@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">LifeOS</string>
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_calendar">Calendar</string>
+    <string name="nav_expenses">Expenses</string>
+    <string name="nav_tasks">Tasks</string>
+    <string name="nav_assistant">Assistant</string>
+    <string name="nav_profile">Profile</string>
+</resources>

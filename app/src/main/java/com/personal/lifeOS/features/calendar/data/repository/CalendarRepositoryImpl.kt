@@ -3,6 +3,7 @@ package com.personal.lifeOS.features.calendar.data.repository
 import com.personal.lifeOS.core.database.dao.EventDao
 import com.personal.lifeOS.core.database.entity.EventEntity
 import com.personal.lifeOS.features.calendar.domain.model.CalendarEvent
+import com.personal.lifeOS.features.calendar.domain.model.EventImportance
 import com.personal.lifeOS.features.calendar.domain.model.EventType
 import com.personal.lifeOS.features.calendar.domain.repository.CalendarRepository
 import kotlinx.coroutines.flow.Flow
@@ -49,6 +50,7 @@ fun EventEntity.toDomain(): CalendarEvent {
         id = id, title = title, description = description,
         date = date, endDate = endDate,
         type = try { EventType.valueOf(type) } catch (_: Exception) { EventType.OTHER },
+        importance = try { EventImportance.valueOf(importance) } catch (_: Exception) { EventImportance.NEUTRAL },
         hasReminder = hasReminder, reminderMinutesBefore = reminderMinutesBefore,
         createdAt = createdAt
     )
@@ -58,6 +60,7 @@ fun CalendarEvent.toEntity(): EventEntity {
     return EventEntity(
         id = id, title = title, description = description,
         date = date, endDate = endDate, type = type.name,
+        importance = importance.name,
         hasReminder = hasReminder, reminderMinutesBefore = reminderMinutesBefore,
         createdAt = createdAt
     )

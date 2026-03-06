@@ -85,10 +85,10 @@ fun ExpensesScreen(
 
     Scaffold(
         containerColor = BackgroundDark,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { com.personal.lifeOS.ui.components.StyledSnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
-                modifier = Modifier.padding(bottom = 64.dp),
+                modifier = Modifier.padding(bottom = 80.dp),
                 onClick = { viewModel.showAddDialog() },
                 containerColor = Primary,
                 contentColor = TextPrimary,

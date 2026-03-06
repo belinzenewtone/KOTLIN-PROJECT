@@ -88,10 +88,10 @@ fun TasksScreen(viewModel: TasksViewModel = hiltViewModel()) {
 
     Scaffold(
         containerColor = BackgroundDark,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { com.personal.lifeOS.ui.components.StyledSnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
-                modifier = Modifier.padding(bottom = 64.dp),
+                modifier = Modifier.padding(bottom = 80.dp),
                 onClick = { viewModel.showAddDialog() },
                 containerColor = Primary, contentColor = TextPrimary, shape = CircleShape
             ) { Icon(Icons.Filled.Add, "Add") }
@@ -144,7 +144,9 @@ fun TasksScreen(viewModel: TasksViewModel = hiltViewModel()) {
 
 @Composable
 private fun SwipeTaskItem(task: Task, onComplete: () -> Unit, onDelete: () -> Unit, onEdit: () -> Unit) {
-    val dismissState = rememberSwipeToDismissBoxState(confirmValueChange = {
+    val dismissState = rememberSwipeToDismissBoxState(
+        positionalThreshold = { totalDistance -> totalDistance * 0.4f },
+        confirmValueChange = {
         when (it) { SwipeToDismissBoxValue.StartToEnd -> { onComplete(); true }; SwipeToDismissBoxValue.EndToStart -> { onDelete(); true }; else -> false }
     })
 

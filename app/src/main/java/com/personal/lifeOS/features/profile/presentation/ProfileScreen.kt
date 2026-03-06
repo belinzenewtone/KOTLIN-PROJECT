@@ -49,8 +49,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
+import com.personal.lifeOS.ui.components.StyledSnackbarHost
+import com.personal.lifeOS.ui.components.StyledSnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -111,7 +111,7 @@ fun ProfileScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
-                .padding(top = 24.dp, bottom = 100.dp), // bottom padding for floating nav
+                .padding(top = 24.dp, bottom = 120.dp), // bottom padding for floating nav
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Header
@@ -356,7 +356,7 @@ fun ProfileScreen(
         }
 
         // Snackbar
-        SnackbarHost(
+        StyledSnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)

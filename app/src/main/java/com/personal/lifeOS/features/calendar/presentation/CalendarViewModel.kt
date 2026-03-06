@@ -3,6 +3,7 @@ package com.personal.lifeOS.features.calendar.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.personal.lifeOS.features.calendar.domain.model.CalendarEvent
+import com.personal.lifeOS.features.calendar.domain.model.EventImportance
 import com.personal.lifeOS.features.calendar.domain.model.EventType
 import com.personal.lifeOS.features.calendar.domain.repository.CalendarRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -59,7 +60,7 @@ class CalendarViewModel @Inject constructor(
         _uiState.update { it.copy(showAddDialog = false) }
     }
 
-    fun addEvent(title: String, description: String, type: EventType) {
+    fun addEvent(title: String, description: String, type: EventType, importance: EventImportance, endDate: Long?) {
         viewModelScope.launch {
             try {
                 val zone = ZoneId.systemDefault()
@@ -69,7 +70,9 @@ class CalendarViewModel @Inject constructor(
                         title = title,
                         description = description,
                         date = date,
-                        type = type
+                        endDate = endDate,
+                        type = type,
+                        importance = importance
                     )
                 )
                 _uiState.update { it.copy(showAddDialog = false) }

@@ -22,7 +22,7 @@ import com.personal.lifeOS.core.database.entity.UserEntity
         EventEntity::class,
         UserEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(DateConverters::class)

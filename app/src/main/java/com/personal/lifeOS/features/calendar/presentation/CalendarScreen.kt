@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Delete
@@ -57,6 +58,10 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.TextStyle
 import java.util.Locale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.sp
+import com.personal.lifeOS.features.calendar.domain.model.EventImportance
 
 @Composable
 fun CalendarScreen(
@@ -68,7 +73,7 @@ fun CalendarScreen(
         containerColor = BackgroundDark,
         floatingActionButton = {
             FloatingActionButton(
-                modifier = Modifier.padding(bottom = 64.dp),
+                modifier = Modifier.padding(bottom = 80.dp),
                 onClick = { viewModel.showAddDialog() },
                 containerColor = Primary,
                 contentColor = TextPrimary,
@@ -175,7 +180,7 @@ fun CalendarScreen(
     if (state.showAddDialog) {
         AddEventDialog(
             onDismiss = { viewModel.hideAddDialog() },
-            onAdd = { title, desc, type -> viewModel.addEvent(title, desc, type) }
+            onAdd = { title, desc, type, importance, endDate -> viewModel.addEvent(title, desc, type, importance, endDate) }
         )
     }
 }
@@ -307,65 +312,93 @@ private fun EventCard(event: CalendarEvent, onDelete: () -> Unit) {
     }
 }
 
+private fun importanceColor(i: EventImportance): Color = when (i) {
+    EventImportance.URGENT -> Color(0xFFEF5350)
+    EventImportance.IMPORTANT -> Color(0xFFFFB74D)
+    EventImportance.NEUTRAL -> Color(0xFF42A5F5)
+}
+
 @Composable
 private fun AddEventDialog(
     onDismiss: () -> Unit,
-    onAdd: (String, String, EventType) -> Unit
+    onAdd: (String, String, EventType, EventImportance, Long?) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf(EventType.PERSONAL) }
+    var selectedImportance by remember { mutableStateOf(EventImportance.NEUTRAL) }
+    var dueDate by remember { mutableStateOf<Long?>(null) }
+    val context = LocalContext.current
 
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = SurfaceDark,
+        shape = RoundedCornerShape(24.dp),
         title = { Text("New Event", color = TextPrimary) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text("Event Title") },
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Primary,
-                        unfocusedBorderColor = GlassBorder
-                    )
+                    value = title, onValueChange = { title = it },
+                    label = { Text("Event Title") }, singleLine = true,
+                    modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Primary, unfocusedBorderColor = GlassBorder,
+                        focusedContainerColor = GlassWhite, unfocusedContainerColor = GlassWhite, cursorColor = Primary)
                 )
                 OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("Description (optional)") },
-                    maxLines = 3,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Primary,
-                        unfocusedBorderColor = GlassBorder
-                    )
+                    value = description, onValueChange = { description = it },
+                    label = { Text("Description (optional)") }, maxLines = 3,
+                    modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Primary, unfocusedBorderColor = GlassBorder,
+                        focusedContainerColor = GlassWhite, unfocusedContainerColor = GlassWhite, cursorColor = Primary)
                 )
+
                 Text("Type", style = MaterialTheme.typography.labelLarge, color = TextSecondary)
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     EventType.entries.forEach { type ->
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(if (type == selectedType) Primary else GlassWhite)
-                                .clickable { selectedType = type }
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
-                        ) {
-                            Text(
-                                type.label,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (type == selectedType) BackgroundDark else TextSecondary
-                            )
+                        Box(Modifier.clip(RoundedCornerShape(12.dp))
+                            .background(if (type == selectedType) Primary else GlassWhite)
+                            .clickable { selectedType = type }
+                            .padding(horizontal = 10.dp, vertical = 6.dp)) {
+                            Text(type.label, style = MaterialTheme.typography.labelSmall,
+                                color = if (type == selectedType) BackgroundDark else TextSecondary)
                         }
                     }
+                }
+
+                Text("Importance", style = MaterialTheme.typography.labelLarge, color = TextSecondary)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    EventImportance.entries.forEach { imp ->
+                        val sel = imp == selectedImportance
+                        Box(Modifier.weight(1f).clip(RoundedCornerShape(12.dp))
+                            .background(if (sel) importanceColor(imp) else importanceColor(imp).copy(0.15f))
+                            .clickable { selectedImportance = imp }
+                            .padding(vertical = 10.dp), contentAlignment = Alignment.Center) {
+                            Text(imp.label, fontWeight = FontWeight.SemiBold,
+                                fontSize = 12.sp, color = if (sel) BackgroundDark else importanceColor(imp))
+                        }
+                    }
+                }
+
+                // Due date picker
+                Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(GlassWhite)
+                    .clickable {
+                        val cal = java.util.Calendar.getInstance()
+                        dueDate?.let { cal.timeInMillis = it }
+                        android.app.DatePickerDialog(context, { _, y, m, d ->
+                            dueDate = java.util.Calendar.getInstance().apply { set(y, m, d, 23, 59, 59) }.timeInMillis
+                        }, cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH), cal.get(java.util.Calendar.DAY_OF_MONTH)).show()
+                    }.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.CalendarMonth, null, tint = Primary, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(12.dp))
+                    Text(if (dueDate != null) "Due: ${DateUtils.formatDate(dueDate!!, "MMM dd, yyyy")}" else "Set due date (optional)",
+                        color = if (dueDate != null) TextPrimary else TextTertiary)
                 }
             }
         },
         confirmButton = {
-            TextButton(
-                onClick = { if (title.isNotBlank()) onAdd(title, description, selectedType) }
-            ) { Text("Add", color = Primary) }
+            TextButton(onClick = { if (title.isNotBlank()) onAdd(title, description, selectedType, selectedImportance, dueDate) }) {
+                Text("Add", color = Primary, fontWeight = FontWeight.SemiBold)
+            }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Cancel", color = TextSecondary) }

@@ -25,7 +25,9 @@ data class EventEntity(
     @ColumnInfo(name = "end_date")
     val endDate: Long? = null,
 
-    val type: String = "PERSONAL", // WORK, PERSONAL, HEALTH, FINANCE, OTHER
+    val type: String = "PERSONAL",
+
+    val importance: String = "NEUTRAL", // NEUTRAL, IMPORTANT, URGENT
 
     @ColumnInfo(name = "has_reminder")
     val hasReminder: Boolean = false,

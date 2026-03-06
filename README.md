@@ -51,9 +51,9 @@ Each feature follows **Clean Architecture**:
 ## Build Stages
 
 - [x] **Stage 1** — Project architecture, Gradle, Hilt, Room, Navigation, Theme, GlassCard
-- [ ] **Stage 2** — Expense tracking module + MPESA SMS parser (full implementation)
-- [ ] **Stage 3** — Dashboard with live data widgets
-- [ ] **Stage 4** — Calendar & Task Manager
+- [x] **Stage 2** — Expense tracking module + MPESA SMS parser (full implementation)
+- [x] **Stage 3** — Dashboard with live data widgets
+- [x] **Stage 4** — Calendar & Task Manager
 - [ ] **Stage 5** — AI Assistant interface
 - [ ] **Stage 6** — Analytics dashboard with Vico charts
 - [ ] **Stage 7** — Security (biometric lock) + polish

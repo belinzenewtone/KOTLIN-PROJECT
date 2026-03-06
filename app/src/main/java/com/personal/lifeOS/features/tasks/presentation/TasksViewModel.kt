@@ -20,10 +20,15 @@ import javax.inject.Inject
 data class TasksUiState(
     val pendingTasks: List<Task> = emptyList(),
     val completedTasks: List<Task> = emptyList(),
-    val showCompleted: Boolean = false,
     val isLoading: Boolean = true,
+    val showDialog: Boolean = false,
+    val editingTask: Task? = null,
+    val title: String = "",
+    val description: String = "",
+    val priority: TaskPriority = TaskPriority.NEUTRAL,
+    val deadline: Long? = null,
     val error: String? = null,
-    val showAddDialog: Boolean = false
+    val successMessage: String? = null
 )
 
 @HiltViewModel
@@ -34,73 +39,66 @@ class TasksViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(TasksUiState())
     val uiState: StateFlow<TasksUiState> = _uiState.asStateFlow()
 
-    init {
-        loadPendingTasks()
-        loadCompletedTasks()
-    }
-
-    fun toggleShowCompleted() {
-        _uiState.update { it.copy(showCompleted = !it.showCompleted) }
-    }
+    init { loadTasks() }
 
     fun showAddDialog() {
-        _uiState.update { it.copy(showAddDialog = true) }
+        _uiState.update { it.copy(showDialog = true, editingTask = null, title = "", description = "", priority = TaskPriority.NEUTRAL, deadline = null) }
     }
 
-    fun hideAddDialog() {
-        _uiState.update { it.copy(showAddDialog = false) }
+    fun showEditDialog(task: Task) {
+        _uiState.update { it.copy(showDialog = true, editingTask = task, title = task.title, description = task.description, priority = task.priority, deadline = task.deadline) }
     }
 
-    fun addTask(title: String, description: String, priority: TaskPriority) {
+    fun hideDialog() { _uiState.update { it.copy(showDialog = false, editingTask = null) } }
+    fun setTitle(v: String) { _uiState.update { it.copy(title = v) } }
+    fun setDescription(v: String) { _uiState.update { it.copy(description = v) } }
+    fun setPriority(v: TaskPriority) { _uiState.update { it.copy(priority = v) } }
+    fun setDeadline(v: Long?) { _uiState.update { it.copy(deadline = v) } }
+    fun clearMessages() { _uiState.update { it.copy(error = null, successMessage = null) } }
+
+    fun saveTask() {
+        val s = _uiState.value
+        if (s.title.isBlank()) return
         viewModelScope.launch {
             try {
-                repository.addTask(
-                    Task(title = title, description = description, priority = priority)
-                )
-                _uiState.update { it.copy(showAddDialog = false) }
+                if (s.editingTask != null) {
+                    repository.updateTask(s.editingTask.copy(title = s.title, description = s.description, priority = s.priority, deadline = s.deadline))
+                } else {
+                    repository.addTask(Task(title = s.title, description = s.description, priority = s.priority, deadline = s.deadline))
+                }
+                hideDialog()
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.message) }
+                _uiState.update { it.copy(error = "Failed: ${e.message}") }
             }
         }
     }
 
     fun completeTask(task: Task) {
         viewModelScope.launch {
-            try {
-                repository.completeTask(task)
-            } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.message) }
-            }
+            try { repository.completeTask(task) } catch (e: Exception) { _uiState.update { it.copy(error = e.message) } }
         }
     }
 
     fun deleteTask(task: Task) {
         viewModelScope.launch {
-            try {
-                repository.deleteTask(task)
-            } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.message) }
-            }
+            try { repository.deleteTask(task) } catch (e: Exception) { _uiState.update { it.copy(error = e.message) } }
         }
     }
 
-    private fun loadPendingTasks() {
-        repository.getPendingTasks()
-            .onEach { tasks ->
-                _uiState.update { it.copy(pendingTasks = tasks, isLoading = false) }
-            }
-            .catch { e ->
-                _uiState.update { it.copy(error = e.message, isLoading = false) }
-            }
-            .launchIn(viewModelScope)
+    fun undoComplete(task: Task) {
+        viewModelScope.launch {
+            repository.updateTask(task.copy(status = TaskStatus.PENDING, completedAt = null))
+        }
     }
 
-    private fun loadCompletedTasks() {
+    private fun loadTasks() {
+        repository.getPendingTasks()
+            .onEach { _uiState.update { s -> s.copy(pendingTasks = it, isLoading = false) } }
+            .catch { _uiState.update { it.copy(isLoading = false) } }
+            .launchIn(viewModelScope)
         repository.getCompletedTasks()
-            .onEach { tasks ->
-                _uiState.update { it.copy(completedTasks = tasks) }
-            }
-            .catch { /* silent */ }
+            .onEach { _uiState.update { s -> s.copy(completedTasks = it) } }
+            .catch { }
             .launchIn(viewModelScope)
     }
 }

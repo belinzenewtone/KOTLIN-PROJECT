@@ -30,15 +30,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import com.personal.lifeOS.R
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.personal.lifeOS.R
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.dashboard.domain.model.DailySpending
@@ -60,7 +58,7 @@ fun DashboardScreen(
             .background(BackgroundDark)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp)
-            .padding(top = 24.dp, bottom = 100.dp),
+            .padding(top = 24.dp, bottom = 80.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Header with logo

@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -7,7 +9,7 @@ plugins {
 }
 
 // Read API keys from local.properties (gitignored)
-val localProperties = java.util.Properties()
+val localProperties = Properties()
 val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
     localProperties.load(localPropertiesFile.inputStream())
@@ -97,11 +99,10 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines)
 
-    // Vico Charts
+    // Vico Charts (stable 1.13.1)
     implementation(libs.vico.compose)
 
     // Security
-    implementation(libs.sqlcipher)
     implementation(libs.biometric)
 
     // Permissions

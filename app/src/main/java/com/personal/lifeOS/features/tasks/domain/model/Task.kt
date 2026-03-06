@@ -4,18 +4,17 @@ data class Task(
     val id: Long = 0,
     val title: String,
     val description: String = "",
-    val priority: TaskPriority = TaskPriority.MEDIUM,
+    val priority: TaskPriority = TaskPriority.NEUTRAL,
     val deadline: Long? = null,
     val status: TaskStatus = TaskStatus.PENDING,
     val completedAt: Long? = null,
     val createdAt: Long = System.currentTimeMillis()
 )
 
-enum class TaskPriority(val label: String, val level: Int) {
-    LOW("Low", 0),
-    MEDIUM("Medium", 1),
-    HIGH("High", 2),
-    CRITICAL("Critical", 3)
+enum class TaskPriority(val label: String) {
+    NEUTRAL("Neutral"),
+    IMPORTANT("Important"),
+    URGENT("Urgent")
 }
 
 enum class TaskStatus(val label: String) {

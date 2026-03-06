@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -42,19 +43,14 @@ fun GlassCard(
     cornerRadius: Dp = 20.dp,
     glassAlpha: Float = 0.08f,
     borderAlpha: Float = 0.10f,
-    elevation: Dp = 8.dp,
+    elevation: Dp = 4.dp,
     content: @Composable BoxScope.() -> Unit
 ) {
-    val shape = RoundedCornerShape(cornerRadius)
+    val shape = remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
 
     Box(
         modifier = modifier
-            .shadow(
-                elevation = elevation,
-                shape = shape,
-                ambientColor = Color.Black.copy(alpha = 0.3f),
-                spotColor = Color.Black.copy(alpha = 0.3f)
-            )
+            .shadow(elevation = elevation, shape = shape)
             .clip(shape)
             .background(
                 brush = Brush.verticalGradient(
@@ -65,13 +61,8 @@ fun GlassCard(
                 )
             )
             .border(
-                width = 1.dp,
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color.White.copy(alpha = borderAlpha),
-                        Color.White.copy(alpha = borderAlpha * 0.3f)
-                    )
-                ),
+                width = 0.5.dp,
+                color = Color.White.copy(alpha = borderAlpha),
                 shape = shape
             )
             .padding(16.dp),
@@ -85,7 +76,7 @@ fun GlassCard(
 @Composable
 fun AccentGlassCard(
     modifier: Modifier = Modifier,
-    accentColor: Color = Color(0xFF10A37F),
+    accentColor: Color = Color(0xFF2979FF),
     cornerRadius: Dp = 20.dp,
     content: @Composable BoxScope.() -> Unit
 ) {

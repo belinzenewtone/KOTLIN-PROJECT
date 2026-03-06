@@ -88,6 +88,7 @@ fun ExpensesScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
+                modifier = Modifier.padding(bottom = 64.dp),
                 onClick = { viewModel.showAddDialog() },
                 containerColor = Primary,
                 contentColor = TextPrimary,
@@ -107,12 +108,25 @@ fun ExpensesScreen(
             // Header
             item {
                 Spacer(Modifier.height(16.dp))
-                Text("Expenses", style = MaterialTheme.typography.headlineLarge)
-                Text(
-                    "Track your MPESA transactions",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = TextSecondary
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text("Expenses", style = MaterialTheme.typography.headlineLarge)
+                        Text(
+                            "Track your MPESA transactions",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = TextSecondary
+                        )
+                    }
+                    androidx.compose.material3.TextButton(
+                        onClick = { viewModel.showImportDialog() }
+                    ) {
+                        Text("Import SMS", color = Primary)
+                    }
+                }
                 Spacer(Modifier.height(8.dp))
             }
 
@@ -194,7 +208,7 @@ fun ExpensesScreen(
                 )
             }
 
-            item { Spacer(Modifier.height(100.dp)) }
+            item { Spacer(Modifier.height(80.dp)) }
         }
     }
 
@@ -214,6 +228,47 @@ fun ExpensesScreen(
             currentCategory = tx.category,
             onDismiss = { viewModel.hideCategoryPicker() },
             onSelect = { newCategory -> viewModel.recategorize(tx, newCategory) }
+        )
+    }
+
+    // SMS Import dialog
+    if (state.showImportDialog) {
+        val context = androidx.compose.ui.platform.LocalContext.current
+        AlertDialog(
+            onDismissRequest = { viewModel.hideImportDialog() },
+            containerColor = SurfaceDark,
+            shape = RoundedCornerShape(24.dp),
+            title = { Text("Import MPESA SMS", color = TextPrimary) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Select time period to scan:", color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
+                    listOf(
+                        "Last 24 hours" to 1,
+                        "Last 7 days" to 7,
+                        "Last 30 days" to 30,
+                        "Last 90 days" to 90
+                    ).forEach { (label, days) ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(GlassWhite)
+                                .clickable {
+                                    viewModel.importSmsMessages(context.contentResolver, days)
+                                }
+                                .padding(16.dp)
+                        ) {
+                            Text(label, color = TextPrimary, style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { viewModel.hideImportDialog() }) {
+                    Text("Cancel", color = TextSecondary)
+                }
+            }
         )
     }
 }

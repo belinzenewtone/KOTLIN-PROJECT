@@ -39,15 +39,20 @@ class AssistantRepositoryImpl @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
-                // Fall through to local engine
+                e.printStackTrace()
             }
         }
 
         // Fallback to local rule-based engine
-        val response = localAIEngine.processQuery(userMessage)
-        return ChatMessage(
-            content = response,
-            sender = MessageSender.ASSISTANT
-        )
+        return try {
+            val response = localAIEngine.processQuery(userMessage)
+            ChatMessage(content = response, sender = MessageSender.ASSISTANT)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            ChatMessage(
+                content = "Sorry, I encountered an error. Please try again.",
+                sender = MessageSender.ASSISTANT
+            )
+        }
     }
 }

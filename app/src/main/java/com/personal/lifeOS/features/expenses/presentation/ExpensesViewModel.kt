@@ -30,7 +30,9 @@ data class ExpensesUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val showAddDialog: Boolean = false,
-    val showCategoryPicker: Transaction? = null // transaction being re-categorized
+    val showImportDialog: Boolean = false,
+    val importResult: String? = null,
+    val showCategoryPicker: Transaction? = null
 )
 
 @HiltViewModel
@@ -154,6 +156,53 @@ class ExpensesViewModel @Inject constructor(
                 _uiState.update { it.copy(error = e.message, isLoading = false) }
             }
             .launchIn(viewModelScope)
+    }
+
+    fun showImportDialog() {
+        _uiState.update { it.copy(showImportDialog = true) }
+    }
+
+    fun hideImportDialog() {
+        _uiState.update { it.copy(showImportDialog = false, importResult = null) }
+    }
+
+    fun importSmsMessages(contentResolver: android.content.ContentResolver, daysBack: Int) {
+        viewModelScope.launch {
+            try {
+                _uiState.update { it.copy(importResult = "Scanning SMS...") }
+                val cutoff = System.currentTimeMillis() - (daysBack.toLong() * 86400000L)
+                var imported = 0
+
+                val cursor = contentResolver.query(
+                    android.net.Uri.parse("content://sms/inbox"),
+                    arrayOf("_id", "address", "body", "date"),
+                    "address LIKE ? AND date > ?",
+                    arrayOf("%MPESA%", cutoff.toString()),
+                    "date DESC"
+                )
+
+                cursor?.use {
+                    val bodyIdx = it.getColumnIndexOrThrow("body")
+                    while (it.moveToNext()) {
+                        val body = it.getString(bodyIdx) ?: continue
+                        try {
+                            val result = addTransaction.fromSms(body)
+                            if (result != null) imported++
+                        } catch (_: Exception) { }
+                    }
+                }
+
+                _uiState.update {
+                    it.copy(
+                        importResult = if (imported > 0) "Imported $imported transactions"
+                        else "No new MPESA messages found",
+                        showImportDialog = false
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(importResult = "Import failed: ${e.message}") }
+            }
+        }
     }
 
     private fun loadSummary() {

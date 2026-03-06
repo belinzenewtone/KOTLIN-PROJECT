@@ -30,9 +30,12 @@ import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.MarkEmailUnread
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Info
@@ -72,6 +75,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.personal.lifeOS.core.utils.DateUtils
+import com.personal.lifeOS.features.auth.presentation.AuthViewModel
 import com.personal.lifeOS.ui.components.AccentGlassCard
 import com.personal.lifeOS.ui.components.GlassCard
 import com.personal.lifeOS.ui.theme.*
@@ -79,9 +83,12 @@ import java.io.File
 
 @Composable
 fun ProfileScreen(
-    viewModel: ProfileViewModel = hiltViewModel()
+    viewModel: ProfileViewModel = hiltViewModel(),
+    authViewModel: AuthViewModel? = null,
+    onSignOut: (() -> Unit)? = null
 ) {
     val state by viewModel.uiState.collectAsState()
+    val authState = authViewModel?.uiState?.collectAsState()?.value
     val snackbarHostState = remember { SnackbarHostState() }
 
     // Image picker launcher
@@ -193,6 +200,47 @@ fun ProfileScreen(
             // Member Since Banner
             MemberSinceBanner(memberSince = state.profile.memberSince)
 
+            // Email Verification Banner
+            if (authState != null) {
+                Spacer(Modifier.height(12.dp))
+                if (authState.emailVerified) {
+                    GlassCard(modifier = Modifier.fillMaxWidth()) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Filled.Verified,
+                                contentDescription = null,
+                                tint = Success,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Column {
+                                Text("Account Verified", style = MaterialTheme.typography.titleMedium, color = Success)
+                                Text("Your email has been confirmed", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                            }
+                        }
+                    }
+                } else {
+                    AccentGlassCard(
+                        modifier = Modifier.fillMaxWidth().clickable { authViewModel?.resendVerification() },
+                        accentColor = Warning
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Filled.MarkEmailUnread,
+                                contentDescription = null,
+                                tint = Warning,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Column {
+                                Text("Email Not Verified", style = MaterialTheme.typography.titleMedium, color = Warning)
+                                Text("Tap to resend verification link", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                            }
+                        }
+                    }
+                }
+            }
+
             Spacer(Modifier.height(16.dp))
 
             // Edit / View Profile
@@ -287,6 +335,24 @@ fun ProfileScreen(
                     }
                 }
             }
+
+            // Sign Out
+            if (onSignOut != null) {
+                Spacer(Modifier.height(16.dp))
+                Button(
+                    onClick = onSignOut,
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Error.copy(alpha = 0.15f),
+                        contentColor = Error
+                    )
+                ) {
+                    Icon(Icons.Filled.Logout, null, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Sign Out", fontWeight = FontWeight.SemiBold)
+                }
+            }
         }
 
         // Snackbar
@@ -294,7 +360,7 @@ fun ProfileScreen(
             hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 100.dp)
+                .padding(bottom = 12.dp)
         )
     }
 

@@ -68,6 +68,7 @@ fun CalendarScreen(
         containerColor = BackgroundDark,
         floatingActionButton = {
             FloatingActionButton(
+                modifier = Modifier.padding(bottom = 64.dp),
                 onClick = { viewModel.showAddDialog() },
                 containerColor = Primary,
                 contentColor = TextPrimary,
@@ -167,7 +168,7 @@ fun CalendarScreen(
                 EventCard(event = event, onDelete = { viewModel.deleteEvent(event) })
             }
 
-            item { Spacer(Modifier.height(100.dp)) }
+            item { Spacer(Modifier.height(80.dp)) }
         }
     }
 

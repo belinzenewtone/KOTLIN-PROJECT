@@ -284,7 +284,7 @@ private fun InputBar(
             .fillMaxWidth()
             .background(SurfaceDark)
             .padding(horizontal = 16.dp, vertical = 12.dp)
-            .padding(bottom = 88.dp),
+            .padding(bottom = 68.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {

@@ -61,7 +61,7 @@ class TaskRepositoryImpl @Inject constructor(
 fun TaskEntity.toDomain(): Task {
     return Task(
         id = id, title = title, description = description,
-        priority = try { TaskPriority.valueOf(priority) } catch (_: Exception) { TaskPriority.MEDIUM },
+        priority = try { TaskPriority.valueOf(priority) } catch (_: Exception) { TaskPriority.NEUTRAL },
         deadline = deadline,
         status = try { TaskStatus.valueOf(status) } catch (_: Exception) { TaskStatus.PENDING },
         completedAt = completedAt, createdAt = createdAt

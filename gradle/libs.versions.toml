@@ -12,7 +12,7 @@ ksp = "2.1.0-1.0.29"
 navigation = "2.8.5"
 datastore = "1.1.1"
 coroutines = "1.9.0"
-vico = "2.0.0-beta.2"
+vico = "1.13.1"
 sqlcipher = "4.6.1"
 biometric = "1.2.0-alpha05"
 accompanist = "0.36.0"
@@ -55,7 +55,7 @@ datastore-preferences = { group = "androidx.datastore", name = "datastore-prefer
 # Coroutines
 kotlinx-coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 
-# Vico Charts
+# Vico Charts (stable)
 vico-compose = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
 
 # Security

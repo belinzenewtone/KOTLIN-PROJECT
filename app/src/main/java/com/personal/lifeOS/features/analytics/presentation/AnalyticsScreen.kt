@@ -1,5 +1,6 @@
 package com.personal.lifeOS.features.analytics.presentation
 
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -39,17 +41,20 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottomAxis
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStartAxis
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
-import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
-import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
+import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
+import com.patrykandpatrick.vico.compose.axis.vertical.rememberStartAxis
+import com.patrykandpatrick.vico.compose.chart.Chart
+import com.patrykandpatrick.vico.compose.chart.column.columnChart
+import com.patrykandpatrick.vico.compose.chart.line.lineChart
+import com.patrykandpatrick.vico.core.axis.AxisPosition
+import com.patrykandpatrick.vico.core.axis.formatter.AxisValueFormatter
+import com.patrykandpatrick.vico.core.component.shape.LineComponent
+import com.patrykandpatrick.vico.core.component.shape.Shapes
+import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
+import com.patrykandpatrick.vico.core.entry.entryOf
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.analytics.domain.model.AnalyticsPeriod
+import com.personal.lifeOS.features.analytics.domain.model.DailySpending
 import com.personal.lifeOS.ui.components.AccentGlassCard
 import com.personal.lifeOS.ui.components.GlassCard
 import com.personal.lifeOS.ui.theme.*
@@ -63,12 +68,12 @@ fun AnalyticsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(BackgroundDark)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp)
-            .padding(top = 24.dp, bottom = 100.dp),
+            .padding(top = 24.dp, bottom = 80.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Header
         Text("Analytics", style = MaterialTheme.typography.headlineLarge)
         Text(
             "Your life metrics at a glance",
@@ -83,7 +88,7 @@ fun AnalyticsScreen(
             return@Column
         }
 
-        // Metric cards row
+        // Metric cards
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -141,75 +146,22 @@ fun AnalyticsScreen(
             onSelect = { viewModel.setPeriod(it) }
         )
 
-        // Spending Chart
+        // Spending Bar Chart
         val spendingData = when (state.selectedPeriod) {
             AnalyticsPeriod.WEEK -> state.data.weeklySpending
             AnalyticsPeriod.MONTH -> state.data.monthlySpending
         }
 
-        if (spendingData.isNotEmpty()) {
-            GlassCard(modifier = Modifier.fillMaxWidth()) {
-                Column {
-                    Text(
-                        if (state.selectedPeriod == AnalyticsPeriod.WEEK) "Weekly Spending" else "Monthly Spending",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Spacer(Modifier.height(16.dp))
-
-                    val modelProducer = remember(spendingData) {
-                        CartesianChartModelProducer.build {
-                            columnSeries { series(spendingData.map { it.amount }) }
-                        }
-                    }
-
-                    CartesianChartHost(
-                        chart = rememberCartesianChart(
-                            rememberColumnCartesianLayer(),
-                            startAxis = rememberStartAxis(),
-                            bottomAxis = rememberBottomAxis()
-                        ),
-                        modelProducer = modelProducer,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                    )
-                }
-            }
+        if (spendingData.isNotEmpty() && spendingData.any { it.amount > 0 }) {
+            SpendingBarChart(
+                title = if (state.selectedPeriod == AnalyticsPeriod.WEEK) "Weekly Spending" else "Monthly Spending",
+                data = spendingData
+            )
         }
 
-        // Spending trend line
-        if (state.data.monthlySpending.size > 1) {
-            GlassCard(modifier = Modifier.fillMaxWidth()) {
-                Column {
-                    Text("Spending Trend", style = MaterialTheme.typography.titleMedium)
-                    Spacer(Modifier.height(16.dp))
-
-                    // Cumulative spending
-                    var cumulative = 0.0
-                    val cumulativeData = state.data.monthlySpending.map {
-                        cumulative += it.amount
-                        cumulative
-                    }
-
-                    val trendProducer = remember(cumulativeData) {
-                        CartesianChartModelProducer.build {
-                            lineSeries { series(cumulativeData) }
-                        }
-                    }
-
-                    CartesianChartHost(
-                        chart = rememberCartesianChart(
-                            rememberLineCartesianLayer(),
-                            startAxis = rememberStartAxis(),
-                            bottomAxis = rememberBottomAxis()
-                        ),
-                        modelProducer = trendProducer,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(180.dp)
-                    )
-                }
-            }
+        // Spending Trend Line
+        if (state.data.monthlySpending.size > 1 && state.data.monthlySpending.any { it.amount > 0 }) {
+            SpendingTrendChart(data = state.data.monthlySpending)
         }
 
         // Category breakdown
@@ -231,7 +183,6 @@ fun AnalyticsScreen(
                                 color = TextPrimary,
                                 modifier = Modifier.width(100.dp)
                             )
-                            // Progress bar
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
@@ -258,8 +209,98 @@ fun AnalyticsScreen(
                 }
             }
         }
+    }
+}
 
-        Spacer(Modifier.height(80.dp))
+@Composable
+private fun SpendingBarChart(title: String, data: List<DailySpending>) {
+    val entries = data.mapIndexed { index, day -> entryOf(index.toFloat(), day.amount.toFloat()) }
+    val producer = remember { ChartEntryModelProducer() }
+
+    LaunchedEffect(data) {
+        producer.setEntries(entries)
+    }
+
+    val labels = data.map { it.dayLabel }
+    val bottomAxisFormatter = AxisValueFormatter<AxisPosition.Horizontal.Bottom> { value, _ ->
+        labels.getOrElse(value.toInt()) { "" }
+    }
+
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column {
+            Text(title, style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(16.dp))
+
+            Chart(
+                chart = columnChart(
+                    columns = listOf(
+                        LineComponent(
+                            color = android.graphics.Color.parseColor("#2979FF"),
+                            thicknessDp = if (data.size <= 7) 16f else 6f,
+                            shape = Shapes.roundedCornerShape(topLeftPercent = 40, topRightPercent = 40)
+                        )
+                    )
+                ),
+                chartModelProducer = producer,
+                startAxis = rememberStartAxis(
+                    valueFormatter = { value, _ ->
+                        if (value >= 1000) "${(value / 1000).toInt()}K" else value.toInt().toString()
+                    }
+                ),
+                bottomAxis = rememberBottomAxis(
+                    valueFormatter = bottomAxisFormatter
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                isZoomEnabled = false
+            )
+        }
+    }
+}
+
+@Composable
+private fun SpendingTrendChart(data: List<DailySpending>) {
+    // Cumulative spending
+    var cumulative = 0.0
+    val cumulativeEntries = data.mapIndexed { index, day ->
+        cumulative += day.amount
+        entryOf(index.toFloat(), cumulative.toFloat())
+    }
+
+    val producer = remember { ChartEntryModelProducer() }
+
+    LaunchedEffect(data) {
+        producer.setEntries(cumulativeEntries)
+    }
+
+    val labels = data.map { it.dayLabel }
+    val bottomAxisFormatter = AxisValueFormatter<AxisPosition.Horizontal.Bottom> { value, _ ->
+        labels.getOrElse(value.toInt()) { "" }
+    }
+
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column {
+            Text("Spending Trend", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(16.dp))
+
+            Chart(
+                chart = lineChart(),
+                chartModelProducer = producer,
+                startAxis = rememberStartAxis(
+                    valueFormatter = { value, _ ->
+                        if (value >= 1000) "${(value / 1000).toInt()}K" else value.toInt().toString()
+                    }
+                ),
+                bottomAxis = rememberBottomAxis(
+                    valueFormatter = bottomAxisFormatter
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp),
+                isZoomEnabled = false
+            )
+        }
     }
 }
 
@@ -272,23 +313,23 @@ private fun MetricCard(
     iconColor: Color,
     isAccent: Boolean = false
 ) {
-    val card: @Composable (Modifier, @Composable () -> Unit) -> Unit = if (isAccent) {
-        { mod, content -> AccentGlassCard(modifier = mod) { content() } }
+    if (isAccent) {
+        AccentGlassCard(modifier = modifier) {
+            Column {
+                Icon(icon, null, tint = iconColor, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.height(8.dp))
+                Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(title, style = MaterialTheme.typography.labelSmall, color = TextTertiary)
+            }
+        }
     } else {
-        { mod, content -> GlassCard(modifier = mod) { content() } }
-    }
-
-    card(modifier) {
-        Column {
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = iconColor,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text(title, style = MaterialTheme.typography.labelSmall, color = TextTertiary)
+        GlassCard(modifier = modifier) {
+            Column {
+                Icon(icon, null, tint = iconColor, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.height(8.dp))
+                Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(title, style = MaterialTheme.typography.labelSmall, color = TextTertiary)
+            }
         }
     }
 }
@@ -297,7 +338,6 @@ private fun MetricCard(
 private fun ProductivityCard(score: Float) {
     GlassCard(modifier = Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // Circular score indicator
             Box(contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(
                     progress = { (score / 100f).coerceIn(0f, 1f) },

@@ -46,7 +46,7 @@ class LocalAIEngine @Inject constructor(
 
             // Greeting
             lower.containsAny("hello", "hi", "hey", "good morning", "good evening") ->
-                "Hey! I'm your LifeOS assistant. I can help you with your expenses, tasks, and schedule. Try asking me something like \"How much did I spend today?\" or \"What tasks are pending?\""
+                "Hey! I'm your BELTECH assistant. I can help you with your expenses, tasks, and schedule. Try asking me something like \"How much did I spend today?\" or \"What tasks are pending?\""
 
             // Help
             lower.containsAny("help", "what can you do", "capabilities") ->
@@ -240,7 +240,7 @@ class LocalAIEngine @Inject constructor(
         val pendingTasks = taskDao.getPendingTasks().first().size
         val upcomingEvents = eventDao.getUpcomingEvents(System.currentTimeMillis(), 5).first().size
 
-        return "📊 **Your LifeOS Summary**\n\n" +
+        return "📊 **Your BELTECH Summary**\n\n" +
             "💰 Today's spending: **${DateUtils.formatCurrency(todaySpend)}**\n" +
             "💰 This month: **${DateUtils.formatCurrency(monthSpend)}**\n" +
             "✅ Pending tasks: **$pendingTasks**\n" +

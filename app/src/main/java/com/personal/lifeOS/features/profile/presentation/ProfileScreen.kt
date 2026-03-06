@@ -252,9 +252,9 @@ fun ProfileScreen(
                     Icon(Icons.Outlined.Info, null, tint = TextTertiary, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(12.dp))
                     Column {
-                        Text("LifeOS", style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
+                        Text("BELTECH", style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
                         Text(
-                            "Version 1.0.0 • Personal Life Operating System",
+                            "Version 1.0.0 • Innovate and Create",
                             style = MaterialTheme.typography.labelSmall
                         )
                     }

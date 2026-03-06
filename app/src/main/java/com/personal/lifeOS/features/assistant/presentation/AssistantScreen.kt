@@ -93,7 +93,7 @@ fun AssistantScreen(
             }
             Spacer(Modifier.width(12.dp))
             Column {
-                Text("LifeOS Assistant", style = MaterialTheme.typography.titleLarge)
+                Text("BELTECH Assistant", style = MaterialTheme.typography.titleLarge)
                 Text(
                     if (state.isProcessing) "Thinking..." else "Online",
                     style = MaterialTheme.typography.labelSmall,
@@ -292,7 +292,7 @@ private fun InputBar(
             value = text,
             onValueChange = onTextChange,
             modifier = Modifier.weight(1f),
-            placeholder = { Text("Message LifeOS...", color = TextTertiary) },
+            placeholder = { Text("Message BELTECH...", color = TextTertiary) },
             shape = RoundedCornerShape(24.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Primary,

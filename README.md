@@ -1,4 +1,4 @@
-# LifeOS — Personal Management App
+# BELTECH — Personal Management App
 
 A modern Android personal management application built with **Kotlin + Jetpack Compose**, featuring MPESA SMS transaction parsing, glass morphism UI, and Clean Architecture.
 

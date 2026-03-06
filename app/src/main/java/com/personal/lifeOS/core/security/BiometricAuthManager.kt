@@ -47,7 +47,7 @@ object BiometricAuthManager {
         }
 
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle("Unlock LifeOS")
+            .setTitle("Unlock BELTECH")
             .setSubtitle("Use your fingerprint to access your data")
             .setNegativeButtonText("Use Password")
             .setAllowedAuthenticators(

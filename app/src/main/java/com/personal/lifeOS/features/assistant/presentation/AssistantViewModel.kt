@@ -34,7 +34,7 @@ class AssistantViewModel @Inject constructor(
             it.copy(
                 messages = listOf(
                     ChatMessage(
-                        content = "Hey! I'm your LifeOS assistant. Ask me about your spending, tasks, or schedule. 💡",
+                        content = "Hey! I'm your BELTECH assistant. Ask me about your spending, tasks, or schedule. 💡",
                         sender = MessageSender.ASSISTANT
                     )
                 )

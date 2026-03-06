@@ -1,20 +1,26 @@
 package com.personal.lifeOS.features.profile.presentation
 
+import android.content.Context
+import android.net.Uri
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.personal.lifeOS.features.profile.domain.model.UserProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
 import javax.inject.Inject
 
 data class ProfileUiState(
@@ -28,12 +34,13 @@ data class ProfileUiState(
     val newPassword: String = "",
     val confirmPassword: String = "",
     val passwordError: String? = null,
-    val saveSuccess: Boolean = false
+    val successMessage: String? = null
 )
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val dataStore: DataStore<Preferences>
+    private val dataStore: DataStore<Preferences>,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -46,6 +53,8 @@ class ProfileViewModel @Inject constructor(
         val KEY_PASSWORD = stringPreferencesKey("user_password")
         val KEY_BIOMETRIC = booleanPreferencesKey("biometric_enabled")
         val KEY_NOTIFICATIONS = booleanPreferencesKey("notifications_enabled")
+        val KEY_PROFILE_PIC = stringPreferencesKey("profile_pic_path")
+        val KEY_MEMBER_SINCE = longPreferencesKey("member_since")
     }
 
     init {
@@ -65,33 +74,36 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun cancelEditing() {
-        _uiState.update { it.copy(isEditing = false, saveSuccess = false) }
+        _uiState.update { it.copy(isEditing = false) }
     }
 
-    fun updateEditName(name: String) {
-        _uiState.update { it.copy(editName = name) }
-    }
-
-    fun updateEditEmail(email: String) {
-        _uiState.update { it.copy(editEmail = email) }
-    }
-
-    fun updateEditPhone(phone: String) {
-        _uiState.update { it.copy(editPhone = phone) }
-    }
+    fun updateEditName(name: String) { _uiState.update { it.copy(editName = name) } }
+    fun updateEditEmail(email: String) { _uiState.update { it.copy(editEmail = email) } }
+    fun updateEditPhone(phone: String) { _uiState.update { it.copy(editPhone = phone) } }
 
     fun saveProfile() {
         viewModelScope.launch {
             val state = _uiState.value
-            dataStore.edit { prefs ->
-                prefs[KEY_NAME] = state.editName
-                prefs[KEY_EMAIL] = state.editEmail
-                prefs[KEY_PHONE] = state.editPhone
+
+            // Set member since on first save
+            val prefs = dataStore.data.first()
+            val existingMemberSince = prefs[KEY_MEMBER_SINCE] ?: 0L
+
+            dataStore.edit { p ->
+                p[KEY_NAME] = state.editName
+                p[KEY_EMAIL] = state.editEmail
+                p[KEY_PHONE] = state.editPhone
+                if (existingMemberSince == 0L) {
+                    p[KEY_MEMBER_SINCE] = System.currentTimeMillis()
+                }
             }
+
             val initials = state.editName.split(" ")
                 .take(2)
                 .mapNotNull { it.firstOrNull()?.uppercase() }
                 .joinToString("")
+
+            val memberSince = if (existingMemberSince == 0L) System.currentTimeMillis() else existingMemberSince
 
             _uiState.update {
                 it.copy(
@@ -99,11 +111,40 @@ class ProfileViewModel @Inject constructor(
                         name = state.editName,
                         email = state.editEmail,
                         phone = state.editPhone,
-                        avatarInitials = initials
+                        avatarInitials = initials.ifEmpty { "?" },
+                        memberSince = memberSince
                     ),
                     isEditing = false,
-                    saveSuccess = true
+                    successMessage = "Profile saved"
                 )
+            }
+        }
+    }
+
+    /**
+     * Copy the selected image to app-private storage and save path.
+     */
+    fun updateProfilePic(uri: Uri) {
+        viewModelScope.launch {
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri) ?: return@launch
+                val file = File(context.filesDir, "profile_pic.jpg")
+                FileOutputStream(file).use { output ->
+                    inputStream.copyTo(output)
+                }
+                inputStream.close()
+
+                val path = file.absolutePath
+                dataStore.edit { it[KEY_PROFILE_PIC] = path }
+
+                _uiState.update {
+                    it.copy(
+                        profile = it.profile.copy(profilePicUri = path),
+                        successMessage = "Profile photo updated"
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(successMessage = "Failed to update photo") }
             }
         }
     }
@@ -124,22 +165,13 @@ class ProfileViewModel @Inject constructor(
         _uiState.update { it.copy(showPasswordDialog = false) }
     }
 
-    fun updateCurrentPassword(pw: String) {
-        _uiState.update { it.copy(currentPassword = pw) }
-    }
-
-    fun updateNewPassword(pw: String) {
-        _uiState.update { it.copy(newPassword = pw) }
-    }
-
-    fun updateConfirmPassword(pw: String) {
-        _uiState.update { it.copy(confirmPassword = pw) }
-    }
+    fun updateCurrentPassword(pw: String) { _uiState.update { it.copy(currentPassword = pw) } }
+    fun updateNewPassword(pw: String) { _uiState.update { it.copy(newPassword = pw) } }
+    fun updateConfirmPassword(pw: String) { _uiState.update { it.copy(confirmPassword = pw) } }
 
     fun changePassword() {
         val state = _uiState.value
         viewModelScope.launch {
-            // Validate
             val storedPassword = dataStore.data.first()[KEY_PASSWORD] ?: ""
 
             if (storedPassword.isNotEmpty() && state.currentPassword != storedPassword) {
@@ -155,10 +187,10 @@ class ProfileViewModel @Inject constructor(
                 return@launch
             }
 
-            dataStore.edit { prefs ->
-                prefs[KEY_PASSWORD] = state.newPassword
+            dataStore.edit { it[KEY_PASSWORD] = state.newPassword }
+            _uiState.update {
+                it.copy(showPasswordDialog = false, successMessage = "Password updated")
             }
-            _uiState.update { it.copy(showPasswordDialog = false, saveSuccess = true) }
         }
     }
 
@@ -176,6 +208,10 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun clearSuccessMessage() {
+        _uiState.update { it.copy(successMessage = null) }
+    }
+
     private fun loadProfile() {
         viewModelScope.launch {
             val prefs = dataStore.data.first()
@@ -184,6 +220,9 @@ class ProfileViewModel @Inject constructor(
             val phone = prefs[KEY_PHONE] ?: ""
             val biometric = prefs[KEY_BIOMETRIC] ?: false
             val notifications = prefs[KEY_NOTIFICATIONS] ?: true
+            val picPath = prefs[KEY_PROFILE_PIC] ?: ""
+            val memberSince = prefs[KEY_MEMBER_SINCE] ?: 0L
+
             val initials = name.split(" ")
                 .take(2)
                 .mapNotNull { it.firstOrNull()?.uppercase() }
@@ -196,6 +235,8 @@ class ProfileViewModel @Inject constructor(
                         email = email,
                         phone = phone,
                         avatarInitials = initials.ifEmpty { "?" },
+                        profilePicUri = picPath,
+                        memberSince = memberSince,
                         isBiometricEnabled = biometric,
                         notificationsEnabled = notifications
                     )

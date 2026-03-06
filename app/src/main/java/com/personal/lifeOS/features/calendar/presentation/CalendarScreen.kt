@@ -167,7 +167,7 @@ fun CalendarScreen(
                 EventCard(event = event, onDelete = { viewModel.deleteEvent(event) })
             }
 
-            item { Spacer(Modifier.height(80.dp)) }
+            item { Spacer(Modifier.height(100.dp)) }
         }
     }
 

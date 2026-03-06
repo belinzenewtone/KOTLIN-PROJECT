@@ -18,5 +18,5 @@ dependencyResolution {
     }
 }
 
-rootProject.name = "LifeOS"
+rootProject.name = "BELTECH"
 include(":app")

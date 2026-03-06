@@ -25,6 +25,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Lock
@@ -240,6 +242,31 @@ fun ProfileScreen(
                         subtitle = "Event and task reminders",
                         checked = state.profile.notificationsEnabled,
                         onToggle = { viewModel.toggleNotifications(it) }
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // Cloud Sync
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Cloud Sync", style = MaterialTheme.typography.titleMedium)
+
+                    SettingsRow(
+                        icon = Icons.Filled.CloudUpload,
+                        iconColor = Info,
+                        title = "Backup to Cloud",
+                        subtitle = "Push data to Supabase",
+                        onClick = { viewModel.syncToCloud() }
+                    )
+
+                    SettingsRow(
+                        icon = Icons.Filled.CloudDownload,
+                        iconColor = Accent,
+                        title = "Restore from Cloud",
+                        subtitle = "Pull data from Supabase",
+                        onClick = { viewModel.syncFromCloud() }
                     )
                 }
             }

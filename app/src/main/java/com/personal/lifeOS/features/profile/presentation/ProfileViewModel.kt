@@ -11,6 +11,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.personal.lifeOS.features.profile.domain.model.UserProfile
+import com.personal.lifeOS.core.utils.CloudSyncService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,6 +41,7 @@ data class ProfileUiState(
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val dataStore: DataStore<Preferences>,
+    private val cloudSyncService: CloudSyncService,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -210,6 +212,22 @@ class ProfileViewModel @Inject constructor(
 
     fun clearSuccessMessage() {
         _uiState.update { it.copy(successMessage = null) }
+    }
+
+    fun syncToCloud() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(successMessage = "Syncing to cloud...") }
+            val result = cloudSyncService.pushToCloud()
+            _uiState.update { it.copy(successMessage = result.message) }
+        }
+    }
+
+    fun syncFromCloud() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(successMessage = "Restoring from cloud...") }
+            val result = cloudSyncService.pullFromCloud()
+            _uiState.update { it.copy(successMessage = result.message) }
+        }
     }
 
     private fun loadProfile() {

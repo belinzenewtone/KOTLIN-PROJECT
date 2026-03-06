@@ -54,8 +54,8 @@ Each feature follows **Clean Architecture**:
 - [x] **Stage 2** — Expense tracking module + MPESA SMS parser (full implementation)
 - [x] **Stage 3** — Dashboard with live data widgets
 - [x] **Stage 4** — Calendar & Task Manager
-- [ ] **Stage 5** — AI Assistant interface
-- [ ] **Stage 6** — Analytics dashboard with Vico charts
+- [x] **Stage 5** — AI Assistant (local rule-based intelligence, ChatGPT-style UI)
+- [x] **Stage 6** — Analytics dashboard with Vico charts
 - [ ] **Stage 7** — Security (biometric lock) + polish
 
 ## Setup

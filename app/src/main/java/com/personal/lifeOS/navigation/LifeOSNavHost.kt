@@ -21,6 +21,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.personal.lifeOS.features.analytics.presentation.AnalyticsScreen
 import com.personal.lifeOS.features.assistant.presentation.AssistantScreen
 import com.personal.lifeOS.features.calendar.presentation.CalendarScreen
 import com.personal.lifeOS.features.dashboard.presentation.DashboardScreen
@@ -98,6 +99,7 @@ fun LifeOSNavHost() {
             composable(Screen.Expenses.route) { ExpensesScreen() }
             composable(Screen.Tasks.route) { TasksScreen() }
             composable(Screen.Assistant.route) { AssistantScreen() }
+            composable(Screen.Analytics.route) { AnalyticsScreen() }
         }
     }
 }

@@ -40,4 +40,5 @@ val bottomNavItems = listOf(
     BottomNavItem(Screen.Expenses, "Expenses", Icons.Filled.Receipt, Icons.Outlined.Receipt),
     BottomNavItem(Screen.Tasks, "Tasks", Icons.Filled.TaskAlt, Icons.Outlined.TaskAlt),
     BottomNavItem(Screen.Assistant, "AI", Icons.Filled.SmartToy, Icons.Outlined.SmartToy),
+    BottomNavItem(Screen.Profile, "Profile", Icons.Filled.Person, Icons.Outlined.Person),
 )

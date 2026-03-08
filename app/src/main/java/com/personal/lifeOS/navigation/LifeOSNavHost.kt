@@ -7,8 +7,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,27 +20,44 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.personal.lifeOS.core.security.BiometricAuthManager
+import com.personal.lifeOS.core.update.presentation.OtaUpdatePromptHost
 import com.personal.lifeOS.features.analytics.presentation.AnalyticsScreen
 import com.personal.lifeOS.features.assistant.presentation.AssistantScreen
 import com.personal.lifeOS.features.auth.presentation.AuthScreen
@@ -46,157 +65,347 @@ import com.personal.lifeOS.features.auth.presentation.AuthViewModel
 import com.personal.lifeOS.features.calendar.presentation.CalendarScreen
 import com.personal.lifeOS.features.dashboard.presentation.DashboardScreen
 import com.personal.lifeOS.features.expenses.presentation.ExpensesScreen
+import com.personal.lifeOS.features.planner.presentation.PlannerScreen
 import com.personal.lifeOS.features.profile.presentation.ProfileScreen
 import com.personal.lifeOS.features.tasks.presentation.TasksScreen
 import com.personal.lifeOS.ui.theme.BackgroundDark
 import com.personal.lifeOS.ui.theme.Primary
+import com.personal.lifeOS.ui.theme.TextPrimary
 import com.personal.lifeOS.ui.theme.TextTertiary
 
+private data class BiometricLockState(
+    val requiresLock: Boolean,
+    val appContentUnlocked: Boolean,
+    val errorMessage: String?,
+    val onRetry: () -> Unit,
+)
+
 @Composable
-fun LifeOSNavHost() {
+fun LifeOSNavHost(biometricEnabled: Boolean) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val authViewModel: AuthViewModel = hiltViewModel()
     val authState by authViewModel.uiState.collectAsState()
 
-    // Determine if we're on the auth screen
     val isOnAuthScreen = currentDestination?.route == "auth"
+    val requiresBiometricLock = authState.isLoggedIn && biometricEnabled && !isOnAuthScreen
+    val lockState = rememberBiometricLockState(requiresBiometricLock)
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundDark)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(BackgroundDark),
     ) {
-        NavHost(
+        LifeOSNavigationGraph(
             navController = navController,
-            startDestination = "auth",
-            modifier = Modifier.fillMaxSize()
-        ) {
-            composable("auth") {
-                AuthScreen(
-                    viewModel = authViewModel,
-                    onAuthenticated = {
-                        navController.navigate(Screen.Dashboard.route) {
-                            popUpTo("auth") { inclusive = true }
-                        }
-                    }
-                )
+            authViewModel = authViewModel,
+        )
+
+        if (!isOnAuthScreen && authState.isLoggedIn && lockState.appContentUnlocked) {
+            LifeOSBottomBar(
+                navController = navController,
+                currentDestination = currentDestination,
+            )
+            OtaUpdatePromptHost(shouldCheckForUpdates = true)
+        }
+
+        if (lockState.requiresLock) {
+            BiometricLockOverlay(
+                errorMessage = lockState.errorMessage,
+                onRetry = lockState.onRetry,
+                onSignOut = {
+                    authViewModel.signOut()
+                    navController.navigateToAuth()
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun rememberBiometricLockState(requiresBiometricLock: Boolean): BiometricLockState {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    var isBiometricUnlocked by rememberSaveable { mutableStateOf(false) }
+    var shouldPromptBiometric by rememberSaveable { mutableStateOf(false) }
+    var biometricError by rememberSaveable { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(requiresBiometricLock) {
+        isBiometricUnlocked = false
+        shouldPromptBiometric = requiresBiometricLock
+        biometricError = null
+    }
+
+    DisposableEffect(lifecycleOwner, requiresBiometricLock) {
+        val observer =
+            LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_START && requiresBiometricLock) {
+                    isBiometricUnlocked = false
+                    shouldPromptBiometric = true
+                    biometricError = null
+                }
             }
-            composable(Screen.Dashboard.route) { DashboardScreen() }
-            composable(Screen.Calendar.route) { CalendarScreen() }
-            composable(Screen.Expenses.route) { ExpensesScreen() }
-            composable(Screen.Tasks.route) { TasksScreen() }
-            composable(Screen.Assistant.route) { AssistantScreen() }
-            composable(Screen.Analytics.route) { AnalyticsScreen() }
-            composable(Screen.Profile.route) {
-                ProfileScreen(
-                    authViewModel = authViewModel,
-                    onSignOut = {
-                        authViewModel.signOut()
-                        navController.navigate("auth") {
-                            popUpTo(0) { inclusive = true }
-                        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    LaunchedEffect(shouldPromptBiometric, requiresBiometricLock, isBiometricUnlocked) {
+        if (!requiresBiometricLock || isBiometricUnlocked || !shouldPromptBiometric) return@LaunchedEffect
+
+        val activity = context as? FragmentActivity
+        if (activity == null) {
+            biometricError = "Biometric prompt unavailable in this context."
+            shouldPromptBiometric = false
+            return@LaunchedEffect
+        }
+
+        if (!BiometricAuthManager.canAuthenticate(activity)) {
+            biometricError = "Biometric authentication is not available on this device."
+            shouldPromptBiometric = false
+            return@LaunchedEffect
+        }
+
+        shouldPromptBiometric = false
+        BiometricAuthManager.authenticate(
+            activity = activity,
+            onSuccess = {
+                isBiometricUnlocked = true
+                biometricError = null
+            },
+            onError = { message ->
+                biometricError = message
+            },
+        )
+    }
+
+    return BiometricLockState(
+        requiresLock = requiresBiometricLock && !isBiometricUnlocked,
+        appContentUnlocked = !requiresBiometricLock || isBiometricUnlocked,
+        errorMessage = biometricError,
+        onRetry = {
+            biometricError = null
+            shouldPromptBiometric = true
+        },
+    )
+}
+
+@Composable
+private fun LifeOSNavigationGraph(
+    navController: NavHostController,
+    authViewModel: AuthViewModel,
+) {
+    NavHost(
+        navController = navController,
+        startDestination = "auth",
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        composable("auth") {
+            AuthScreen(
+                viewModel = authViewModel,
+                onAuthenticated = {
+                    navController.navigate(Screen.Dashboard.route) {
+                        popUpTo("auth") { inclusive = true }
                     }
+                },
+            )
+        }
+        composable(Screen.Dashboard.route) { DashboardScreen() }
+        composable(Screen.Calendar.route) { CalendarScreen() }
+        composable(Screen.Expenses.route) { ExpensesScreen() }
+        composable(Screen.Tasks.route) { TasksScreen() }
+        composable(Screen.Planner.route) { PlannerScreen() }
+        composable(Screen.Assistant.route) { AssistantScreen() }
+        composable(Screen.Analytics.route) { AnalyticsScreen() }
+        composable(Screen.Profile.route) {
+            ProfileScreen(
+                authViewModel = authViewModel,
+                onSignOut = {
+                    authViewModel.signOut()
+                    navController.navigateToAuth()
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun BoxScope.LifeOSBottomBar(
+    navController: NavHostController,
+    currentDestination: NavDestination?,
+) {
+    Box(
+        modifier =
+            Modifier
+                .align(Alignment.BottomCenter)
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(horizontal = 24.dp, vertical = 8.dp),
+    ) {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .shadow(
+                        elevation = 16.dp,
+                        shape = RoundedCornerShape(24.dp),
+                        ambientColor = Color.Black.copy(alpha = 0.4f),
+                        spotColor = Color.Black.copy(alpha = 0.4f),
+                    )
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(
+                        brush =
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        Color.White.copy(alpha = 0.12f),
+                                        Color.White.copy(alpha = 0.06f),
+                                    ),
+                            ),
+                    )
+                    .border(
+                        width = 1.dp,
+                        brush =
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        Color.White.copy(alpha = 0.15f),
+                                        Color.White.copy(alpha = 0.04f),
+                                    ),
+                            ),
+                        shape = RoundedCornerShape(24.dp),
+                    )
+                    .padding(horizontal = 6.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            bottomNavItems.forEach { item ->
+                val selected = currentDestination?.hierarchy?.any { it.route == item.screen.route } == true
+                BottomNavItem(
+                    label = item.label,
+                    selected = selected,
+                    selectedIcon = item.selectedIcon,
+                    unselectedIcon = item.unselectedIcon,
+                    onClick = {
+                        navController.navigate(item.screen.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                 )
             }
         }
+    }
+}
 
-        // Floating Glass Bottom Bar — only show when NOT on auth screen
-        if (!isOnAuthScreen && authState.isLoggedIn) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-                    .padding(horizontal = 24.dp, vertical = 8.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .shadow(
-                            elevation = 16.dp,
-                            shape = RoundedCornerShape(24.dp),
-                            ambientColor = Color.Black.copy(alpha = 0.4f),
-                            spotColor = Color.Black.copy(alpha = 0.4f)
-                        )
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.White.copy(alpha = 0.12f),
-                                    Color.White.copy(alpha = 0.06f)
-                                )
-                            )
-                        )
-                        .border(
-                            width = 1.dp,
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.White.copy(alpha = 0.15f),
-                                    Color.White.copy(alpha = 0.04f)
-                                )
-                            ),
-                            shape = RoundedCornerShape(24.dp)
-                        )
-                        .padding(horizontal = 6.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    bottomNavItems.forEach { item ->
-                        val selected = currentDestination?.hierarchy?.any {
-                            it.route == item.screen.route
-                        } == true
+@Composable
+private fun RowScope.BottomNavItem(
+    label: String,
+    selected: Boolean,
+    selectedIcon: androidx.compose.ui.graphics.vector.ImageVector,
+    unselectedIcon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit,
+) {
+    val iconColor by animateColorAsState(
+        targetValue = if (selected) Primary else TextTertiary,
+        label = "iconColor",
+    )
 
-                        val iconColor by animateColorAsState(
-                            targetValue = if (selected) Primary else TextTertiary,
-                            label = "iconColor"
-                        )
+    Column(
+        modifier =
+            Modifier
+                .weight(1f)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onClick,
+                )
+                .padding(vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            if (selected) {
+                Box(
+                    modifier =
+                        Modifier
+                            .size(30.dp)
+                            .clip(CircleShape)
+                            .background(Primary.copy(alpha = 0.15f)),
+                )
+            }
+            Icon(
+                imageVector = if (selected) selectedIcon else unselectedIcon,
+                contentDescription = label,
+                tint = iconColor,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        Text(
+            text = label,
+            color = iconColor,
+            fontSize = 9.sp,
+            maxLines = 1,
+            modifier = Modifier.padding(top = 1.dp),
+        )
+    }
+}
 
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null
-                                ) {
-                                    navController.navigate(item.screen.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
-                                        }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                }
-                                .padding(vertical = 4.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                if (selected) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(30.dp)
-                                            .clip(CircleShape)
-                                            .background(Primary.copy(alpha = 0.15f))
-                                    )
-                                }
-                                Icon(
-                                    imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
-                                    contentDescription = item.label,
-                                    tint = iconColor,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                            Text(
-                                text = item.label,
-                                color = iconColor,
-                                fontSize = 9.sp,
-                                maxLines = 1,
-                                modifier = Modifier.padding(top = 1.dp)
-                            )
-                        }
-                    }
+@Composable
+private fun BiometricLockOverlay(
+    errorMessage: String?,
+    onRetry: () -> Unit,
+    onSignOut: () -> Unit,
+) {
+    Box(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.7f)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .padding(24.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(BackgroundDark)
+                    .border(
+                        width = 1.dp,
+                        color = Color.White.copy(alpha = 0.12f),
+                        shape = RoundedCornerShape(20.dp),
+                    )
+                    .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = "Biometric Unlock Required",
+                style = MaterialTheme.typography.titleMedium,
+                color = TextPrimary,
+            )
+            Text(
+                text = errorMessage ?: "Authenticate with fingerprint to continue.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextTertiary,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = onRetry) {
+                    Text("Retry")
+                }
+                OutlinedButton(onClick = onSignOut) {
+                    Text("Sign Out")
                 }
             }
         }
+    }
+}
+
+private fun NavHostController.navigateToAuth() {
+    navigate("auth") {
+        popUpTo(0) { inclusive = true }
     }
 }

@@ -14,18 +14,23 @@ import java.util.Locale
  * - Bought airtime
  */
 object MpesaSmsParser {
-
     data class ParsedTransaction(
         val mpesaCode: String,
         val amount: Double,
         val merchant: String,
         val transactionType: TransactionType,
         val date: Long,
-        val rawSms: String
+        val rawSms: String,
     )
 
     enum class TransactionType {
-        SENT, RECEIVED, PAID, WITHDRAWN, AIRTIME, DEPOSIT, UNKNOWN
+        SENT,
+        RECEIVED,
+        PAID,
+        WITHDRAWN,
+        AIRTIME,
+        DEPOSIT,
+        UNKNOWN,
     }
 
     private val MPESA_CODE_REGEX = Regex("[A-Z0-9]{10}")
@@ -39,8 +44,8 @@ object MpesaSmsParser {
     fun isMpesaSms(message: String): Boolean {
         val upperMsg = message.uppercase()
         return upperMsg.contains("MPESA") ||
-                upperMsg.contains("M-PESA") ||
-                (MPESA_CODE_REGEX.containsMatchIn(message) && AMOUNT_REGEX.containsMatchIn(message))
+            upperMsg.contains("M-PESA") ||
+            (MPESA_CODE_REGEX.containsMatchIn(message) && AMOUNT_REGEX.containsMatchIn(message))
     }
 
     /**
@@ -61,7 +66,7 @@ object MpesaSmsParser {
                 merchant = merchant,
                 transactionType = type,
                 date = date,
-                rawSms = sms
+                rawSms = sms,
             )
         } catch (e: Exception) {
             // Fault resistance: ignore malformed messages
@@ -92,7 +97,10 @@ object MpesaSmsParser {
         }
     }
 
-    private fun extractMerchant(sms: String, type: TransactionType): String {
+    private fun extractMerchant(
+        sms: String,
+        type: TransactionType,
+    ): String {
         return try {
             when (type) {
                 TransactionType.SENT -> {
@@ -102,7 +110,8 @@ object MpesaSmsParser {
                 }
                 TransactionType.PAID -> {
                     // "paid to KFC WESTLANDS" or "Buy Goods from NAIVAS"
-                    val regex = Regex("(?:paid to|from)\\s+([A-Z0-9\\s&'-]+?)(?:\\s+on |\\.|New)", RegexOption.IGNORE_CASE)
+                    val regex =
+                        Regex("(?:paid to|from)\\s+([A-Z0-9\\s&'-]+?)(?:\\s+on |\\.|New)", RegexOption.IGNORE_CASE)
                     regex.find(sms)?.groupValues?.get(1)?.trim() ?: "Unknown"
                 }
                 TransactionType.RECEIVED -> {

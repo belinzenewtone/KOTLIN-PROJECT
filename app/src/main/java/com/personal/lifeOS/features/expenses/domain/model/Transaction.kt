@@ -10,13 +10,13 @@ data class Transaction(
     val transactionType: String = "SENT",
     val mpesaCode: String? = null,
     val rawSms: String? = null,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
 )
 
 data class CategoryBreakdown(
     val category: String,
     val total: Double,
-    val percentage: Float = 0f
+    val percentage: Float = 0f,
 )
 
 data class SpendingSummary(
@@ -25,9 +25,12 @@ data class SpendingSummary(
     val monthTotal: Double = 0.0,
     val transactionCount: Int = 0,
     val categoryBreakdown: List<CategoryBreakdown> = emptyList(),
-    val topMerchant: String? = null
+    val topMerchant: String? = null,
 )
 
 enum class TransactionFilter {
-    ALL, TODAY, THIS_WEEK, THIS_MONTH
+    ALL,
+    TODAY,
+    THIS_WEEK,
+    THIS_MONTH,
 }

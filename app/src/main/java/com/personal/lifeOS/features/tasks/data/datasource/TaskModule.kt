@@ -11,10 +11,7 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class TaskModule {
-
     @Binds
     @Singleton
-    abstract fun bindTaskRepository(
-        impl: TaskRepositoryImpl
-    ): TaskRepository
+    abstract fun bindTaskRepository(impl: TaskRepositoryImpl): TaskRepository
 }

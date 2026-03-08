@@ -19,33 +19,34 @@ data class AnalyticsUiState(
     val data: AnalyticsData = AnalyticsData(),
     val selectedPeriod: AnalyticsPeriod = AnalyticsPeriod.WEEK,
     val isLoading: Boolean = true,
-    val error: String? = null
+    val error: String? = null,
 )
 
 @HiltViewModel
-class AnalyticsViewModel @Inject constructor(
-    private val repository: AnalyticsRepository
-) : ViewModel() {
+class AnalyticsViewModel
+    @Inject
+    constructor(
+        private val repository: AnalyticsRepository,
+    ) : ViewModel() {
+        private val _uiState = MutableStateFlow(AnalyticsUiState())
+        val uiState: StateFlow<AnalyticsUiState> = _uiState.asStateFlow()
 
-    private val _uiState = MutableStateFlow(AnalyticsUiState())
-    val uiState: StateFlow<AnalyticsUiState> = _uiState.asStateFlow()
+        init {
+            loadAnalytics()
+        }
 
-    init {
-        loadAnalytics()
+        fun setPeriod(period: AnalyticsPeriod) {
+            _uiState.update { it.copy(selectedPeriod = period) }
+        }
+
+        private fun loadAnalytics() {
+            repository.getAnalytics()
+                .onEach { data ->
+                    _uiState.update { it.copy(data = data, isLoading = false) }
+                }
+                .catch { e ->
+                    _uiState.update { it.copy(error = e.message, isLoading = false) }
+                }
+                .launchIn(viewModelScope)
+        }
     }
-
-    fun setPeriod(period: AnalyticsPeriod) {
-        _uiState.update { it.copy(selectedPeriod = period) }
-    }
-
-    private fun loadAnalytics() {
-        repository.getAnalytics()
-            .onEach { data ->
-                _uiState.update { it.copy(data = data, isLoading = false) }
-            }
-            .catch { e ->
-                _uiState.update { it.copy(error = e.message, isLoading = false) }
-            }
-            .launchIn(viewModelScope)
-    }
-}

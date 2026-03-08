@@ -11,10 +11,7 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ExpenseModule {
-
     @Binds
     @Singleton
-    abstract fun bindExpenseRepository(
-        impl: ExpenseRepositoryImpl
-    ): ExpenseRepository
+    abstract fun bindExpenseRepository(impl: ExpenseRepositoryImpl): ExpenseRepository
 }

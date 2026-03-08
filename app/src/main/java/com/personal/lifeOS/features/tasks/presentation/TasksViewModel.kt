@@ -28,77 +28,139 @@ data class TasksUiState(
     val priority: TaskPriority = TaskPriority.NEUTRAL,
     val deadline: Long? = null,
     val error: String? = null,
-    val successMessage: String? = null
+    val successMessage: String? = null,
 )
 
 @HiltViewModel
-class TasksViewModel @Inject constructor(
-    private val repository: TaskRepository
-) : ViewModel() {
+class TasksViewModel
+    @Inject
+    constructor(
+        private val repository: TaskRepository,
+    ) : ViewModel() {
+        private val _uiState = MutableStateFlow(TasksUiState())
+        val uiState: StateFlow<TasksUiState> = _uiState.asStateFlow()
 
-    private val _uiState = MutableStateFlow(TasksUiState())
-    val uiState: StateFlow<TasksUiState> = _uiState.asStateFlow()
+        init {
+            loadTasks()
+        }
 
-    init { loadTasks() }
-
-    fun showAddDialog() {
-        _uiState.update { it.copy(showDialog = true, editingTask = null, title = "", description = "", priority = TaskPriority.NEUTRAL, deadline = null) }
-    }
-
-    fun showEditDialog(task: Task) {
-        _uiState.update { it.copy(showDialog = true, editingTask = task, title = task.title, description = task.description, priority = task.priority, deadline = task.deadline) }
-    }
-
-    fun hideDialog() { _uiState.update { it.copy(showDialog = false, editingTask = null) } }
-    fun setTitle(v: String) { _uiState.update { it.copy(title = v) } }
-    fun setDescription(v: String) { _uiState.update { it.copy(description = v) } }
-    fun setPriority(v: TaskPriority) { _uiState.update { it.copy(priority = v) } }
-    fun setDeadline(v: Long?) { _uiState.update { it.copy(deadline = v) } }
-    fun clearMessages() { _uiState.update { it.copy(error = null, successMessage = null) } }
-
-    fun saveTask() {
-        val s = _uiState.value
-        if (s.title.isBlank()) return
-        viewModelScope.launch {
-            try {
-                if (s.editingTask != null) {
-                    repository.updateTask(s.editingTask.copy(title = s.title, description = s.description, priority = s.priority, deadline = s.deadline))
-                } else {
-                    repository.addTask(Task(title = s.title, description = s.description, priority = s.priority, deadline = s.deadline))
-                }
-                hideDialog()
-            } catch (e: Exception) {
-                _uiState.update { it.copy(error = "Failed: ${e.message}") }
+        fun showAddDialog() {
+            _uiState.update {
+                it.copy(
+                    showDialog = true,
+                    editingTask = null,
+                    title = "",
+                    description = "",
+                    priority = TaskPriority.NEUTRAL,
+                    deadline = null,
+                )
             }
         }
-    }
 
-    fun completeTask(task: Task) {
-        viewModelScope.launch {
-            try { repository.completeTask(task) } catch (e: Exception) { _uiState.update { it.copy(error = e.message) } }
+        fun showEditDialog(task: Task) {
+            _uiState.update {
+                it.copy(
+                    showDialog = true,
+                    editingTask = task,
+                    title = task.title,
+                    description = task.description,
+                    priority = task.priority,
+                    deadline = task.deadline,
+                )
+            }
+        }
+
+        fun hideDialog() {
+            _uiState.update { it.copy(showDialog = false, editingTask = null) }
+        }
+
+        fun setTitle(v: String) {
+            _uiState.update { it.copy(title = v) }
+        }
+
+        fun setDescription(v: String) {
+            _uiState.update { it.copy(description = v) }
+        }
+
+        fun setPriority(v: TaskPriority) {
+            _uiState.update { it.copy(priority = v) }
+        }
+
+        fun setDeadline(v: Long?) {
+            _uiState.update { it.copy(deadline = v) }
+        }
+
+        fun clearMessages() {
+            _uiState.update { it.copy(error = null, successMessage = null) }
+        }
+
+        fun saveTask() {
+            val s = _uiState.value
+            if (s.title.isBlank()) return
+            viewModelScope.launch {
+                try {
+                    if (s.editingTask != null) {
+                        repository.updateTask(
+                            s.editingTask.copy(
+                                title = s.title,
+                                description = s.description,
+                                priority = s.priority,
+                                deadline = s.deadline,
+                            ),
+                        )
+                    } else {
+                        repository.addTask(
+                            Task(
+                                title = s.title,
+                                description = s.description,
+                                priority = s.priority,
+                                deadline = s.deadline,
+                            ),
+                        )
+                    }
+                    hideDialog()
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(error = "Failed: ${e.message}") }
+                }
+            }
+        }
+
+        fun completeTask(task: Task) {
+            viewModelScope.launch {
+                try {
+                    repository.completeTask(task)
+                } catch (
+                    e: Exception,
+                ) {
+                    _uiState.update { it.copy(error = e.message) }
+                }
+            }
+        }
+
+        fun deleteTask(task: Task) {
+            viewModelScope.launch {
+                try {
+                    repository.deleteTask(task)
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(error = e.message) }
+                }
+            }
+        }
+
+        fun undoComplete(task: Task) {
+            viewModelScope.launch {
+                repository.updateTask(task.copy(status = TaskStatus.PENDING, completedAt = null))
+            }
+        }
+
+        private fun loadTasks() {
+            repository.getPendingTasks()
+                .onEach { _uiState.update { s -> s.copy(pendingTasks = it, isLoading = false) } }
+                .catch { _uiState.update { it.copy(isLoading = false) } }
+                .launchIn(viewModelScope)
+            repository.getCompletedTasks()
+                .onEach { _uiState.update { s -> s.copy(completedTasks = it) } }
+                .catch { }
+                .launchIn(viewModelScope)
         }
     }
-
-    fun deleteTask(task: Task) {
-        viewModelScope.launch {
-            try { repository.deleteTask(task) } catch (e: Exception) { _uiState.update { it.copy(error = e.message) } }
-        }
-    }
-
-    fun undoComplete(task: Task) {
-        viewModelScope.launch {
-            repository.updateTask(task.copy(status = TaskStatus.PENDING, completedAt = null))
-        }
-    }
-
-    private fun loadTasks() {
-        repository.getPendingTasks()
-            .onEach { _uiState.update { s -> s.copy(pendingTasks = it, isLoading = false) } }
-            .catch { _uiState.update { it.copy(isLoading = false) } }
-            .launchIn(viewModelScope)
-        repository.getCompletedTasks()
-            .onEach { _uiState.update { s -> s.copy(completedTasks = it) } }
-            .catch { }
-            .launchIn(viewModelScope)
-    }
-}

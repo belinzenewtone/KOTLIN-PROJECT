@@ -8,17 +8,17 @@ data class Task(
     val deadline: Long? = null,
     val status: TaskStatus = TaskStatus.PENDING,
     val completedAt: Long? = null,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
 )
 
 enum class TaskPriority(val label: String) {
     NEUTRAL("Neutral"),
     IMPORTANT("Important"),
-    URGENT("Urgent")
+    URGENT("Urgent"),
 }
 
 enum class TaskStatus(val label: String) {
     PENDING("Pending"),
     IN_PROGRESS("In Progress"),
-    COMPLETED("Completed")
+    COMPLETED("Completed"),
 }

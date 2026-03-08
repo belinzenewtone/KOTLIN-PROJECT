@@ -9,14 +9,14 @@ data class DashboardData(
     val pendingTaskCount: Int = 0,
     val completedTodayCount: Int = 0,
     val recentTransactions: List<RecentTransaction> = emptyList(),
-    val weeklySpendingData: List<DailySpending> = emptyList()
+    val weeklySpendingData: List<DailySpending> = emptyList(),
 )
 
 data class UpcomingEvent(
     val id: Long,
     val title: String,
     val date: Long,
-    val type: String
+    val type: String,
 )
 
 data class RecentTransaction(
@@ -24,10 +24,10 @@ data class RecentTransaction(
     val amount: Double,
     val merchant: String,
     val category: String,
-    val date: Long
+    val date: Long,
 )
 
 data class DailySpending(
     val dayLabel: String,
-    val amount: Double
+    val amount: Double,
 )

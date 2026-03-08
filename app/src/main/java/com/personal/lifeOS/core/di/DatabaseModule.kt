@@ -2,9 +2,13 @@ package com.personal.lifeOS.core.di
 
 import android.content.Context
 import androidx.room.Room
+import com.personal.lifeOS.core.database.DatabaseMigrations
 import com.personal.lifeOS.core.database.LifeOSDatabase
+import com.personal.lifeOS.core.database.dao.BudgetDao
 import com.personal.lifeOS.core.database.dao.EventDao
+import com.personal.lifeOS.core.database.dao.IncomeDao
 import com.personal.lifeOS.core.database.dao.MerchantCategoryDao
+import com.personal.lifeOS.core.database.dao.RecurringRuleDao
 import com.personal.lifeOS.core.database.dao.TaskDao
 import com.personal.lifeOS.core.database.dao.TransactionDao
 import dagger.Module
@@ -17,10 +21,11 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
-
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): LifeOSDatabase {
+    fun provideDatabase(
+        @ApplicationContext context: Context,
+    ): LifeOSDatabase {
         // Clean up old encrypted database if it exists
         val oldDb = context.getDatabasePath("lifeos_db")
         if (oldDb.exists()) {
@@ -30,9 +35,15 @@ object DatabaseModule {
         return Room.databaseBuilder(
             context,
             LifeOSDatabase::class.java,
-            "beltech_db"
+            "beltech_db",
         )
-            .fallbackToDestructiveMigration()
+            .addMigrations(
+                DatabaseMigrations.MIGRATION_1_2,
+                DatabaseMigrations.MIGRATION_2_3,
+                DatabaseMigrations.MIGRATION_3_4,
+                DatabaseMigrations.MIGRATION_4_5,
+                DatabaseMigrations.MIGRATION_5_6,
+            )
             .build()
     }
 
@@ -47,4 +58,13 @@ object DatabaseModule {
 
     @Provides
     fun provideEventDao(db: LifeOSDatabase): EventDao = db.eventDao()
+
+    @Provides
+    fun provideBudgetDao(db: LifeOSDatabase): BudgetDao = db.budgetDao()
+
+    @Provides
+    fun provideIncomeDao(db: LifeOSDatabase): IncomeDao = db.incomeDao()
+
+    @Provides
+    fun provideRecurringRuleDao(db: LifeOSDatabase): RecurringRuleDao = db.recurringRuleDao()
 }

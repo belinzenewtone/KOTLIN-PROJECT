@@ -19,11 +19,19 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class Screen(val route: String) {
     data object Dashboard : Screen("dashboard")
+
     data object Calendar : Screen("calendar")
+
     data object Expenses : Screen("expenses")
+
     data object Tasks : Screen("tasks")
+
+    data object Planner : Screen("planner")
+
     data object Assistant : Screen("assistant")
+
     data object Analytics : Screen("analytics")
+
     data object Profile : Screen("profile")
 }
 
@@ -31,14 +39,16 @@ data class BottomNavItem(
     val screen: Screen,
     val label: String,
     val selectedIcon: ImageVector,
-    val unselectedIcon: ImageVector
+    val unselectedIcon: ImageVector,
 )
 
-val bottomNavItems = listOf(
-    BottomNavItem(Screen.Dashboard, "Home", Icons.Filled.Dashboard, Icons.Outlined.Dashboard),
-    BottomNavItem(Screen.Calendar, "Calendar", Icons.Filled.CalendarMonth, Icons.Outlined.CalendarMonth),
-    BottomNavItem(Screen.Expenses, "Expenses", Icons.Filled.Receipt, Icons.Outlined.Receipt),
-    BottomNavItem(Screen.Tasks, "Tasks", Icons.Filled.TaskAlt, Icons.Outlined.TaskAlt),
-    BottomNavItem(Screen.Assistant, "AI", Icons.Filled.SmartToy, Icons.Outlined.SmartToy),
-    BottomNavItem(Screen.Profile, "Profile", Icons.Filled.Person, Icons.Outlined.Person),
-)
+val bottomNavItems =
+    listOf(
+        BottomNavItem(Screen.Dashboard, "Home", Icons.Filled.Dashboard, Icons.Outlined.Dashboard),
+        BottomNavItem(Screen.Calendar, "Calendar", Icons.Filled.CalendarMonth, Icons.Outlined.CalendarMonth),
+        BottomNavItem(Screen.Expenses, "Expenses", Icons.Filled.Receipt, Icons.Outlined.Receipt),
+        BottomNavItem(Screen.Tasks, "Tasks", Icons.Filled.TaskAlt, Icons.Outlined.TaskAlt),
+        BottomNavItem(Screen.Planner, "Plan", Icons.Filled.Analytics, Icons.Outlined.Analytics),
+        BottomNavItem(Screen.Assistant, "AI", Icons.Filled.SmartToy, Icons.Outlined.SmartToy),
+        BottomNavItem(Screen.Profile, "Profile", Icons.Filled.Person, Icons.Outlined.Person),
+    )

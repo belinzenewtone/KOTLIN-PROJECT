@@ -9,21 +9,22 @@ data class AnalyticsData(
     val totalTasksCompleted: Int = 0,
     val totalTasksPending: Int = 0,
     val totalEvents: Int = 0,
-    val averageDailySpending: Double = 0.0
+    val averageDailySpending: Double = 0.0,
 )
 
 data class DailySpending(
-    val dayLabel: String,  // "Mon", "Tue" or "1", "2"
+    val dayLabel: String, // "Mon", "Tue" or "1", "2"
     val amount: Double,
-    val date: Long
+    val date: Long,
 )
 
 data class CategorySpend(
     val category: String,
     val amount: Double,
-    val percentage: Float
+    val percentage: Float,
 )
 
 enum class AnalyticsPeriod {
-    WEEK, MONTH
+    WEEK,
+    MONTH,
 }

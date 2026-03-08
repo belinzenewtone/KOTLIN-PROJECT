@@ -5,16 +5,24 @@ import com.personal.lifeOS.features.expenses.domain.model.Transaction
 import kotlinx.coroutines.flow.Flow
 
 interface ExpenseRepository {
-
     fun getAllTransactions(): Flow<List<Transaction>>
 
-    fun getTransactionsBetween(start: Long, end: Long): Flow<List<Transaction>>
+    fun getTransactionsBetween(
+        start: Long,
+        end: Long,
+    ): Flow<List<Transaction>>
 
     fun getByCategory(category: String): Flow<List<Transaction>>
 
-    fun getTotalSpendingBetween(start: Long, end: Long): Flow<Double>
+    fun getTotalSpendingBetween(
+        start: Long,
+        end: Long,
+    ): Flow<Double>
 
-    fun getCategoryBreakdown(start: Long, end: Long): Flow<List<CategoryBreakdown>>
+    fun getCategoryBreakdown(
+        start: Long,
+        end: Long,
+    ): Flow<List<CategoryBreakdown>>
 
     fun getTransactionCount(): Flow<Int>
 
@@ -30,5 +38,8 @@ interface ExpenseRepository {
 
     suspend fun importFromSms(smsBody: String): Transaction?
 
-    suspend fun updateMerchantCategory(merchant: String, category: String)
+    suspend fun updateMerchantCategory(
+        merchant: String,
+        category: String,
+    )
 }

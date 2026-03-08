@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<baseline version="1.0">
+    <file name="build.gradle.kts">
+        <error line="40" column="1" source="standard:max-line-length" />
+        <error line="40" column="26" source="standard:argument-list-wrapping" />
+        <error line="40" column="36" source="standard:argument-list-wrapping" />
+        <error line="40" column="59" source="standard:argument-list-wrapping" />
+        <error line="40" column="92" source="standard:argument-list-wrapping" />
+        <error line="40" column="115" source="standard:argument-list-wrapping" />
+        <error line="40" column="117" source="standard:argument-list-wrapping" />
+        <error line="40" column="122" source="standard:argument-list-wrapping" />
+        <error line="49" column="37" source="standard:trailing-comma-on-call-site" />
+    </file>
+    <file name="src/main/java/com/personal/lifeOS/core/database/dao/MerchantCategoryDao.kt">
+        <error line="27" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="src/main/java/com/personal/lifeOS/core/database/dao/TaskDao.kt">
+        <error line="42" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="src/main/java/com/personal/lifeOS/core/database/entity/EventEntity.kt">
+        <error line="20" column="21" source="standard:discouraged-comment-location" />
+        <error line="24" column="41" source="standard:discouraged-comment-location" />
+    </file>
+    <file name="src/main/java/com/personal/lifeOS/core/database/entity/MerchantCategoryEntity.kt">
+        <error line="19" column="35" source="standard:discouraged-comment-location" />
+    </file>
+    <file name="src/main/java/com/personal/lifeOS/core/database/entity/TaskEntity.kt">
+        <error line="21" column="38" source="standard:discouraged-comment-location" />
+        <error line="22" column="33" source="standard:discouraged-comment-location" />
+        <error line="23" column="37" source="standard:discouraged-comment-location" />
+    </file>
+    <file name="src/main/java/com/personal/lifeOS/core/database/entity/TransactionEntity.kt">
+        <error line="22" column="21" source="standard:discouraged-comment-location" />
+        <error line="23" column="35" source="standard:discouraged-comment-location" />
+        <error line="25" column="43" source="standard:discouraged-comment-location" />
+    </file>
+    <file name="src/main/java/com/personal/lifeOS/core/notifications/EventReminderReceiver.kt">
+        <error line="33" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="src/main/java/com/personal/lifeOS/core/notifications/TaskReminderReceiver.kt">
+        <error line="33" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="src/main/java/com/personal/lifeOS/features/analytics/domain/model/AnalyticsData.kt">
+        <error line="16" column="27" source="standard:discouraged-comment-location" />
+    </file>
+    <file name="src/main/java/com/personal/lifeOS/features/assistant/data/datasource/LocalAIEngine.kt">
+        <error line="72" column="1" source="standard:max-line-length" />
+        <error line="84" column="1" source="standard:max-line-length" />
+        <error line="257" column="1" source="standard:max-line-length" />
+        <error line="281" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="src/main/java/com/personal/lifeOS/features/assistant/presentation/AssistantViewModel.kt">
+        <error line="39" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="src/main/java/com/personal/lifeOS/features/auth/data/SupabaseAuthClient.kt">
+        <error line="103" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="src/main/java/com/personal/lifeOS/features/expenses/domain/usecase/GetSpendingSummaryUseCase.kt">
+        <error line="51" column="41" source="standard:discouraged-comment-location" />
+    </file>
+    <file name="src/main/java/com/personal/lifeOS/features/profile/domain/model/UserProfile.kt">
+        <error line="9" column="33" source="standard:discouraged-comment-location" />
+    </file>
+    <file name="src/main/java/com/personal/lifeOS/features/profile/presentation/ProfileScreen.kt">
+        <error line="31" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="src/main/java/com/personal/lifeOS/features/settings/presentation/SettingsViewModel.kt">
+        <error line="63" column="1" source="standard:max-line-length" />
+    </file>
+    <file name="src/main/java/com/personal/lifeOS/ui/theme/Spacing.kt">
+        <error line="1" column="1" source="standard:filename" />
+    </file>
+    <file name="src/test/java/com/personal/lifeOS/features/expenses/data/parser/MpesaSmsParserTest.kt">
+        <error line="21" column="1" source="standard:max-line-length" />
+    </file>
+</baseline>

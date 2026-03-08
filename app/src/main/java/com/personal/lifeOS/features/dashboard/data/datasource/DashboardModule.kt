@@ -11,10 +11,7 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class DashboardModule {
-
     @Binds
     @Singleton
-    abstract fun bindDashboardRepository(
-        impl: DashboardRepositoryImpl
-    ): DashboardRepository
+    abstract fun bindDashboardRepository(impl: DashboardRepositoryImpl): DashboardRepository
 }

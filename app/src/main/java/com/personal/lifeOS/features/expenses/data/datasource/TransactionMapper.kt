@@ -14,7 +14,7 @@ fun TransactionEntity.toDomain(): Transaction {
         transactionType = transactionType,
         mpesaCode = mpesaCode,
         rawSms = rawSms,
-        createdAt = createdAt
+        createdAt = createdAt,
     )
 }
 
@@ -29,6 +29,6 @@ fun Transaction.toEntity(): TransactionEntity {
         transactionType = transactionType,
         mpesaCode = mpesaCode,
         rawSms = rawSms,
-        createdAt = createdAt
+        createdAt = createdAt,
     )
 }

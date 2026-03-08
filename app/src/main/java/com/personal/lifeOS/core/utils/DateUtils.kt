@@ -2,13 +2,11 @@ package com.personal.lifeOS.core.utils
 
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAdjusters
 
 object DateUtils {
-
     fun todayStartMillis(): Long {
         return LocalDate.now()
             .atStartOfDay(ZoneId.systemDefault())
@@ -49,11 +47,15 @@ object DateUtils {
             .toEpochMilli() - 1
     }
 
-    fun formatDate(epochMillis: Long, pattern: String = "MMM dd, yyyy"): String {
+    fun formatDate(
+        epochMillis: Long,
+        pattern: String = "MMM dd, yyyy",
+    ): String {
         val formatter = DateTimeFormatter.ofPattern(pattern)
-        val dateTime = Instant.ofEpochMilli(epochMillis)
-            .atZone(ZoneId.systemDefault())
-            .toLocalDateTime()
+        val dateTime =
+            Instant.ofEpochMilli(epochMillis)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime()
         return dateTime.format(formatter)
     }
 

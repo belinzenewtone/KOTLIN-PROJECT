@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.personal.lifeOS.features.calendar.domain.model.CalendarEvent
 import com.personal.lifeOS.features.calendar.domain.model.EventImportance
+import com.personal.lifeOS.features.calendar.domain.model.EventStatus
 import com.personal.lifeOS.features.calendar.domain.model.EventType
 import com.personal.lifeOS.features.calendar.domain.repository.CalendarRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,95 +28,140 @@ data class CalendarUiState(
     val selectedDayEvents: List<CalendarEvent> = emptyList(),
     val isLoading: Boolean = true,
     val error: String? = null,
-    val showAddDialog: Boolean = false
+    val showAddDialog: Boolean = false,
+    val editingEvent: CalendarEvent? = null,
 )
 
 @HiltViewModel
-class CalendarViewModel @Inject constructor(
-    private val repository: CalendarRepository
-) : ViewModel() {
+class CalendarViewModel
+    @Inject
+    constructor(
+        private val repository: CalendarRepository,
+    ) : ViewModel() {
+        private val _uiState = MutableStateFlow(CalendarUiState())
+        val uiState: StateFlow<CalendarUiState> = _uiState.asStateFlow()
 
-    private val _uiState = MutableStateFlow(CalendarUiState())
-    val uiState: StateFlow<CalendarUiState> = _uiState.asStateFlow()
+        init {
+            loadMonthEvents()
+        }
 
-    init {
-        loadMonthEvents()
-    }
+        fun navigateMonth(offset: Int) {
+            _uiState.update { it.copy(currentMonth = it.currentMonth.plusMonths(offset.toLong())) }
+            loadMonthEvents()
+        }
 
-    fun navigateMonth(offset: Int) {
-        _uiState.update { it.copy(currentMonth = it.currentMonth.plusMonths(offset.toLong())) }
-        loadMonthEvents()
-    }
+        fun selectDate(date: LocalDate) {
+            _uiState.update { it.copy(selectedDate = date) }
+            filterSelectedDayEvents()
+        }
 
-    fun selectDate(date: LocalDate) {
-        _uiState.update { it.copy(selectedDate = date) }
-        filterSelectedDayEvents()
-    }
+        fun showAddDialog() {
+            _uiState.update { it.copy(showAddDialog = true, editingEvent = null) }
+        }
 
-    fun showAddDialog() {
-        _uiState.update { it.copy(showAddDialog = true) }
-    }
+        fun showEditDialog(event: CalendarEvent) {
+            _uiState.update { it.copy(showAddDialog = true, editingEvent = event) }
+        }
 
-    fun hideAddDialog() {
-        _uiState.update { it.copy(showAddDialog = false) }
-    }
+        fun hideAddDialog() {
+            _uiState.update { it.copy(showAddDialog = false, editingEvent = null) }
+        }
 
-    fun addEvent(title: String, description: String, type: EventType, importance: EventImportance, endDate: Long?) {
-        viewModelScope.launch {
-            try {
-                val zone = ZoneId.systemDefault()
-                val date = _uiState.value.selectedDate.atStartOfDay(zone).toInstant().toEpochMilli()
-                repository.addEvent(
-                    CalendarEvent(
-                        title = title,
-                        description = description,
-                        date = date,
-                        endDate = endDate,
-                        type = type,
-                        importance = importance
+        fun saveEvent(
+            title: String,
+            description: String,
+            type: EventType,
+            importance: EventImportance,
+            date: Long,
+            endDate: Long?,
+        ) {
+            viewModelScope.launch {
+                try {
+                    val editing = _uiState.value.editingEvent
+                    if (editing == null) {
+                        repository.addEvent(
+                            CalendarEvent(
+                                title = title,
+                                description = description,
+                                date = date,
+                                endDate = endDate,
+                                type = type,
+                                importance = importance,
+                                status = EventStatus.PENDING,
+                            ),
+                        )
+                    } else {
+                        repository.updateEvent(
+                            editing.copy(
+                                title = title,
+                                description = description,
+                                date = date,
+                                endDate = endDate,
+                                type = type,
+                                importance = importance,
+                            ),
+                        )
+                    }
+                    _uiState.update { it.copy(showAddDialog = false, editingEvent = null) }
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(error = e.message) }
+                }
+            }
+        }
+
+        fun markEventCompleted(event: CalendarEvent) {
+            if (event.status == EventStatus.COMPLETED) return
+            viewModelScope.launch {
+                try {
+                    repository.updateEvent(
+                        event.copy(
+                            status = EventStatus.COMPLETED,
+                            hasReminder = false,
+                        ),
                     )
-                )
-                _uiState.update { it.copy(showAddDialog = false) }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.message) }
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(error = e.message) }
+                }
             }
         }
-    }
 
-    fun deleteEvent(event: CalendarEvent) {
-        viewModelScope.launch {
-            try {
-                repository.deleteEvent(event)
-            } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.message) }
+        fun deleteEvent(event: CalendarEvent) {
+            viewModelScope.launch {
+                try {
+                    repository.deleteEvent(event)
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(error = e.message) }
+                }
             }
         }
+
+        private fun loadMonthEvents() {
+            val month = _uiState.value.currentMonth
+            val zone = ZoneId.systemDefault()
+            val start = month.atDay(1).atStartOfDay(zone).toInstant().toEpochMilli()
+            val end = month.atEndOfMonth().plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli() - 1
+
+            repository.getEventsBetween(start, end)
+                .onEach { events ->
+                    _uiState.update { it.copy(events = events, isLoading = false) }
+                    filterSelectedDayEvents()
+                }
+                .catch { e ->
+                    _uiState.update { it.copy(error = e.message, isLoading = false) }
+                }
+                .launchIn(viewModelScope)
+        }
+
+        private fun filterSelectedDayEvents() {
+            val state = _uiState.value
+            val zone = ZoneId.systemDefault()
+            val dayStart = state.selectedDate.atStartOfDay(zone).toInstant().toEpochMilli()
+            val dayEnd = state.selectedDate.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli() - 1
+
+            val dayEvents =
+                state.events
+                    .filter { it.date in dayStart..dayEnd }
+                    .sortedBy { it.date }
+            _uiState.update { it.copy(selectedDayEvents = dayEvents) }
+        }
     }
-
-    private fun loadMonthEvents() {
-        val month = _uiState.value.currentMonth
-        val zone = ZoneId.systemDefault()
-        val start = month.atDay(1).atStartOfDay(zone).toInstant().toEpochMilli()
-        val end = month.atEndOfMonth().plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli() - 1
-
-        repository.getEventsBetween(start, end)
-            .onEach { events ->
-                _uiState.update { it.copy(events = events, isLoading = false) }
-                filterSelectedDayEvents()
-            }
-            .catch { e ->
-                _uiState.update { it.copy(error = e.message, isLoading = false) }
-            }
-            .launchIn(viewModelScope)
-    }
-
-    private fun filterSelectedDayEvents() {
-        val state = _uiState.value
-        val zone = ZoneId.systemDefault()
-        val dayStart = state.selectedDate.atStartOfDay(zone).toInstant().toEpochMilli()
-        val dayEnd = state.selectedDate.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli() - 1
-
-        val dayEvents = state.events.filter { it.date in dayStart..dayEnd }
-        _uiState.update { it.copy(selectedDayEvents = dayEvents) }
-    }
-}

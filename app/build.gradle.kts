@@ -6,6 +6,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.ktlint)
 }
 
 // Read API keys from local.properties (gitignored)
@@ -14,6 +16,16 @@ val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
     localProperties.load(localPropertiesFile.inputStream())
 }
+
+val releaseStoreFilePath = localProperties.getProperty("RELEASE_STORE_FILE", "").trim()
+val releaseStorePassword = localProperties.getProperty("RELEASE_STORE_PASSWORD", "").trim()
+val releaseKeyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS", "").trim()
+val releaseKeyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD", "").trim()
+val hasConfiguredReleaseSigning =
+    releaseStoreFilePath.isNotBlank() &&
+        releaseStorePassword.isNotBlank() &&
+        releaseKeyAlias.isNotBlank() &&
+        releaseKeyPassword.isNotBlank()
 
 android {
     namespace = "com.personal.lifeOS"
@@ -35,16 +47,38 @@ android {
         // Inject API keys into BuildConfig
         buildConfigField("String", "SUPABASE_URL", "\"${localProperties.getProperty("SUPABASE_URL", "")}\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"${localProperties.getProperty("SUPABASE_ANON_KEY", "")}\"")
-        buildConfigField("String", "OPENAI_API_KEY", "\"${localProperties.getProperty("OPENAI_API_KEY", "")}\"")
+        buildConfigField(
+            "String",
+            "ASSISTANT_PROXY_URL",
+            "\"${localProperties.getProperty("ASSISTANT_PROXY_URL", "")}\"",
+        )
+        buildConfigField("String", "OTA_MANIFEST_URL", "\"${localProperties.getProperty("OTA_MANIFEST_URL", "")}\"")
+    }
+
+    signingConfigs {
+        create("release") {
+            if (hasConfiguredReleaseSigning) {
+                storeFile = file(releaseStoreFilePath)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            if (hasConfiguredReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -62,6 +96,28 @@ android {
         compose = true
         buildConfig = true
     }
+
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    allRules = false
+    ignoreFailures = false
+    config.setFrom(rootProject.file("detekt.yml"))
+    baseline = file("$projectDir/detekt-baseline.xml")
+}
+
+ktlint {
+    ignoreFailures.set(false)
+    android.set(true)
+    baseline.set(file("$projectDir/config/ktlint/baseline.xml"))
+}
+
+tasks.named("check") {
+    dependsOn("detekt", "ktlintCheck")
 }
 
 dependencies {
@@ -104,6 +160,7 @@ dependencies {
 
     // Security
     implementation(libs.biometric)
+    implementation(libs.androidx.security.crypto)
 
     // Permissions
     implementation(libs.accompanist.permissions)
@@ -111,8 +168,16 @@ dependencies {
     // Image Loading
     implementation(libs.coil.compose)
 
-    // Networking (Supabase + OpenAI)
+    // Networking (Supabase + assistant proxy)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
     implementation(libs.gson)
+    implementation(libs.androidx.work.runtime)
+
+    // Unit tests
+    testImplementation(libs.junit4)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.room.testing)
 }

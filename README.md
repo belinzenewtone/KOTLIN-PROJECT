@@ -48,6 +48,15 @@ Each feature follows **Clean Architecture**:
 | Navigation | Jetpack Navigation Compose |
 | Preferences | DataStore |
 
+## New Parity Modules
+
+- Planner route now includes `Budget`, `Income`, `Recurring`, `Search`, `Export`, and `Settings` tabs.
+- `Budget`, `Income`, and `Recurring` are Room-backed and included in cloud sync.
+- `Search` provides cross-module lookup across transactions, tasks, events, budgets, incomes, and recurring rules.
+- `Export` writes a JSON snapshot of all user data to the app documents folder.
+- `Settings` now controls app theme mode (`system/light/dark`) and notification toggle behavior.
+- Recurring rules are now executed by an hourly WorkManager job that generates due task/income/expense entries and advances `next_run_at`.
+
 ## Build Stages
 
 - [x] **Stage 1** — Project architecture, Gradle, Hilt, Room, Navigation, Theme, GlassCard
@@ -64,6 +73,48 @@ Each feature follows **Clean Architecture**:
 2. Open in Android Studio (Ladybug or newer)
 3. Sync Gradle
 4. Run on device/emulator (API 26+)
+
+## Runtime Configuration
+
+Set runtime values in `local.properties` (gitignored):
+
+```properties
+SUPABASE_URL=https://<project>.supabase.co
+SUPABASE_ANON_KEY=<anon-key>
+ASSISTANT_PROXY_URL=https://<project>.supabase.co/functions/v1/assistant-proxy
+```
+
+Assistant calls are proxy-based. Do not place model provider secret keys in the Android app.
+
+## Supabase Sync Requirements
+
+- Apply [`supabase_schema.sql`](supabase_schema.sql) (v3) so sync tables include `user_id` ownership and `events.importance`.
+- For existing Supabase projects that were created with `PRIMARY KEY (id)`, run [`supabase_migration_v4_composite_keys.sql`](supabase_migration_v4_composite_keys.sql) to move all sync tables to `PRIMARY KEY (user_id, id)`.
+- Run [`supabase_migration_v5_feature_parity.sql`](supabase_migration_v5_feature_parity.sql) to add `budgets`, `incomes`, and `recurring_rules` tables with RLS.
+- Run [`supabase_migration_v6_event_status.sql`](supabase_migration_v6_event_status.sql) to add event completion `status` support.
+- Android auth sessions are now stored in encrypted shared preferences (`AuthSessionStore`), with legacy plaintext token migration from DataStore.
+- Cloud sync uses user-scoped conflict keys (`user_id,id` and `user_id,merchant`) with retry/backoff for transient HTTP/network failures.
+- Event/task reminders are alarm-backed, and respect the profile `notifications_enabled` toggle at both scheduling and delivery time.
+- Turning notifications off now cancels all currently scheduled event/task alarms immediately for the active user.
+
+## Supabase Isolation Smoke Test
+
+Run two-user RLS + collision checks against Supabase:
+
+```powershell
+$env:SUPABASE_PRIMARY_EMAIL="<confirmed-user-email>"
+$env:SUPABASE_PRIMARY_PASSWORD="<confirmed-user-password>"
+./scripts/supabase_two_user_smoke_test.ps1
+```
+
+- If `SUPABASE_SECONDARY_EMAIL` / `SUPABASE_SECONDARY_PASSWORD` are provided, the script uses them.
+- Otherwise it attempts to create a temporary secondary user. If your project enforces email confirmation or hits email send limits, it falls back to a single-user RLS enforcement check.
+
+## Release Hardening
+
+- Checklist: [`RELEASE_HARDENING_CHECKLIST.md`](RELEASE_HARDENING_CHECKLIST.md)
+- Automation script:
+  - `.\scripts\release_hardening_check.ps1`
 
 ## MPESA SMS Permissions
 

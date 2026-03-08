@@ -9,7 +9,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.personal.lifeOS.ui.theme.Error
 import com.personal.lifeOS.ui.theme.Primary
 import com.personal.lifeOS.ui.theme.SurfaceElevated
 import com.personal.lifeOS.ui.theme.TextPrimary
@@ -17,7 +16,7 @@ import com.personal.lifeOS.ui.theme.TextPrimary
 @Composable
 fun StyledSnackbarHost(
     hostState: SnackbarHostState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     SnackbarHost(
         hostState = hostState,
@@ -29,8 +28,8 @@ fun StyledSnackbarHost(
                 contentColor = TextPrimary,
                 actionColor = Primary,
                 shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.padding(horizontal = 16.dp)
+                modifier = Modifier.padding(horizontal = 16.dp),
             )
-        }
+        },
     )
 }

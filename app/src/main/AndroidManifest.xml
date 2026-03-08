@@ -5,6 +5,9 @@
     <!-- SMS permissions for MPESA parsing -->
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
 
     <!-- Biometric -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
@@ -15,6 +18,7 @@
     <!-- Notifications for reminders -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:name=".LifeOSApplication"
@@ -45,5 +49,13 @@
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
             </intent-filter>
         </receiver>
+
+        <receiver
+            android:name=".core.notifications.EventReminderReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".core.notifications.TaskReminderReceiver"
+            android:exported="false" />
     </application>
 </manifest>

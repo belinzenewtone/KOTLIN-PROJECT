@@ -17,77 +17,80 @@ import javax.inject.Inject
 data class AssistantUiState(
     val messages: List<ChatMessage> = emptyList(),
     val inputText: String = "",
-    val isProcessing: Boolean = false
+    val isProcessing: Boolean = false,
 )
 
 @HiltViewModel
-class AssistantViewModel @Inject constructor(
-    private val repository: AssistantRepository
-) : ViewModel() {
+class AssistantViewModel
+    @Inject
+    constructor(
+        private val repository: AssistantRepository,
+    ) : ViewModel() {
+        private val _uiState = MutableStateFlow(AssistantUiState())
+        val uiState: StateFlow<AssistantUiState> = _uiState.asStateFlow()
 
-    private val _uiState = MutableStateFlow(AssistantUiState())
-    val uiState: StateFlow<AssistantUiState> = _uiState.asStateFlow()
-
-    init {
-        // Welcome message
-        _uiState.update {
-            it.copy(
-                messages = listOf(
-                    ChatMessage(
-                        content = "Hey! I'm your BELTECH assistant. Ask me about your spending, tasks, or schedule. 💡",
-                        sender = MessageSender.ASSISTANT
-                    )
+        init {
+            // Welcome message
+            _uiState.update {
+                it.copy(
+                    messages =
+                        listOf(
+                            ChatMessage(
+                                content = "Hey! I'm your BELTECH assistant. Ask me about your spending, tasks, or schedule. 💡",
+                                sender = MessageSender.ASSISTANT,
+                            ),
+                        ),
                 )
-            )
-        }
-    }
-
-    fun updateInput(text: String) {
-        _uiState.update { it.copy(inputText = text) }
-    }
-
-    fun sendMessage() {
-        val text = _uiState.value.inputText.trim()
-        if (text.isEmpty()) return
-
-        val userMessage = ChatMessage(content = text, sender = MessageSender.USER)
-
-        _uiState.update {
-            it.copy(
-                messages = it.messages + userMessage,
-                inputText = "",
-                isProcessing = true
-            )
+            }
         }
 
-        viewModelScope.launch {
-            try {
-                // Small delay for natural feel
-                delay(300)
-                val response = repository.processMessage(text)
-                _uiState.update {
-                    it.copy(
-                        messages = it.messages + response,
-                        isProcessing = false
-                    )
-                }
-            } catch (e: Exception) {
-                val errorMessage = ChatMessage(
-                    content = "Sorry, I ran into an error. Please try again.",
-                    sender = MessageSender.ASSISTANT
+        fun updateInput(text: String) {
+            _uiState.update { it.copy(inputText = text) }
+        }
+
+        fun sendMessage() {
+            val text = _uiState.value.inputText.trim()
+            if (text.isEmpty()) return
+
+            val userMessage = ChatMessage(content = text, sender = MessageSender.USER)
+
+            _uiState.update {
+                it.copy(
+                    messages = it.messages + userMessage,
+                    inputText = "",
+                    isProcessing = true,
                 )
-                _uiState.update {
-                    it.copy(
-                        messages = it.messages + errorMessage,
-                        isProcessing = false
-                    )
+            }
+
+            viewModelScope.launch {
+                try {
+                    // Small delay for natural feel
+                    delay(300)
+                    val response = repository.processMessage(text)
+                    _uiState.update {
+                        it.copy(
+                            messages = it.messages + response,
+                            isProcessing = false,
+                        )
+                    }
+                } catch (e: Exception) {
+                    val errorMessage =
+                        ChatMessage(
+                            content = "Sorry, I ran into an error. Please try again.",
+                            sender = MessageSender.ASSISTANT,
+                        )
+                    _uiState.update {
+                        it.copy(
+                            messages = it.messages + errorMessage,
+                            isProcessing = false,
+                        )
+                    }
                 }
             }
         }
-    }
 
-    fun sendSuggestedPrompt(prompt: String) {
-        _uiState.update { it.copy(inputText = prompt) }
-        sendMessage()
+        fun sendSuggestedPrompt(prompt: String) {
+            _uiState.update { it.copy(inputText = prompt) }
+            sendMessage()
+        }
     }
-}

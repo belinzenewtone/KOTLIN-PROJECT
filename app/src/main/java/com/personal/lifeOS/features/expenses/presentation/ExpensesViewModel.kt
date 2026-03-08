@@ -2,7 +2,6 @@ package com.personal.lifeOS.features.expenses.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.personal.lifeOS.features.expenses.domain.model.CategoryBreakdown
 import com.personal.lifeOS.features.expenses.domain.model.SpendingSummary
 import com.personal.lifeOS.features.expenses.domain.model.Transaction
 import com.personal.lifeOS.features.expenses.domain.model.TransactionFilter
@@ -32,187 +31,201 @@ data class ExpensesUiState(
     val showAddDialog: Boolean = false,
     val showImportDialog: Boolean = false,
     val importResult: String? = null,
-    val showCategoryPicker: Transaction? = null
+    val showCategoryPicker: Transaction? = null,
 )
 
 @HiltViewModel
-class ExpensesViewModel @Inject constructor(
-    private val getTransactions: GetTransactionsUseCase,
-    private val getSpendingSummary: GetSpendingSummaryUseCase,
-    private val addTransaction: AddTransactionUseCase,
-    private val deleteTransaction: DeleteTransactionUseCase,
-    private val updateMerchantCategory: UpdateMerchantCategoryUseCase
-) : ViewModel() {
+class ExpensesViewModel
+    @Inject
+    constructor(
+        private val getTransactions: GetTransactionsUseCase,
+        private val getSpendingSummary: GetSpendingSummaryUseCase,
+        private val addTransaction: AddTransactionUseCase,
+        private val deleteTransaction: DeleteTransactionUseCase,
+        private val updateMerchantCategory: UpdateMerchantCategoryUseCase,
+    ) : ViewModel() {
+        private val _uiState = MutableStateFlow(ExpensesUiState())
+        val uiState: StateFlow<ExpensesUiState> = _uiState.asStateFlow()
 
-    private val _uiState = MutableStateFlow(ExpensesUiState())
-    val uiState: StateFlow<ExpensesUiState> = _uiState.asStateFlow()
+        init {
+            loadTransactions()
+            loadSummary()
+        }
 
-    init {
-        loadTransactions()
-        loadSummary()
-    }
+        fun setFilter(filter: TransactionFilter) {
+            _uiState.update { it.copy(selectedFilter = filter, selectedCategory = null) }
+            loadTransactions()
+        }
 
-    fun setFilter(filter: TransactionFilter) {
-        _uiState.update { it.copy(selectedFilter = filter, selectedCategory = null) }
-        loadTransactions()
-    }
+        fun filterByCategory(category: String?) {
+            _uiState.update { it.copy(selectedCategory = category) }
+            loadTransactions()
+        }
 
-    fun filterByCategory(category: String?) {
-        _uiState.update { it.copy(selectedCategory = category) }
-        loadTransactions()
-    }
+        fun showAddDialog() {
+            _uiState.update { it.copy(showAddDialog = true) }
+        }
 
-    fun showAddDialog() {
-        _uiState.update { it.copy(showAddDialog = true) }
-    }
+        fun hideAddDialog() {
+            _uiState.update { it.copy(showAddDialog = false) }
+        }
 
-    fun hideAddDialog() {
-        _uiState.update { it.copy(showAddDialog = false) }
-    }
+        fun showCategoryPicker(transaction: Transaction) {
+            _uiState.update { it.copy(showCategoryPicker = transaction) }
+        }
 
-    fun showCategoryPicker(transaction: Transaction) {
-        _uiState.update { it.copy(showCategoryPicker = transaction) }
-    }
+        fun hideCategoryPicker() {
+            _uiState.update { it.copy(showCategoryPicker = null) }
+        }
 
-    fun hideCategoryPicker() {
-        _uiState.update { it.copy(showCategoryPicker = null) }
-    }
-
-    fun addManualTransaction(
-        amount: Double,
-        merchant: String,
-        category: String,
-        date: Long = System.currentTimeMillis()
-    ) {
-        viewModelScope.launch {
-            try {
-                addTransaction(
-                    Transaction(
-                        amount = amount,
-                        merchant = merchant,
-                        category = category,
-                        date = date,
-                        source = "Manual"
+        fun addManualTransaction(
+            amount: Double,
+            merchant: String,
+            category: String,
+            date: Long = System.currentTimeMillis(),
+        ) {
+            viewModelScope.launch {
+                try {
+                    addTransaction(
+                        Transaction(
+                            amount = amount,
+                            merchant = merchant,
+                            category = category,
+                            date = date,
+                            source = "Manual",
+                        ),
                     )
-                )
-                _uiState.update { it.copy(showAddDialog = false) }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(error = "Failed to add transaction: ${e.message}") }
+                    _uiState.update { it.copy(showAddDialog = false) }
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(error = "Failed to add transaction: ${e.message}") }
+                }
             }
         }
-    }
 
-    fun importSms(smsBody: String) {
-        viewModelScope.launch {
-            try {
-                addTransaction.fromSms(smsBody)
-            } catch (e: Exception) {
-                _uiState.update { it.copy(error = "Failed to import SMS: ${e.message}") }
+        fun importSms(smsBody: String) {
+            viewModelScope.launch {
+                try {
+                    addTransaction.fromSms(smsBody)
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(error = "Failed to import SMS: ${e.message}") }
+                }
             }
         }
-    }
 
-    fun delete(transaction: Transaction) {
-        viewModelScope.launch {
-            try {
-                deleteTransaction(transaction)
-            } catch (e: Exception) {
-                _uiState.update { it.copy(error = "Failed to delete: ${e.message}") }
+        fun delete(transaction: Transaction) {
+            viewModelScope.launch {
+                try {
+                    deleteTransaction(transaction)
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(error = "Failed to delete: ${e.message}") }
+                }
             }
         }
-    }
 
-    fun recategorize(transaction: Transaction, newCategory: String) {
-        viewModelScope.launch {
-            try {
-                // Update the merchant mapping so future transactions auto-categorize
-                updateMerchantCategory(transaction.merchant, newCategory)
-                // Update this specific transaction
-                addTransaction(transaction.copy(category = newCategory))
-                hideCategoryPicker()
-            } catch (e: Exception) {
-                _uiState.update { it.copy(error = "Failed to update category: ${e.message}") }
+        fun recategorize(
+            transaction: Transaction,
+            newCategory: String,
+        ) {
+            viewModelScope.launch {
+                try {
+                    // Update the merchant mapping so future transactions auto-categorize
+                    updateMerchantCategory(transaction.merchant, newCategory)
+                    // Update this specific transaction
+                    addTransaction(transaction.copy(category = newCategory))
+                    hideCategoryPicker()
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(error = "Failed to update category: ${e.message}") }
+                }
             }
         }
-    }
 
-    fun clearError() {
-        _uiState.update { it.copy(error = null) }
-    }
-
-    private fun loadTransactions() {
-        val state = _uiState.value
-        val flow = if (state.selectedCategory != null) {
-            getTransactions.byCategory(state.selectedCategory)
-        } else {
-            getTransactions(state.selectedFilter)
+        fun clearError() {
+            _uiState.update { it.copy(error = null) }
         }
 
-        flow
-            .onEach { txList ->
-                _uiState.update { it.copy(transactions = txList, isLoading = false) }
-            }
-            .catch { e ->
-                _uiState.update { it.copy(error = e.message, isLoading = false) }
-            }
-            .launchIn(viewModelScope)
-    }
+        private fun loadTransactions() {
+            val state = _uiState.value
+            val flow =
+                if (state.selectedCategory != null) {
+                    getTransactions.byCategory(state.selectedCategory)
+                } else {
+                    getTransactions(state.selectedFilter)
+                }
 
-    fun showImportDialog() {
-        _uiState.update { it.copy(showImportDialog = true) }
-    }
+            flow
+                .onEach { txList ->
+                    _uiState.update { it.copy(transactions = txList, isLoading = false) }
+                }
+                .catch { e ->
+                    _uiState.update { it.copy(error = e.message, isLoading = false) }
+                }
+                .launchIn(viewModelScope)
+        }
 
-    fun hideImportDialog() {
-        _uiState.update { it.copy(showImportDialog = false, importResult = null) }
-    }
+        fun showImportDialog() {
+            _uiState.update { it.copy(showImportDialog = true) }
+        }
 
-    fun importSmsMessages(contentResolver: android.content.ContentResolver, daysBack: Int) {
-        viewModelScope.launch {
-            try {
-                _uiState.update { it.copy(importResult = "Scanning SMS...") }
-                val cutoff = System.currentTimeMillis() - (daysBack.toLong() * 86400000L)
-                var imported = 0
+        fun hideImportDialog() {
+            _uiState.update { it.copy(showImportDialog = false, importResult = null) }
+        }
 
-                val cursor = contentResolver.query(
-                    android.net.Uri.parse("content://sms/inbox"),
-                    arrayOf("_id", "address", "body", "date"),
-                    "address LIKE ? AND date > ?",
-                    arrayOf("%MPESA%", cutoff.toString()),
-                    "date DESC"
-                )
+        fun importSmsMessages(
+            contentResolver: android.content.ContentResolver,
+            daysBack: Int,
+        ) {
+            viewModelScope.launch {
+                try {
+                    _uiState.update { it.copy(importResult = "Scanning SMS...") }
+                    val cutoff = System.currentTimeMillis() - (daysBack.toLong() * 86400000L)
+                    var imported = 0
 
-                cursor?.use {
-                    val bodyIdx = it.getColumnIndexOrThrow("body")
-                    while (it.moveToNext()) {
-                        val body = it.getString(bodyIdx) ?: continue
-                        try {
-                            val result = addTransaction.fromSms(body)
-                            if (result != null) imported++
-                        } catch (_: Exception) { }
+                    val cursor =
+                        contentResolver.query(
+                            android.net.Uri.parse("content://sms/inbox"),
+                            arrayOf("_id", "address", "body", "date"),
+                            "address LIKE ? AND date > ?",
+                            arrayOf("%MPESA%", cutoff.toString()),
+                            "date DESC",
+                        )
+
+                    cursor?.use {
+                        val bodyIdx = it.getColumnIndexOrThrow("body")
+                        while (it.moveToNext()) {
+                            val body = it.getString(bodyIdx) ?: continue
+                            try {
+                                val result = addTransaction.fromSms(body)
+                                if (result != null) imported++
+                            } catch (_: Exception) {
+                            }
+                        }
                     }
-                }
 
-                _uiState.update {
-                    it.copy(
-                        importResult = if (imported > 0) "Imported $imported transactions"
-                        else "No new MPESA messages found",
-                        showImportDialog = false
-                    )
+                    _uiState.update {
+                        it.copy(
+                            importResult =
+                                if (imported > 0) {
+                                    "Imported $imported transactions"
+                                } else {
+                                    "No new MPESA messages found"
+                                },
+                            showImportDialog = false,
+                        )
+                    }
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(importResult = "Import failed: ${e.message}") }
                 }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(importResult = "Import failed: ${e.message}") }
             }
         }
-    }
 
-    private fun loadSummary() {
-        getSpendingSummary()
-            .onEach { summary ->
-                _uiState.update { it.copy(summary = summary) }
-            }
-            .catch { e ->
-                _uiState.update { it.copy(error = e.message) }
-            }
-            .launchIn(viewModelScope)
+        private fun loadSummary() {
+            getSpendingSummary()
+                .onEach { summary ->
+                    _uiState.update { it.copy(summary = summary) }
+                }
+                .catch { e ->
+                    _uiState.update { it.copy(error = e.message) }
+                }
+                .launchIn(viewModelScope)
+        }
     }
-}

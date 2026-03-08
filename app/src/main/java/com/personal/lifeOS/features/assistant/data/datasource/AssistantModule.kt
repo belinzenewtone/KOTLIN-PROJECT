@@ -11,10 +11,7 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class AssistantModule {
-
     @Binds
     @Singleton
-    abstract fun bindAssistantRepository(
-        impl: AssistantRepositoryImpl
-    ): AssistantRepository
+    abstract fun bindAssistantRepository(impl: AssistantRepositoryImpl): AssistantRepository
 }

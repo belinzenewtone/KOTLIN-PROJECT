@@ -11,10 +11,7 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class AnalyticsModule {
-
     @Binds
     @Singleton
-    abstract fun bindAnalyticsRepository(
-        impl: AnalyticsRepositoryImpl
-    ): AnalyticsRepository
+    abstract fun bindAnalyticsRepository(impl: AnalyticsRepositoryImpl): AnalyticsRepository
 }

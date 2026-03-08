@@ -17,29 +17,30 @@ import javax.inject.Inject
 data class DashboardUiState(
     val data: DashboardData = DashboardData(),
     val isLoading: Boolean = true,
-    val error: String? = null
+    val error: String? = null,
 )
 
 @HiltViewModel
-class DashboardViewModel @Inject constructor(
-    private val repository: DashboardRepository
-) : ViewModel() {
+class DashboardViewModel
+    @Inject
+    constructor(
+        private val repository: DashboardRepository,
+    ) : ViewModel() {
+        private val _uiState = MutableStateFlow(DashboardUiState())
+        val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
-    private val _uiState = MutableStateFlow(DashboardUiState())
-    val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
+        init {
+            loadDashboard()
+        }
 
-    init {
-        loadDashboard()
+        private fun loadDashboard() {
+            repository.getDashboardData()
+                .onEach { data ->
+                    _uiState.update { it.copy(data = data, isLoading = false) }
+                }
+                .catch { e ->
+                    _uiState.update { it.copy(error = e.message, isLoading = false) }
+                }
+                .launchIn(viewModelScope)
+        }
     }
-
-    private fun loadDashboard() {
-        repository.getDashboardData()
-            .onEach { data ->
-                _uiState.update { it.copy(data = data, isLoading = false) }
-            }
-            .catch { e ->
-                _uiState.update { it.copy(error = e.message, isLoading = false) }
-            }
-            .launchIn(viewModelScope)
-    }
-}

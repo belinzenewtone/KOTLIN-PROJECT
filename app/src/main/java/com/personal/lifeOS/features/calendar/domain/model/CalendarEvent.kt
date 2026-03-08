@@ -8,9 +8,10 @@ data class CalendarEvent(
     val endDate: Long? = null,
     val type: EventType = EventType.PERSONAL,
     val importance: EventImportance = EventImportance.NEUTRAL,
+    val status: EventStatus = EventStatus.PENDING,
     val hasReminder: Boolean = false,
     val reminderMinutesBefore: Int = 15,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
 )
 
 enum class EventType(val label: String) {
@@ -18,11 +19,16 @@ enum class EventType(val label: String) {
     PERSONAL("Personal"),
     HEALTH("Health"),
     FINANCE("Finance"),
-    OTHER("Other")
+    OTHER("Other"),
 }
 
 enum class EventImportance(val label: String) {
     NEUTRAL("Neutral"),
     IMPORTANT("Important"),
-    URGENT("Urgent")
+    URGENT("Urgent"),
+}
+
+enum class EventStatus {
+    PENDING,
+    COMPLETED,
 }

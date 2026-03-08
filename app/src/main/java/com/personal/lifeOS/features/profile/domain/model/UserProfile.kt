@@ -8,5 +8,5 @@ data class UserProfile(
     val profilePicUri: String = "",
     val memberSince: Long = 0L, // epoch millis of first profile creation
     val isBiometricEnabled: Boolean = false,
-    val notificationsEnabled: Boolean = true
+    val notificationsEnabled: Boolean = true,
 )

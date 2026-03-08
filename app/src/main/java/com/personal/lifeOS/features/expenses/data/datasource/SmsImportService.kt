@@ -15,47 +15,51 @@ import javax.inject.Singleton
  * Used on first launch or manual sync to backfill transaction history.
  */
 @Singleton
-class SmsImportService @Inject constructor(
-    private val repository: ExpenseRepository
-) {
-    /**
-     * Scan SMS inbox and import all MPESA transactions.
-     * Skips duplicates automatically (by mpesa code).
-     *
-     * @return number of new transactions imported
-     */
-    suspend fun importFromInbox(contentResolver: ContentResolver): Int = withContext(Dispatchers.IO) {
-        var imported = 0
-        var cursor: Cursor? = null
+class SmsImportService
+    @Inject
+    constructor(
+        private val repository: ExpenseRepository,
+    ) {
+        /**
+         * Scan SMS inbox and import all MPESA transactions.
+         * Skips duplicates automatically (by mpesa code).
+         *
+         * @return number of new transactions imported
+         */
+        suspend fun importFromInbox(contentResolver: ContentResolver): Int =
+            withContext(Dispatchers.IO) {
+                var imported = 0
+                var cursor: Cursor? = null
 
-        try {
-            cursor = contentResolver.query(
-                Uri.parse("content://sms/inbox"),
-                arrayOf("_id", "address", "body", "date"),
-                "address LIKE ?",
-                arrayOf("%MPESA%"),
-                "date DESC"
-            )
+                try {
+                    cursor =
+                        contentResolver.query(
+                            Uri.parse("content://sms/inbox"),
+                            arrayOf("_id", "address", "body", "date"),
+                            "address LIKE ?",
+                            arrayOf("%MPESA%"),
+                            "date DESC",
+                        )
 
-            cursor?.let {
-                val bodyIndex = it.getColumnIndexOrThrow("body")
+                    cursor?.let {
+                        val bodyIndex = it.getColumnIndexOrThrow("body")
 
-                while (it.moveToNext()) {
-                    val body = it.getString(bodyIndex) ?: continue
+                        while (it.moveToNext()) {
+                            val body = it.getString(bodyIndex) ?: continue
 
-                    if (!MpesaSmsParser.isMpesaSms(body)) continue
+                            if (!MpesaSmsParser.isMpesaSms(body)) continue
 
-                    val result = repository.importFromSms(body)
-                    if (result != null) imported++
+                            val result = repository.importFromSms(body)
+                            if (result != null) imported++
+                        }
+                    }
+                } catch (e: Exception) {
+                    // Fault resistance: log but don't crash
+                    e.printStackTrace()
+                } finally {
+                    cursor?.close()
                 }
-            }
-        } catch (e: Exception) {
-            // Fault resistance: log but don't crash
-            e.printStackTrace()
-        } finally {
-            cursor?.close()
-        }
 
-        imported
+                imported
+            }
     }
-}

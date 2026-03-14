@@ -17,6 +17,9 @@ import 'package:beltech/features/search/presentation/providers/global_search_pro
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+part 'calendar_screen_events.dart';
+part 'calendar_screen_layout.dart';
+
 enum _CalendarView { month, week }
 
 class CalendarScreen extends ConsumerStatefulWidget {
@@ -86,308 +89,42 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       (i) => weekStart.add(Duration(days: i)),
     );
 
-    return PageShell(
-      scrollable: true,
-      glowColor: AppColors.glowBlue,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          PageHeader(
-            eyebrow: 'PLAN',
-            title: 'Calendar',
-            action: IconButton(
-              tooltip: 'Add event',
-              onPressed: writeState.isLoading
-                  ? null
-                  : () async {
-                      final input = await showAddEventDialog(
-                        context,
-                        selectedDay: selectedDay,
-                      );
-                      if (input == null) {
-                        return;
-                      }
-                      await ref
-                          .read(calendarWriteControllerProvider.notifier)
-                          .addEvent(
-                            title: input.title,
-                            startAt: input.startAt,
-                            priority: input.priority,
-                            type: input.type,
-                            endAt: input.endAt,
-                            note: input.note,
-                          );
-                      if (context.mounted &&
-                          !ref.read(calendarWriteControllerProvider).hasError) {
-                        AppFeedback.success(context, 'Event added', ref: ref);
-                      }
-                    },
-              icon: const Icon(Icons.add_rounded),
-            ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              SegmentedButton<_CalendarView>(
-                showSelectedIcon: false,
-                style: const ButtonStyle(
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  visualDensity: VisualDensity.compact,
-                ),
-                segments: const [
-                  ButtonSegment(
-                    value: _CalendarView.month,
-                    icon: Icon(Icons.calendar_month_outlined, size: 18),
-                    label: Text('Month'),
-                  ),
-                  ButtonSegment(
-                    value: _CalendarView.week,
-                    icon: Icon(Icons.view_week_outlined, size: 18),
-                    label: Text('Week'),
-                  ),
-                ],
-                selected: {_view},
-                onSelectionChanged: (v) => setState(() => _view = v.first),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onHorizontalDragStart: (_) => setState(() => _swiping = true),
-            onHorizontalDragEnd: (details) {
-              setState(() => _swiping = false);
-              final velocity = details.primaryVelocity ?? 0;
-              if (_view == _CalendarView.month) {
-                if (velocity < -120) _changeMonth(ref, 1);
-                if (velocity > 120) _changeMonth(ref, -1);
-              } else {
-                if (velocity < -120) _changeWeek(ref, 1);
-                if (velocity > 120) _changeWeek(ref, -1);
-              }
-            },
-            onHorizontalDragCancel: () => setState(() => _swiping = false),
-            child: GlassCard(
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        onPressed: () => _view == _CalendarView.month
-                            ? _changeMonth(ref, -1)
-                            : _changeWeek(ref, -1),
-                        icon: const Icon(Icons.chevron_left),
-                      ),
-                      Text(title, style: textTheme.titleMedium),
-                      IconButton(
-                        onPressed: () => _view == _CalendarView.month
-                            ? _changeMonth(ref, 1)
-                            : _changeWeek(ref, 1),
-                        icon: const Icon(Icons.chevron_right),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  if (_view == _CalendarView.month) ...[
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxWidth: _calendarContentMaxWidth,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: _weekDays
-                              .map(
-                                (day) => SizedBox(
-                                  width: 30,
-                                  child: Text(
-                                    day,
-                                    textAlign: TextAlign.center,
-                                    style: textTheme.bodyMedium,
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    CalendarMonthGrid(
-                      visibleMonth: visibleMonth,
-                      selectedDay: selectedDay,
-                      eventTypes: monthEventTypesState.valueOrNull ?? const {},
-                      maxWidth: _calendarContentMaxWidth,
-                      onSelect: (day) {
-                        ref.read(selectedDayProvider.notifier).state = day;
-                      },
-                    ),
-                  ] else ...[
-                    // Week view: 7 day cells in a row
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final daySize = ((constraints.maxWidth / 7) - 10)
-                            .clamp(24.0, 34.0)
-                            .toDouble();
-                        return Row(
-                          children: weekDays.map((day) {
-                            final isSelected = day.year == selectedDay.year &&
-                                day.month == selectedDay.month &&
-                                day.day == selectedDay.day;
-                            final isToday = day.year == DateTime.now().year &&
-                                day.month == DateTime.now().month &&
-                                day.day == DateTime.now().day;
-                            return Expanded(
-                              child: GestureDetector(
-                                onTap: () {
-                                  ref.read(selectedDayProvider.notifier).state =
-                                      day;
-                                },
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      _weekDays[day.weekday - 1],
-                                      style: textTheme.bodySmall,
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Center(
-                                      child: Container(
-                                        width: daySize,
-                                        height: daySize,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: isSelected
-                                              ? Theme.of(context)
-                                                  .colorScheme
-                                                  .primary
-                                              : isToday
-                                                  ? Theme.of(context)
-                                                      .colorScheme
-                                                      .primary
-                                                      .withValues(alpha: 0.22)
-                                                  : Colors.transparent,
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            '${day.day}',
-                                            style:
-                                                textTheme.bodyMedium?.copyWith(
-                                              fontWeight: isSelected || isToday
-                                                  ? FontWeight.w700
-                                                  : FontWeight.w400,
-                                              color: isSelected
-                                                  ? Colors.white
-                                                  : null,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            '${_weekdayName(selectedDay.weekday)}, ${_months[selectedDay.month - 1]} ${selectedDay.day.toString().padLeft(2, '0')}',
-            style: textTheme.titleMedium,
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
-            height: eventsPaneHeight,
-            child: AbsorbPointer(
-              absorbing: _swiping,
-              child: eventsState.when(
-                data: (events) {
-                  _consumeSearchTarget(context, ref, selectedDay, events);
-                  if (events.isEmpty) {
-                    return AppEmptyState(
-                      icon: Icons.event_outlined,
-                      title: 'No events',
-                      subtitle: 'Add an event to get started',
-                    );
-                  }
-                  return CalendarEventsCard(
-                    events: events,
-                    busy: writeState.isLoading,
-                    onComplete: (event) async {
-                      if (event.completed) {
-                        return;
-                      }
-                      await ref
-                          .read(calendarWriteControllerProvider.notifier)
-                          .setEventCompleted(
-                              eventId: event.id, completed: true);
-                      if (context.mounted &&
-                          !ref.read(calendarWriteControllerProvider).hasError) {
-                        AppFeedback.success(context, 'Event completed ✓',
-                            ref: ref);
-                      }
-                    },
-                    onEdit: (event) async {
-                      final input = await showEditEventDialog(
-                        context,
-                        selectedDay: selectedDay,
-                        event: event,
-                      );
-                      if (input == null) {
-                        return;
-                      }
-                      await ref
-                          .read(calendarWriteControllerProvider.notifier)
-                          .updateEvent(
-                            eventId: event.id,
-                            title: input.title,
-                            startAt: input.startAt,
-                            priority: input.priority,
-                            type: input.type,
-                            endAt: input.endAt,
-                            note: input.note,
-                          );
-                      if (context.mounted &&
-                          !ref.read(calendarWriteControllerProvider).hasError) {
-                        AppFeedback.success(context, 'Event updated', ref: ref);
-                      }
-                    },
-                    onDelete: (event) async {
-                      await ref
-                          .read(calendarWriteControllerProvider.notifier)
-                          .deleteEvent(event.id);
-                      if (context.mounted &&
-                          !ref.read(calendarWriteControllerProvider).hasError) {
-                        AppFeedback.success(context, 'Event deleted', ref: ref);
-                      }
-                    },
-                  );
-                },
-                loading: () => Column(
-                  children: List.generate(3, (_) => AppSkeleton.card(context))
-                      .expand((element) => [
-                            element,
-                            const SizedBox(height: AppSpacing.listGap),
-                          ])
-                      .toList(),
-                ),
-                error: (_, __) => ErrorMessage(
-                  label: 'Unable to load events',
-                  onRetry: () => ref.invalidate(dayEventsProvider),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+    return _CalendarLayout(
+      state: this,
+      textTheme: textTheme,
+      visibleMonth: visibleMonth,
+      selectedDay: selectedDay,
+      eventsState: eventsState,
+      monthEventTypesState: monthEventTypesState,
+      writeState: writeState,
+      eventsPaneHeight: eventsPaneHeight,
+      title: title,
+      weekDays: weekDays,
     );
+  }
+
+  void _setView(_CalendarView view) {
+    setState(() => _view = view);
+  }
+
+  void _beginSwipe() {
+    setState(() => _swiping = true);
+  }
+
+  void _cancelSwipe() {
+    setState(() => _swiping = false);
+  }
+
+  void _handleSwipeEnd(DragEndDetails details) {
+    setState(() => _swiping = false);
+    final velocity = details.primaryVelocity ?? 0;
+    if (_view == _CalendarView.month) {
+      if (velocity < -120) _changeMonth(ref, 1);
+      if (velocity > 120) _changeMonth(ref, -1);
+      return;
+    }
+    if (velocity < -120) _changeWeek(ref, 1);
+    if (velocity > 120) _changeWeek(ref, -1);
   }
 
   void _syncSearchTargetDay(WidgetRef ref, DateTime selectedDay) {

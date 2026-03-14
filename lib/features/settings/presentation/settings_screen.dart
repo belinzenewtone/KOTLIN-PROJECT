@@ -23,7 +23,6 @@ import 'package:beltech/features/settings/presentation/widgets/settings_security
 import 'package:beltech/features/settings/presentation/widgets/settings_tools_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 part 'settings_screen_data_mode.dart';
 

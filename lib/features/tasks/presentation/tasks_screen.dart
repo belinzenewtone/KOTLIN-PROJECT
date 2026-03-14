@@ -18,6 +18,8 @@ import 'package:beltech/features/tasks/presentation/widgets/task_selection_bar.d
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+part 'tasks_screen_layout.dart';
+
 class TasksScreen extends ConsumerStatefulWidget {
   const TasksScreen({super.key});
 
@@ -60,215 +62,36 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
         ? '${_selectedTaskIds.length} selected'
         : _buildCountSubtitle(allTasksState);
 
-    return PageShell(
-      scrollable: false,
-      glowColor: AppColors.glowViolet,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          PageHeader(
-            eyebrow: 'FOCUS',
-            title: 'Tasks',
-            subtitle: countSubtitle,
-            action: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (!_selectionMode)
-                  IconButton(
-                    tooltip: 'Search',
-                    onPressed: () {
-                      setState(() {
-                        _showSearch = !_showSearch;
-                      });
-                      if (!_showSearch) {
-                        _searchController.clear();
-                      }
-                    },
-                    icon: const Icon(Icons.search_rounded),
-                  ),
-                if (_selectionMode)
-                  IconButton(
-                    tooltip: allTasks.isEmpty
-                        ? 'Select all'
-                        : _selectedTaskIds.length == allTasks.length
-                            ? 'Clear selection'
-                            : 'Select all',
-                    onPressed: writeState.isLoading || allTasks.isEmpty
-                        ? null
-                        : () => _toggleSelectAll(allTasks),
-                    icon: Icon(
-                      _selectedTaskIds.length == allTasks.length
-                          ? Icons.deselect_rounded
-                          : Icons.select_all_rounded,
-                    ),
-                  ),
-                IconButton(
-                  tooltip: _selectionMode
-                      ? 'Exit multi-select'
-                      : 'Select multiple tasks',
-                  onPressed: writeState.isLoading
-                      ? null
-                      : () {
-                          setState(() {
-                            _selectionMode = !_selectionMode;
-                            if (!_selectionMode) {
-                              _selectedTaskIds.clear();
-                            }
-                          });
-                        },
-                  icon: Icon(_selectionMode
-                      ? Icons.close_rounded
-                      : Icons.checklist_rtl_rounded),
-                ),
-                IconButton(
-                  tooltip: 'Add task',
-                  onPressed: writeState.isLoading || _selectionMode
-                      ? null
-                      : () async {
-                          final input = await showAddTaskDialog(context);
-                          if (input == null) return;
-                          await ref
-                              .read(taskWriteControllerProvider.notifier)
-                              .addTask(
-                                title: input.title,
-                                description: input.description,
-                                dueDate: input.dueDate,
-                                priority: input.priority,
-                              );
-                          if (context.mounted &&
-                              !ref.read(taskWriteControllerProvider).hasError) {
-                            AppFeedback.success(context, 'Task added',
-                                ref: ref);
-                          }
-                        },
-                  icon: const Icon(Icons.add_rounded),
-                ),
-              ],
-            ),
-          ),
-          if (_showSearch) ...[
-            AppSearchBar(
-              controller: _searchController,
-              hint: 'Search tasks...',
-              onChanged: (_) => setState(() {}),
-            ),
-            const SizedBox(height: AppSpacing.sectionGap),
-          ],
-          if (_selectionMode) ...[
-            TaskSelectionBar(
-              selectedCount: _selectedTaskIds.length,
-              isLoading: writeState.isLoading,
-              onComplete: () => _completeSelected(context),
-              onArchive: () => _archiveSelected(context),
-              onDelete: () => _deleteSelected(context),
-            ),
-            const SizedBox(height: AppSpacing.sectionGap),
-          ],
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: TaskFilter.values
-                .map(
-                  (filter) => GestureDetector(
-                    onTap: () {
-                      ref.read(taskFilterProvider.notifier).state = filter;
-                    },
-                    child: AppCapsule(
-                      label: _filterLabel(filter),
-                      color: selectedFilter == filter
-                          ? AppColors.accent
-                          : AppColors.textMuted,
-                      variant: selectedFilter == filter
-                          ? AppCapsuleVariant.solid
-                          : AppCapsuleVariant.subtle,
-                      size: AppCapsuleSize.sm,
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-          const SizedBox(height: AppSpacing.sectionGap),
-          Expanded(
-            child: tasksState.when(
-              data: (tasks) {
-                if (tasks.isEmpty) {
-                  return AppEmptyState(
-                    icon: Icons.task_alt_rounded,
-                    title: 'No tasks here',
-                    subtitle: 'Tap + to add your first task',
-                  );
-                }
-                return ListView.separated(
-                  itemBuilder: (_, index) => TaskItemCard(
-                    task: tasks[index],
-                    selectionMode: _selectionMode,
-                    selected: _selectedTaskIds.contains(tasks[index].id),
-                    onSelectToggle: () => _toggleTaskSelection(tasks[index].id),
-                    busy: writeState.isLoading,
-                    onToggle: () async {
-                      if (_selectionMode) {
-                        _toggleTaskSelection(tasks[index].id);
-                        return;
-                      }
-                      final isCompleting = !tasks[index].completed;
-                      await ref
-                          .read(taskWriteControllerProvider.notifier)
-                          .toggleTask(
-                            taskId: tasks[index].id,
-                            completed: isCompleting,
-                          );
-                      if (context.mounted &&
-                          !ref.read(taskWriteControllerProvider).hasError) {
-                        AppFeedback.success(
-                          context,
-                          isCompleting
-                              ? 'Task completed ✓'
-                              : 'Task marked as pending',
-                          ref: ref,
-                        );
-                      }
-                    },
-                    onEdit: () async {
-                      await _editTask(context, tasks[index]);
-                    },
-                    onDelete: () async {
-                      if (_selectionMode) {
-                        _toggleTaskSelection(tasks[index].id);
-                        return;
-                      }
-                      await ref
-                          .read(taskWriteControllerProvider.notifier)
-                          .deleteTask(
-                            tasks[index].id,
-                          );
-                      if (context.mounted &&
-                          !ref.read(taskWriteControllerProvider).hasError) {
-                        AppFeedback.success(context, 'Task deleted', ref: ref);
-                      }
-                    },
-                  ),
-                  separatorBuilder: (_, __) =>
-                      const SizedBox(height: AppSpacing.listGap),
-                  itemCount: tasks.length,
-                );
-              },
-              loading: () => Column(
-                children: List.generate(5, (_) => const TaskCardSkeleton())
-                    .expand((element) => [
-                          element,
-                          const SizedBox(height: AppSpacing.listGap),
-                        ])
-                    .toList(),
-              ),
-              error: (_, __) => ErrorMessage(
-                label: 'Unable to load tasks',
-                onRetry: () => ref.invalidate(filteredTasksProvider),
-              ),
-            ),
-          ),
-        ],
-      ),
+    return _TasksLayout(
+      state: this,
+      tasksState: tasksState,
+      allTasks: allTasks,
+      selectedFilter: selectedFilter,
+      writeState: writeState,
+      countSubtitle: countSubtitle,
     );
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _showSearch = !_showSearch;
+    });
+    if (!_showSearch) {
+      _searchController.clear();
+    }
+  }
+
+  void _toggleSelectionMode() {
+    setState(() {
+      _selectionMode = !_selectionMode;
+      if (!_selectionMode) {
+        _selectedTaskIds.clear();
+      }
+    });
+  }
+
+  void _refreshSearchResults() {
+    setState(() {});
   }
 
   String _filterLabel(TaskFilter filter) {

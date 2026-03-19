@@ -1,0 +1,87 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:AuthViewModel.kt$AuthViewModel$state.signUpUsername.isBlank() || state.signUpEmail.isBlank() || state.signUpPassword.isBlank() || state.signUpConfirmPassword.isBlank()</ID>
+    <ID>CyclomaticComplexMethod:CloudSyncService.kt$CloudSyncService$suspend fun pullFromCloud(): SyncResult</ID>
+    <ID>CyclomaticComplexMethod:CloudSyncService.kt$CloudSyncService$suspend fun pushToCloud(): SyncResult</ID>
+    <ID>CyclomaticComplexMethod:DataContextBuilder.kt$DataContextBuilder$suspend fun buildContext(): String</ID>
+    <ID>CyclomaticComplexMethod:MerchantCategorizer.kt$MerchantCategorizer$fun categorize(merchantName: String): ExpenseCategory</ID>
+    <ID>ImplicitDefaultLocale:DataContextBuilder.kt$DataContextBuilder$String.format( "%,.0f", it.amount, )</ID>
+    <ID>ImplicitDefaultLocale:DataContextBuilder.kt$DataContextBuilder$String.format("%,.0f", it.total)</ID>
+    <ID>ImplicitDefaultLocale:DataContextBuilder.kt$DataContextBuilder$String.format("%,.0f", monthSpend)</ID>
+    <ID>ImplicitDefaultLocale:DataContextBuilder.kt$DataContextBuilder$String.format("%,.0f", todaySpend)</ID>
+    <ID>ImplicitDefaultLocale:DataContextBuilder.kt$DataContextBuilder$String.format("%,.0f", weekSpend)</ID>
+    <ID>ImplicitDefaultLocale:DateUtils.kt$DateUtils$String.format("%,.2f", amount)</ID>
+    <ID>LongMethod:AuthComponents.kt$@Composable internal fun SignUpCard( state: AuthUiState, viewModel: AuthViewModel, )</ID>
+    <ID>LongMethod:CalendarComponents.kt$@Composable internal fun AddEventDialog( onDismiss: () -&gt; Unit, onAdd: (String, String, EventType, EventImportance, Long?) -&gt; Unit, )</ID>
+    <ID>LongMethod:CloudSyncService.kt$CloudSyncService$suspend fun pullFromCloud(): SyncResult</ID>
+    <ID>LongMethod:CloudSyncService.kt$CloudSyncService$suspend fun pushToCloud(): SyncResult</ID>
+    <ID>LongMethod:DataContextBuilder.kt$DataContextBuilder$suspend fun buildContext(): String</ID>
+    <ID>LongMethod:DatabaseMigrations.kt$DatabaseMigrations.&lt;no name provided&gt;$override fun migrate(database: SupportSQLiteDatabase)</ID>
+    <ID>LongMethod:ExpensesScreen.kt$@Composable fun ExpensesScreen(viewModel: ExpensesViewModel = hiltViewModel())</ID>
+    <ID>LongMethod:LifeOSNavHost.kt$@Composable fun LifeOSNavHost()</ID>
+    <ID>LongMethod:ProfileScreen.kt$@Composable fun ProfileScreen( viewModel: ProfileViewModel = hiltViewModel(), authViewModel: AuthViewModel? = null, onSignOut: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongMethod:RecurringExecutionService.kt$RecurringExecutionService$suspend fun processDueRules(maxRules: Int = 50): RecurringExecutionResult</ID>
+    <ID>LongMethod:TasksComponents.kt$@Composable internal fun SwipeTaskItem( task: Task, onComplete: () -&gt; Unit, onDelete: () -&gt; Unit, onEdit: () -&gt; Unit, )</ID>
+    <ID>LongMethod:TasksComponents.kt$@Composable internal fun TaskDialog( state: TasksUiState, viewModel: TasksViewModel, )</ID>
+    <ID>LongParameterList:AuthComponents.kt$( value: String, onValueChange: (String) -&gt; Unit, label: String, leadingIcon: ImageVector, keyboardType: KeyboardType = KeyboardType.Text, isPassword: Boolean = false, showPassword: Boolean = false, onTogglePassword: (() -&gt; Unit)? = null, )</ID>
+    <ID>LongParameterList:CloudSyncService.kt$CloudSyncService$( private val database: LifeOSDatabase, private val transactionDao: TransactionDao, private val taskDao: TaskDao, private val eventDao: EventDao, private val merchantCategoryDao: MerchantCategoryDao, private val budgetDao: BudgetDao, private val incomeDao: IncomeDao, private val recurringRuleDao: RecurringRuleDao, private val authSessionStore: AuthSessionStore, )</ID>
+    <ID>LongParameterList:ExportRepositoryImpl.kt$ExportRepositoryImpl$( @ApplicationContext private val context: Context, private val authSessionStore: AuthSessionStore, private val transactionDao: TransactionDao, private val taskDao: TaskDao, private val eventDao: EventDao, private val merchantCategoryDao: MerchantCategoryDao, private val budgetDao: BudgetDao, private val incomeDao: IncomeDao, private val recurringRuleDao: RecurringRuleDao, )</ID>
+    <ID>LongParameterList:SearchRepositoryImpl.kt$SearchRepositoryImpl$( private val transactionDao: TransactionDao, private val taskDao: TaskDao, private val eventDao: EventDao, private val budgetDao: BudgetDao, private val incomeDao: IncomeDao, private val recurringRuleDao: RecurringRuleDao, private val authSessionStore: AuthSessionStore, )</ID>
+    <ID>LongParameterList:UserDataOwnershipService.kt$UserDataOwnershipService$( private val transactionDao: TransactionDao, private val taskDao: TaskDao, private val eventDao: EventDao, private val merchantCategoryDao: MerchantCategoryDao, private val budgetDao: BudgetDao, private val incomeDao: IncomeDao, private val recurringRuleDao: RecurringRuleDao, )</ID>
+    <ID>LoopWithTooManyJumpStatements:SmsImportService.kt$SmsImportService$while</ID>
+    <ID>MatchingDeclarationName:Spacing.kt$AppSpacing</ID>
+    <ID>MaxLineLength:AssistantViewModel.kt$AssistantViewModel$content = "Hey! I'm your BELTECH assistant. Ask me about your spending, tasks, or schedule. 💡"</ID>
+    <ID>MaxLineLength:EventReminderReceiver.kt$EventReminderReceiver$ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED</ID>
+    <ID>MaxLineLength:LocalAIEngine.kt$LocalAIEngine$"Hey! I'm your BELTECH assistant. I can help you with your expenses, tasks, and schedule. Try asking me something like \"How much did I spend today?\" or \"What tasks are pending?\""</ID>
+    <ID>MaxLineLength:LocalAIEngine.kt$LocalAIEngine$"I'm not sure how to answer that yet. Try asking about your spending, tasks, or upcoming events. Type \"help\" to see what I can do."</ID>
+    <ID>MaxLineLength:LocalAIEngine.kt$LocalAIEngine$events.joinToString("\n") { "• **${it.title}** — ${DateUtils.formatDate(it.date, "EEE, MMM dd 'at' h:mm a")}" }</ID>
+    <ID>MaxLineLength:LocalAIEngine.kt$LocalAIEngine$upcoming.joinToString("\n") { "• ${it.title} — ${DateUtils.formatDate(it.date, "MMM dd, h:mm a")}" }</ID>
+    <ID>MaxLineLength:MerchantCategoryDao.kt$MerchantCategoryDao$"UPDATE merchant_categories SET category = :category, userCorrected = 1, confidence = 1.0 WHERE merchant = :merchant AND user_id = :userId"</ID>
+    <ID>MaxLineLength:MpesaSmsParserTest.kt$MpesaSmsParserTest$"QH12345678 Confirmed. Ksh1,250.00 sent to JOHN DOE 0712345678 on 7/3/26 at 10:15 AM. New M-PESA balance is Ksh300.00."</ID>
+    <ID>MaxLineLength:SettingsViewModel.kt$SettingsViewModel$infoMessage = if (enabled) "Notifications enabled" else "Notifications disabled and reminders cleared"</ID>
+    <ID>MaxLineLength:SupabaseAuthClient.kt$SupabaseAuthClient$val username = (authResponse.user?.userMetadata as? Map&lt;*, *&gt;)?.get("username")?.toString() ?: ""</ID>
+    <ID>MaxLineLength:TaskDao.kt$TaskDao$"SELECT COUNT(*) FROM tasks WHERE user_id = :userId AND status = 'COMPLETED' AND completed_at BETWEEN :start AND :end"</ID>
+    <ID>MaxLineLength:TaskReminderReceiver.kt$TaskReminderReceiver$ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED</ID>
+    <ID>NestedBlockDepth:DataContextBuilder.kt$DataContextBuilder$suspend fun buildContext(): String</ID>
+    <ID>PrintStackTrace:AssistantRepositoryImpl.kt$AssistantRepositoryImpl$e</ID>
+    <ID>SwallowedException:AssistantViewModel.kt$AssistantViewModel$e: Exception</ID>
+    <ID>SwallowedException:DataContextBuilder.kt$DataContextBuilder$e: Exception</ID>
+    <ID>SwallowedException:MpesaSmsParser.kt$MpesaSmsParser$e: Exception</ID>
+    <ID>SwallowedException:ProfileViewModel.kt$ProfileViewModel$e: Exception</ID>
+    <ID>SwallowedException:SupabaseAuthClient.kt$SupabaseAuthClient$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:AssistantRepositoryImpl.kt$AssistantRepositoryImpl$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:AssistantViewModel.kt$AssistantViewModel$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CalendarViewModel.kt$CalendarViewModel$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CloudSyncService.kt$CloudSyncService$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:DataContextBuilder.kt$DataContextBuilder$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ExpensesViewModel.kt$ExpensesViewModel$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:MpesaSmsParser.kt$MpesaSmsParser$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:OpenAIClient.kt$OpenAIClient$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ProfileViewModel.kt$ProfileViewModel$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:Resource.kt$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SmsImportService.kt$SmsImportService$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SupabaseAuthClient.kt$SupabaseAuthClient$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SupabaseClient.kt$SupabaseClient$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:TasksViewModel.kt$TasksViewModel$e: Exception</ID>
+    <ID>TooManyFunctions:AuthViewModel.kt$AuthViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:EventDao.kt$EventDao</ID>
+    <ID>TooManyFunctions:ExpenseRepository.kt$ExpenseRepository</ID>
+    <ID>TooManyFunctions:ExpenseRepositoryImpl.kt$ExpenseRepositoryImpl : ExpenseRepository</ID>
+    <ID>TooManyFunctions:ExpensesComponents.kt$com.personal.lifeOS.features.expenses.presentation.ExpensesComponents.kt</ID>
+    <ID>TooManyFunctions:ExpensesViewModel.kt$ExpensesViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:ProfileComponents.kt$com.personal.lifeOS.features.profile.presentation.ProfileComponents.kt</ID>
+    <ID>TooManyFunctions:ProfileViewModel.kt$ProfileViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:RecurringRuleDao.kt$RecurringRuleDao</ID>
+    <ID>TooManyFunctions:TaskDao.kt$TaskDao</ID>
+    <ID>TooManyFunctions:TaskRepositoryImpl.kt$TaskRepositoryImpl : TaskRepository</ID>
+    <ID>TooManyFunctions:TasksViewModel.kt$TasksViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:TransactionDao.kt$TransactionDao</ID>
+    <ID>UnusedParameter:AnalyticsRepositoryImpl.kt$AnalyticsRepositoryImpl$monthStart: Long</ID>
+    <ID>UnusedParameter:LocalAIEngine.kt$LocalAIEngine$query: String</ID>
+    <ID>UnusedPrivateProperty:AnalyticsRepositoryImpl.kt$AnalyticsRepositoryImpl$val todayEnd = DateUtils.todayEndMillis()</ID>
+    <ID>UseCheckOrError:CloudSyncService.kt$CloudSyncService$throw IllegalStateException( "Supabase pull failed for $table (${result.code ?: 0}) ${result.body.take(200)}", )</ID>
+    <ID>UseCheckOrError:CloudSyncService.kt$CloudSyncService$throw IllegalStateException( "Supabase upsert failed for $table (${result.code ?: 0}) ${result.body.take(200)}", )</ID>
+  </CurrentIssues>
+</SmellBaseline>

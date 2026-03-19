@@ -1,25 +1,14 @@
-# Flutter/Dart
-.dart_tool/
-.packages
-.flutter-plugins
-.flutter-plugins-dependencies
-.fvm/
-build/
-coverage/
-
-# IDE
-.idea/
-.vscode/
 *.iml
-
-# Misc
-*.log
-*.tmp
-
-# Supabase CLI temp
-supabase/.temp/
-
-# Android signing secrets
-android/key.properties
-*.jks
-*.keystore
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+/app/build
+/app/release
+*.apk
+*.aab

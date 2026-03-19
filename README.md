@@ -1,104 +1,122 @@
-# DART-2.0 Personal Management App
+# BELTECH — Personal Management App
 
-A Flutter personal management application with a dark glassmorphism UI and feature-based clean architecture.
+A modern Android personal management application built with **Kotlin + Jetpack Compose**, featuring MPESA SMS transaction parsing, glass morphism UI, and Clean Architecture.
 
-## Product Direction
+## Architecture
 
-Core user experiences (based on provided UI references):
-
-- Home dashboard with daily and weekly summaries.
-- Calendar with monthly view and day events.
-- Expenses tracking with categories and transactions.
-- Tasks tracking with completion status.
-- AI assistant for spending/tasks/schedule questions.
-- Profile and account/security management.
-
-## Engineering Contracts
-
-- [`AGENTS.md`](./AGENTS.md): AI workflow and execution behavior.
-- [`CODING_RULES.md`](./CODING_RULES.md): strict architecture, quality, and coding constraints.
-- [`EXECUTION_PLAN.md`](./EXECUTION_PLAN.md): phased implementation roadmap.
-
-## Planned Stack
-
-- Flutter (Dart)
-- Riverpod (state management)
-- Supabase (primary database and sync)
-- Drift (local test fallback)
-- Flutter Secure Storage (secrets/credentials)
-
-## Supabase Runtime Configuration
-
-Pass Supabase values through `--dart-define` (not hardcoded in source):
-
-```bash
-flutter run \
-  --dart-define=SUPABASE_URL=https://sjapmklwyibqvatssctw.supabase.co \
-  --dart-define=SUPABASE_PUBLISHABLE_KEY=<your-key>
+```
+com.personal.lifeOS/
+├── core/
+│   ├── database/        # Room DB, entities, DAOs, migrations
+│   ├── di/              # Hilt dependency injection modules
+│   ├── utils/           # Resource wrapper, date utils
+│   ├── security/        # Biometric lock, encryption
+│   └── preferences/     # DataStore preferences
+├── navigation/          # Jetpack Navigation + bottom nav
+├── ui/
+│   ├── theme/           # Colors, typography, Material3 theme
+│   └── components/      # GlassCard, reusable composables
+└── features/
+    ├── dashboard/       # Home screen with life metrics
+    ├── calendar/        # Monthly/weekly calendar + events
+    ├── expenses/        # MPESA parser, transaction tracking
+    ├── tasks/           # Task manager with priorities
+    ├── assistant/       # AI chat interface
+    ├── analytics/       # Life analytics dashboard
+    └── profile/         # User settings
 ```
 
-Database SQL bootstrap: [`supabase/schema.sql`](./supabase/schema.sql)
+Each feature follows **Clean Architecture**:
+- `presentation/` — Screens, ViewModels
+- `domain/model/` — Data models
+- `domain/usecase/` — Business logic
+- `domain/repository/` — Repository interfaces
+- `data/repository/` — Repository implementations
+- `data/datasource/` — Local/remote data sources
 
-Optional assistant proxy override:
+## Tech Stack
 
-```bash
---dart-define=ASSISTANT_PROXY_URL=https://<project>.supabase.co/functions/v1/assistant-proxy
+| Layer | Technology |
+|-------|-----------|
+| Language | Kotlin |
+| UI | Jetpack Compose + Material3 |
+| Architecture | Clean Architecture + MVVM |
+| DI | Hilt |
+| Database | Room + SQLCipher (encrypted) |
+| Async | Coroutines + Flow |
+| Charts | Vico Charts |
+| Navigation | Jetpack Navigation Compose |
+| Preferences | DataStore |
+
+## New Parity Modules
+
+- Planner route now includes `Budget`, `Income`, `Recurring`, `Search`, `Export`, and `Settings` tabs.
+- `Budget`, `Income`, and `Recurring` are Room-backed and included in cloud sync.
+- `Search` provides cross-module lookup across transactions, tasks, events, budgets, incomes, and recurring rules.
+- `Export` writes a JSON snapshot of all user data to the app documents folder.
+- `Settings` now controls app theme mode (`system/light/dark`) and notification toggle behavior.
+- Recurring rules are now executed by an hourly WorkManager job that generates due task/income/expense entries and advances `next_run_at`.
+
+## Build Stages
+
+- [x] **Stage 1** — Project architecture, Gradle, Hilt, Room, Navigation, Theme, GlassCard
+- [x] **Stage 2** — Expense tracking module + MPESA SMS parser (full implementation)
+- [x] **Stage 3** — Dashboard with live data widgets
+- [x] **Stage 4** — Calendar & Task Manager
+- [x] **Stage 5** — AI Assistant (local rule-based intelligence, ChatGPT-style UI)
+- [x] **Stage 6** — Analytics dashboard with Vico charts
+- [ ] **Stage 7** — Security (biometric lock) + polish
+
+## Setup
+
+1. Clone the repo
+2. Open in Android Studio (Ladybug or newer)
+3. Sync Gradle
+4. Run on device/emulator (API 26+)
+
+## Runtime Configuration
+
+Set runtime values in `local.properties` (gitignored):
+
+```properties
+SUPABASE_URL=https://<project>.supabase.co
+SUPABASE_ANON_KEY=<anon-key>
+ASSISTANT_PROXY_URL=https://<project>.supabase.co/functions/v1/assistant-proxy
 ```
 
-Optional OTA update fallback via `--dart-define` (when no Supabase update row is set):
+Assistant calls are proxy-based. Do not place model provider secret keys in the Android app.
 
-```bash
---dart-define=APP_UPDATE_LATEST_VERSION=1.0.2 \
---dart-define=APP_UPDATE_MIN_VERSION=1.0.0 \
---dart-define=APP_UPDATE_FORCE=false \
---dart-define=APP_UPDATE_TITLE="Update BELTECH App" \
---dart-define=APP_UPDATE_MESSAGE="A newer update is available." \
---dart-define=APP_UPDATE_NOTES="Feature improvements||Bug fixes" \
---dart-define=APP_UPDATE_APK_URL=https://example.com/app-release.apk \
---dart-define=APP_UPDATE_WEBSITE_URL=https://example.com/download
+## Supabase Sync Requirements
+
+- Apply [`supabase_schema.sql`](supabase_schema.sql) (v3) so sync tables include `user_id` ownership and `events.importance`.
+- For existing Supabase projects that were created with `PRIMARY KEY (id)`, run [`supabase_migration_v4_composite_keys.sql`](supabase_migration_v4_composite_keys.sql) to move all sync tables to `PRIMARY KEY (user_id, id)`.
+- Run [`supabase_migration_v5_feature_parity.sql`](supabase_migration_v5_feature_parity.sql) to add `budgets`, `incomes`, and `recurring_rules` tables with RLS.
+- Run [`supabase_migration_v6_event_status.sql`](supabase_migration_v6_event_status.sql) to add event completion `status` support.
+- Run [`supabase_migration_v8_core_sync_bootstrap.sql`](supabase_migration_v8_core_sync_bootstrap.sql) to add canonical sync metadata, sync queue, import audit, assistant conversation/message storage, insight/review snapshots, and update diagnostics tables.
+- Android auth sessions are now stored in encrypted shared preferences (`AuthSessionStore`), with legacy plaintext token migration from DataStore.
+- Cloud sync uses user-scoped conflict keys (`user_id,id` and `user_id,merchant`) with retry/backoff for transient HTTP/network failures.
+- Event/task reminders are alarm-backed, and respect the profile `notifications_enabled` toggle at both scheduling and delivery time.
+- Turning notifications off now cancels all currently scheduled event/task alarms immediately for the active user.
+
+## Supabase Isolation Smoke Test
+
+Run two-user RLS + collision checks against Supabase:
+
+```powershell
+$env:SUPABASE_PRIMARY_EMAIL="<confirmed-user-email>"
+$env:SUPABASE_PRIMARY_PASSWORD="<confirmed-user-password>"
+./scripts/supabase_two_user_smoke_test.ps1
 ```
 
-## Target Project Structure
+- If `SUPABASE_SECONDARY_EMAIL` / `SUPABASE_SECONDARY_PASSWORD` are provided, the script uses them.
+- Otherwise it attempts to create a temporary secondary user. If your project enforces email confirmation or hits email send limits, it falls back to a single-user RLS enforcement check.
 
-```text
-lib/
-  core/
-    theme/
-    routing/
-    utils/
-  features/
-    home/
-      data/
-      domain/
-      presentation/
-    calendar/
-      data/
-      domain/
-      presentation/
-    expenses/
-      data/
-      domain/
-      presentation/
-    tasks/
-      data/
-      domain/
-      presentation/
-    assistant/
-      data/
-      domain/
-      presentation/
-    profile/
-      data/
-      domain/
-      presentation/
-test/
-```
+## Release Hardening
 
-## Notes
+- Checklist: [`RELEASE_HARDENING_CHECKLIST.md`](RELEASE_HARDENING_CHECKLIST.md)
+- Automation script:
+  - `.\scripts\release_hardening_check.ps1`
 
-- App now supports Supabase email auth and per-user cloud data sync.
-- SMS import supports Android inbox read (`READ_SMS`) and paste-based import.
-- MPESA auto-sync runs periodically while app is active/resumed and deduplicates by message hash.
-- AI assistant network calls use backend proxy endpoint (Supabase Edge Function), not direct client API keys.
-- App supports runtime update prompts with release notes, website fallback, and Android APK in-app install flow.
-- Keep secrets in `--dart-define`; do not commit keys in source.
+## MPESA SMS Permissions
+
+The app requires `READ_SMS` and `RECEIVE_SMS` permissions to auto-detect MPESA transactions. Grant these permissions when prompted.

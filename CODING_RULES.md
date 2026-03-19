@@ -1,151 +1,79 @@
 # CODING_RULES.md
 
-## Global Development Rules for Codex
+## Global Engineering Rules
 
-This document defines non-negotiable engineering rules for the Personal Management App.
-All AI agents and contributors must follow these rules when generating or editing code in this repository.
+This document defines mandatory rules for the Kotlin BELTECH project.
+All contributors and agents must follow these constraints.
 
-## Precedence and Behavior with AGENTS.md
+## KR-01: Architecture Boundaries
 
-- `AGENTS.md` defines agent workflow, execution process, and collaboration behavior.
-- `CODING_RULES.md` defines architecture, design, quality, and engineering constraints.
-- When both files apply, follow both.
-- If a conflict exists, the stricter engineering constraint wins unless the task explicitly includes a written exemption.
+- Required flow: `presentation -> domain -> data`.
+- `presentation` must not call Room/HTTP clients directly.
+- Business logic belongs in `domain`.
+- Data source and mapping logic belongs in `data`.
 
-## CR-01: Architecture Rules (Clean Architecture)
+## KR-02: Feature Modularity
 
-- Required layer layout:
-  - `lib/core/`
-  - `lib/features/`
-  - `lib/data/`
-  - `lib/domain/`
-  - `lib/presentation/`
-- Dependency direction must remain: `presentation -> domain -> data`.
-- UI code must not access database or persistence APIs directly.
-- Business logic must live in `domain`.
-- Data access implementations must live in `data`.
-
-## CR-02: Feature-Based Structure
-
-- Each feature must be isolated under `lib/features/<feature_name>/`.
-- Every feature must contain:
+- Each feature must include:
   - `data/`
   - `domain/`
   - `presentation/`
-- Cross-feature imports are allowed only through domain-level contracts or shared `core` abstractions.
+- Cross-feature dependencies must go through domain contracts or shared `core` abstractions.
 
-## CR-03: File Size Rules
+## KR-03: File Size and Composition
 
-- No `.dart` file may exceed 300 lines.
-- If a file exceeds 300 lines, split it by responsibility before merging.
-- Allowed split strategies:
-  - Extract widgets.
-  - Extract services/repositories.
-  - Extract mappers/use cases.
+- Target max file length is 300 lines.
+- Files over 300 lines must be split by responsibility.
+- Screens should orchestrate composables, not contain all UI internals.
 
-## CR-04: Widget Composition Rules
+## KR-04: UI and Theme
 
-- Prefer small, reusable widgets over large screen files.
-- A screen file must primarily orchestrate composition, not contain all UI detail logic.
-- Repeated UI blocks must be extracted into reusable widgets.
+- Shared styles/tokens live in `ui/theme` and `ui/components`.
+- Avoid one-off hardcoded colors in feature screens.
+- Reuse `GlassCard` and shared surface abstractions.
 
-## CR-05: State Management Rules
+## KR-05: State and Async Handling
 
-- Riverpod is required for state management.
-- Global mutable variables are forbidden for app state.
-- State must be managed through providers, `StateNotifier`, `Notifier`, or `AsyncNotifier`.
-- Async UI state must expose explicit loading, success, and error states.
-
-## CR-06: UI Design Rules (Glassmorphism)
-
-- The default visual style is dark glassmorphism.
-- Card-like surfaces must use a reusable `GlassCard` component.
-- Glass surfaces must use `BackdropFilter` (or a shared abstraction that wraps it).
-- Glass surfaces must include rounded corners and blur.
-- Transitions and major state changes must use smooth animations.
-
-## CR-07: Styling Rules
-
-- Hardcoded color/style constants in feature widgets are forbidden.
-- Shared theme and style tokens must be centralized under `core/theme/`.
-- Expected shared style files include:
-  - `app_colors.dart`
-  - `app_theme.dart`
-  - `glass_styles.dart`
-- Widgets must import shared theme tokens instead of defining local color systems.
-
-## CR-08: Database Rules
-
-- Drift is the required database layer.
-- Queries used by UI/business workflows must be reactive where applicable.
-- Schema versioning and migrations are mandatory for schema changes.
-- Table definitions must remain explicit and feature-aligned.
-
-## CR-09: Security Rules
-
-- Plain-text passwords must never be stored.
-- Passwords must be hashed before persistence.
-- Credentials and secrets must be stored using Flutter Secure Storage (or a stricter secure store).
-- Sensitive logs must be avoided or redacted.
-
-## CR-10: Error Handling Rules
-
-- All async flows must handle failures explicitly (`try/catch`, typed errors, or result wrappers).
+- ViewModels must expose explicit loading/success/error states.
 - Silent failure paths are forbidden.
-- Error handling must return actionable states/messages to caller layers.
+- Exceptions must map to actionable UI states.
 
-## CR-11: Testing Rules
+## KR-06: Security
 
-- Tests are required for:
-  - repositories
-  - use cases
-  - domain/business logic
-- Standard test tooling:
-  - `flutter_test`
-  - `mocktail`
-- New or changed business logic must include corresponding tests before merge.
+- Plain-text passwords are forbidden.
+- Sensitive credentials/tokens must use encrypted storage.
+- Client apps must not embed provider secrets.
+- AI calls must go through a backend proxy endpoint.
 
-## CR-12: Git and Commit Rules
+## KR-07: Data and Migrations
 
-- Commit messages must follow Conventional Commits.
-- Required format: `<type>: <short description>`.
-- Allowed types include `feat`, `fix`, `refactor`, `test`, `docs`, `chore`.
+- Destructive migration must not be default behavior for production paths.
+- Schema upgrades must use explicit Room migrations.
+- Sync models must include ownership fields compatible with Supabase RLS.
 
-## CR-13: Performance Rules
+## KR-08: Testing
 
-- App startup target: under 1.5 seconds on release-profile baseline devices.
-- Data handling must support 10,000+ transactions without functional degradation.
-- Avoid unnecessary rebuilds in widget trees.
-- Use `const` constructors/widgets where possible.
+- Required tests for repositories, use cases, parsers, and security logic.
+- New business logic must ship with tests.
+- Priority tests:
+  - SMS parsing and dedupe
+  - Auth/session handling
+  - Sync/merge logic
 
-## CR-14: AI Agent Behavior Rules
+## KR-09: Tooling and Quality Gates
 
-- Before coding, read `AGENTS.md` and `CODING_RULES.md`.
-- Modify only files relevant to the task.
-- Avoid unrelated refactors.
-- Preserve modular architecture boundaries.
-- For large changes, provide a plan and expected file impact before implementation.
+- `detekt` and `ktlint` are required and must run in CI.
+- No new warnings in touched files without explicit justification.
 
-## CR-15: Dependency Rules
+## KR-10: Dependency Governance
 
-- Avoid heavy dependencies when platform or existing project utilities are sufficient.
-- Before adding a package, verify:
-  - Flutter SDK does not already cover the need.
-  - Package is actively maintained.
-  - Package is widely used and reliable.
+- Add dependencies only when existing platform/project tools are insufficient.
+- Prefer maintained and widely adopted libraries.
 
-## CR-16: Documentation Rules
+## Compliance Checklist
 
-- Every new feature module must include a local `README.md`.
-- The feature README must document:
-  - feature purpose
-  - main classes/components
-  - dependencies and integration points
-
-## Compliance Checklist (Required Before Finalizing Changes)
-
-- Architecture boundaries are respected (`presentation -> domain -> data`).
-- No hardcoded styles were added in feature widgets.
-- Async operations include explicit error handling.
-- Tests were added or updated for business logic changes.
-- No `.dart` file exceeds 300 lines; modularity is preserved.
+- Architecture boundaries preserved.
+- No sensitive data stored in plaintext.
+- Async error handling present.
+- Test coverage added/updated for changed business logic.
+- New code follows module and style rules.

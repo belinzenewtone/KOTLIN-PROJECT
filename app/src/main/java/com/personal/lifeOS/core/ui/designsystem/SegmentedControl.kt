@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -26,11 +27,11 @@ fun SegmentedControl(
             modifier
                 .fillMaxWidth()
                 .background(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
+                    shape = RoundedCornerShape(AppDesignTokens.radius.md),
                 )
-                .padding(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                .padding(AppDesignTokens.spacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.xs),
     ) {
         items.forEachIndexed { index, label ->
             val selected = selectedIndex == index
@@ -41,14 +42,14 @@ fun SegmentedControl(
                         .background(
                             color =
                                 if (selected) {
-                                    MaterialTheme.colorScheme.surface
+                                    AppDesignTokens.colors.surfaceContainerLowest
                                 } else {
-                                    MaterialTheme.colorScheme.surfaceVariant
+                                    Color.Transparent
                                 },
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(AppDesignTokens.radius.md),
                         )
                         .clickable { onSelected(index) }
-                        .padding(vertical = 10.dp),
+                        .padding(vertical = 10.dp, horizontal = 8.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {

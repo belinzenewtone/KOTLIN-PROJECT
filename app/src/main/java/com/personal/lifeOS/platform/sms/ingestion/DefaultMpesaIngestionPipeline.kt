@@ -16,13 +16,16 @@ class DefaultMpesaIngestionPipeline
         private val expenseRepository: ExpenseRepository,
         private val importAuditLogger: ImportAuditLogger,
     ) : MpesaIngestionPipeline {
-        override suspend fun ingestRealtime(rawMessage: String): Boolean {
+        override suspend fun ingestRealtime(
+            rawMessage: String,
+            source: MpesaIngestionSource,
+        ): MpesaIngestionOutcome {
             if (!parser.isMpesaMessage(rawMessage)) {
                 importAuditLogger.log(
                     outcome = "ignored_irrelevant",
                     rawMessage = rawMessage,
                 )
-                return false
+                return MpesaIngestionOutcome.IGNORED_IRRELEVANT
             }
 
             val parsed = parser.parse(rawMessage)
@@ -32,7 +35,7 @@ class DefaultMpesaIngestionPipeline
                     rawMessage = rawMessage,
                     failureReason = "Parser returned null",
                 )
-                return false
+                return MpesaIngestionOutcome.PARSE_FAILED
             }
 
             if (
@@ -50,7 +53,7 @@ class DefaultMpesaIngestionPipeline
                     amount = parsed.amount,
                     merchant = parsed.merchant,
                 )
-                return false
+                return MpesaIngestionOutcome.DUPLICATE
             }
 
             val created = expenseRepository.importFromSms(rawMessage)
@@ -63,16 +66,21 @@ class DefaultMpesaIngestionPipeline
                     merchant = parsed.merchant,
                     failureReason = "Repository import returned null",
                 )
-                return false
+                return MpesaIngestionOutcome.CANDIDATE_PENDING
             }
 
             importAuditLogger.log(
-                outcome = "imported",
+                outcome =
+                    if (source == MpesaIngestionSource.BACKFILL) {
+                        "recovered_from_backfill"
+                    } else {
+                        "imported"
+                    },
                 rawMessage = rawMessage,
                 mpesaCode = parsed.mpesaCode,
                 amount = parsed.amount,
                 merchant = parsed.merchant,
             )
-            return true
+            return MpesaIngestionOutcome.IMPORTED
         }
     }

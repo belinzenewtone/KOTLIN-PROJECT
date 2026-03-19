@@ -37,6 +37,7 @@ object MpesaSmsParser {
     private val AMOUNT_REGEX = Regex("Ksh([\\d,]+\\.?\\d*)")
     private val DATE_REGEX = Regex("on (\\d{1,2}/\\d{1,2}/\\d{2,4})")
     private val TIME_REGEX = Regex("at (\\d{1,2}:\\d{2} [AP]M)")
+    private val SUPPORTED_DATE_PATTERNS = listOf("d/M/yy h:mm a", "d/M/yyyy h:mm a")
 
     /**
      * Check if an SMS is an MPESA message.
@@ -133,10 +134,19 @@ object MpesaSmsParser {
             val dateMatch = DATE_REGEX.find(sms)?.groupValues?.get(1) ?: return System.currentTimeMillis()
             val timeMatch = TIME_REGEX.find(sms)?.groupValues?.get(1) ?: "12:00 PM"
             val dateTimeStr = "$dateMatch $timeMatch"
-            val format = SimpleDateFormat("d/M/yy h:mm a", Locale.ENGLISH)
-            format.parse(dateTimeStr)?.time ?: System.currentTimeMillis()
+            parseSupportedDateTime(dateTimeStr) ?: System.currentTimeMillis()
         } catch (e: Exception) {
             System.currentTimeMillis()
+        }
+    }
+
+    private fun parseSupportedDateTime(dateTimeStr: String): Long? {
+        return SUPPORTED_DATE_PATTERNS.firstNotNullOfOrNull { pattern ->
+            runCatching {
+                SimpleDateFormat(pattern, Locale.ENGLISH).apply { isLenient = false }
+                    .parse(dateTimeStr)
+                    ?.time
+            }.getOrNull()
         }
     }
 }

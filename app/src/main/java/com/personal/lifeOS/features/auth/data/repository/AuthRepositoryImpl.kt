@@ -41,4 +41,8 @@ class AuthRepositoryImpl
         override suspend fun resendVerification(email: String): Boolean {
             return authClient.resendVerification(email)
         }
+
+        override suspend fun sendPasswordReset(email: String): Boolean {
+            return authClient.sendPasswordReset(email)
+        }
     }

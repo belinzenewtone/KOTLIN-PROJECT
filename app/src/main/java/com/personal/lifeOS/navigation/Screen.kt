@@ -1,56 +1,83 @@
 package com.personal.lifeOS.navigation
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.TaskAlt
-import androidx.compose.material.icons.outlined.Analytics
 import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.Dashboard
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Receipt
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.outlined.SmartToy
 import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.ui.graphics.vector.ImageVector
 
-sealed class Screen(val route: String) {
-    data object Dashboard : Screen("dashboard")
+object AppRoute {
+    const val Auth = "auth"
+    const val Onboarding = "onboarding"
+    const val Home = "home"
+    const val Tasks = "tasks"
+    const val Finance = "finance"
+    const val Calendar = "calendar"
+    const val Assistant = "assistant"
 
-    data object Calendar : Screen("calendar")
+    const val Profile = "profile"
+    const val Settings = "settings"
+    const val Export = "export"
+    const val Analytics = "analytics"
+    const val Search = "search"
+    const val Planner = "planner"
+    const val Review = "review"
 
-    data object Expenses : Screen("expenses")
-
-    data object Tasks : Screen("tasks")
-
-    data object Planner : Screen("planner")
-
-    data object Assistant : Screen("assistant")
-
-    data object Analytics : Screen("analytics")
-
-    data object Export : Screen("export")
-
-    data object Profile : Screen("profile")
+    // Compatibility aliases preserved during navigation migration.
+    const val LegacyDashboard = "dashboard"
+    const val LegacyExpenses = "expenses"
 }
 
-data class BottomNavItem(
-    val screen: Screen,
+data class AppPrimaryTab(
+    val route: String,
     val label: String,
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector,
+    val routeAliases: Set<String> = emptySet(),
 )
 
-val bottomNavItems =
+val primaryTabs =
     listOf(
-        BottomNavItem(Screen.Dashboard, "Home", Icons.Filled.Dashboard, Icons.Outlined.Dashboard),
-        BottomNavItem(Screen.Calendar, "Calendar", Icons.Filled.CalendarMonth, Icons.Outlined.CalendarMonth),
-        BottomNavItem(Screen.Expenses, "Expenses", Icons.Filled.Receipt, Icons.Outlined.Receipt),
-        BottomNavItem(Screen.Tasks, "Tasks", Icons.Filled.TaskAlt, Icons.Outlined.TaskAlt),
-        BottomNavItem(Screen.Planner, "Plan", Icons.Filled.Analytics, Icons.Outlined.Analytics),
-        BottomNavItem(Screen.Assistant, "AI", Icons.Filled.SmartToy, Icons.Outlined.SmartToy),
-        BottomNavItem(Screen.Profile, "Profile", Icons.Filled.Person, Icons.Outlined.Person),
+        AppPrimaryTab(
+            route = AppRoute.Home,
+            label = "Home",
+            selectedIcon = Icons.Filled.Home,
+            unselectedIcon = Icons.Outlined.Home,
+            routeAliases = setOf(AppRoute.Home, AppRoute.LegacyDashboard),
+        ),
+        AppPrimaryTab(
+            route = AppRoute.Tasks,
+            label = "Tasks",
+            selectedIcon = Icons.Filled.TaskAlt,
+            unselectedIcon = Icons.Outlined.TaskAlt,
+            routeAliases = setOf(AppRoute.Tasks),
+        ),
+        AppPrimaryTab(
+            route = AppRoute.Finance,
+            label = "Finance",
+            selectedIcon = Icons.Filled.Payments,
+            unselectedIcon = Icons.Outlined.Payments,
+            routeAliases = setOf(AppRoute.Finance, AppRoute.LegacyExpenses),
+        ),
+        AppPrimaryTab(
+            route = AppRoute.Calendar,
+            label = "Calendar",
+            selectedIcon = Icons.Filled.CalendarMonth,
+            unselectedIcon = Icons.Outlined.CalendarMonth,
+            routeAliases = setOf(AppRoute.Calendar),
+        ),
+        AppPrimaryTab(
+            route = AppRoute.Assistant,
+            label = "AI",
+            selectedIcon = Icons.Filled.SmartToy,
+            unselectedIcon = Icons.Outlined.SmartToy,
+            routeAliases = setOf(AppRoute.Assistant),
+        ),
     )

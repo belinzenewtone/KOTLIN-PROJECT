@@ -3,21 +3,15 @@ package com.personal.lifeOS.features.profile.presentation
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -27,11 +21,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.personal.lifeOS.core.ui.designsystem.PageScaffold
+import com.personal.lifeOS.features.auth.presentation.AuthUiEvent
 import com.personal.lifeOS.features.auth.presentation.AuthViewModel
 import com.personal.lifeOS.ui.components.StyledSnackbarHost
 import com.personal.lifeOS.ui.theme.AppSpacing
-import com.personal.lifeOS.ui.theme.BackgroundDark
-import com.personal.lifeOS.ui.theme.TextSecondary
 
 @Composable
 fun ProfileScreen(
@@ -43,7 +37,6 @@ fun ProfileScreen(
     val authState = authViewModel?.uiState?.collectAsState()?.value
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Image picker launcher
     val imagePickerLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.GetContent(),
@@ -58,112 +51,66 @@ fun ProfileScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(BackgroundDark).statusBarsPadding()) {
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .navigationBarsPadding()
-                    .padding(horizontal = AppSpacing.ScreenHorizontal)
-                    .padding(top = AppSpacing.ScreenTop, bottom = AppSpacing.BottomSafeWithFab),
-            horizontalAlignment = Alignment.CenterHorizontally,
+    Box(modifier = Modifier.fillMaxSize()) {
+        PageScaffold(
+            title = "Profile",
+            subtitle = "Personal details, security, and sync controls.",
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = AppSpacing.BottomSafeWithFab),
         ) {
-            // Header
-            Text(
-                "Profile",
-                style = MaterialTheme.typography.headlineLarge,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Spacer(Modifier.height(24.dp))
-
-            ProfileAvatar(
-                profilePicPath = state.profile.profilePicUri,
-                avatarInitials = state.profile.avatarInitials,
-                onChangePhoto = { imagePickerLauncher.launch("image/*") },
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            Text(
-                state.profile.name.ifEmpty { "Set up your profile" },
-                style = MaterialTheme.typography.headlineMedium,
-            )
-            if (state.profile.email.isNotEmpty()) {
-                Text(
-                    state.profile.email,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary,
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                ProfileIdentityCard(
+                    profile = state.profile,
+                    onChangePhoto = { imagePickerLauncher.launch("image/*") },
                 )
-            }
+                EmailVerificationCard(
+                    authState = authState,
+                    onResendVerification = { authViewModel?.onEvent(AuthUiEvent.ResendVerification) },
+                )
 
-            Spacer(Modifier.height(16.dp))
+                if (state.isEditing) {
+                    ProfileEditorCard(state = state, viewModel = viewModel)
+                } else {
+                    ProfileDetailsCard(state = state, onEdit = viewModel::startEditing)
+                }
 
-            // Member Since Banner
-            MemberSinceBanner(memberSince = state.profile.memberSince)
+                ProfileSecurityCard(
+                    biometricEnabled = state.profile.isBiometricEnabled,
+                    onChangePassword = viewModel::showPasswordDialog,
+                    onToggleBiometric = viewModel::toggleBiometric,
+                )
 
-            // Email Verification Banner
-            EmailVerificationCard(
-                authState = authState,
-                onResendVerification = { authViewModel?.resendVerification() },
-            )
+                ProfilePreferencesCard(
+                    notificationsEnabled = state.profile.notificationsEnabled,
+                    onToggleNotifications = viewModel::toggleNotifications,
+                )
 
-            Spacer(Modifier.height(16.dp))
+                ProfileCloudSyncCard(
+                    onBackup = viewModel::syncToCloud,
+                    onRestore = viewModel::syncFromCloud,
+                )
 
-            // Edit / View Profile
-            if (state.isEditing) {
-                EditProfileCard(state, viewModel)
-            } else {
-                ProfileInfoCard(state, viewModel)
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            SecurityCard(
-                biometricEnabled = state.profile.isBiometricEnabled,
-                onChangePassword = { viewModel.showPasswordDialog() },
-                onToggleBiometric = { viewModel.toggleBiometric(it) },
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            PreferencesCard(
-                notificationsEnabled = state.profile.notificationsEnabled,
-                onToggleNotifications = { viewModel.toggleNotifications(it) },
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            CloudSyncCard(
-                onBackup = { viewModel.syncToCloud() },
-                onRestore = { viewModel.syncFromCloud() },
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            AppInfoCard()
-
-            // Sign Out
-            if (onSignOut != null) {
-                Spacer(Modifier.height(16.dp))
-                SignOutButton(onClick = onSignOut)
+                ProfileAppInfoCard()
+                if (onSignOut != null) {
+                    SignOutButton(onClick = onSignOut)
+                }
+                Spacer(modifier = Modifier.height(4.dp))
             }
         }
 
-        // Snackbar
         StyledSnackbarHost(
             hostState = snackbarHostState,
             modifier =
                 Modifier
                     .align(Alignment.BottomCenter)
                     .navigationBarsPadding()
-                    .padding(bottom = AppSpacing.BottomSafe),
+                    .padding(horizontal = AppSpacing.ScreenHorizontal),
         )
     }
 
-    // Dialogs
     if (state.showPasswordDialog) {
-        ChangePasswordDialog(state, viewModel)
+        ChangePasswordDialog(
+            state = state,
+            viewModel = viewModel,
+        )
     }
 }

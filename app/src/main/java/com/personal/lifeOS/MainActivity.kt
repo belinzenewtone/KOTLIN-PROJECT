@@ -1,18 +1,18 @@
+@file:Suppress("MaxLineLength")
+
 package com.personal.lifeOS
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.personal.lifeOS.bootstrap.AppBootstrapViewModel
@@ -20,12 +20,11 @@ import com.personal.lifeOS.core.preferences.AppSettingsStore
 import com.personal.lifeOS.core.preferences.ThemePreferences
 import com.personal.lifeOS.navigation.LifeOSNavHost
 import com.personal.lifeOS.ui.theme.AppThemeMode
-import com.personal.lifeOS.ui.theme.BackgroundDark
 import com.personal.lifeOS.ui.theme.LifeOSTheme
-import com.personal.lifeOS.ui.theme.Primary
-import com.personal.lifeOS.ui.theme.TextSecondary
+import com.personal.lifeOS.ui.splash.PersonalOsSplashScreen
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import kotlinx.coroutines.delay
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -44,32 +43,29 @@ class MainActivity : ComponentActivity() {
             val bootstrapViewModel: AppBootstrapViewModel = hiltViewModel()
             val bootstrapState by bootstrapViewModel.uiState.collectAsState()
             val biometricEnabled by appSettingsStore.biometricEnabledFlow().collectAsState(initial = false)
+            val minSplashElapsed by
+                produceState(initialValue = false) {
+                    delay(1200)
+                    value = true
+                }
 
             LifeOSTheme(themeMode = themeMode) {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    if (bootstrapState.isLoading || bootstrapState.result == null) {
-                        Box(
-                            modifier =
-                                Modifier
-                                    .fillMaxSize()
-                                    .background(BackgroundDark),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator(color = Primary)
-                                Text(
-                                    text = "Starting Personal OS...",
-                                    color = TextSecondary,
-                                    modifier = Modifier.align(Alignment.BottomCenter),
-                                )
-                            }
+                    val shouldShowSplash = !minSplashElapsed || bootstrapState.isLoading || bootstrapState.result == null
+                    Crossfade(
+                        targetState = shouldShowSplash,
+                        animationSpec = tween(durationMillis = 420),
+                        label = "bootstrapCrossfade",
+                    ) { loading ->
+                        if (loading) {
+                            PersonalOsSplashScreen()
+                        } else {
+                            LifeOSNavHost(
+                                biometricEnabled = biometricEnabled && bootstrapState.result!!.requiresBiometricRelock,
+                                startDestination = bootstrapState.result!!.startDestination.route,
+                                shouldCheckForUpdates = bootstrapState.result!!.shouldCheckForUpdates,
+                            )
                         }
-                    } else {
-                        LifeOSNavHost(
-                            biometricEnabled = biometricEnabled && bootstrapState.result!!.requiresBiometricRelock,
-                            startDestination = bootstrapState.result!!.startDestination.route,
-                            shouldCheckForUpdates = bootstrapState.result!!.shouldCheckForUpdates,
-                        )
                     }
                 }
             }

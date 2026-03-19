@@ -2,18 +2,18 @@ package com.personal.lifeOS.features.budget.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.budget.domain.model.Budget
 import com.personal.lifeOS.features.budget.domain.model.BudgetPeriod
 import com.personal.lifeOS.features.budget.domain.model.BudgetProgress
-import com.personal.lifeOS.features.budget.domain.repository.BudgetRepository
-import com.personal.lifeOS.features.expenses.domain.repository.ExpenseRepository
+import com.personal.lifeOS.features.budget.domain.usecase.AddBudgetUseCase
+import com.personal.lifeOS.features.budget.domain.usecase.DeleteBudgetUseCase
+import com.personal.lifeOS.features.budget.domain.usecase.ObserveBudgetProgressUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -33,8 +33,9 @@ data class BudgetUiState(
 class BudgetViewModel
     @Inject
     constructor(
-        private val budgetRepository: BudgetRepository,
-        private val expenseRepository: ExpenseRepository,
+        private val observeBudgetProgressUseCase: ObserveBudgetProgressUseCase,
+        private val addBudgetUseCase: AddBudgetUseCase,
+        private val deleteBudgetUseCase: DeleteBudgetUseCase,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(BudgetUiState())
         val uiState: StateFlow<BudgetUiState> = _uiState.asStateFlow()
@@ -86,48 +87,51 @@ class BudgetViewModel
             }
 
             viewModelScope.launch {
-                budgetRepository.addBudget(
-                    Budget(
-                        category = category,
-                        limitAmount = limit,
-                        period = state.periodInput,
-                    ),
-                )
-                hideDialog()
+                runCatching {
+                    addBudgetUseCase(
+                        Budget(
+                            category = category,
+                            limitAmount = limit,
+                            period = state.periodInput,
+                        ),
+                    )
+                }.onSuccess {
+                    hideDialog()
+                }.onFailure { throwable ->
+                    _uiState.update {
+                        it.copy(error = throwable.message ?: "Failed to save budget")
+                    }
+                }
             }
         }
 
         fun deleteBudget(id: Long) {
             viewModelScope.launch {
-                budgetRepository.deleteBudget(id)
+                runCatching {
+                    deleteBudgetUseCase(id)
+                }.onFailure { throwable ->
+                    _uiState.update {
+                        it.copy(error = throwable.message ?: "Failed to delete budget")
+                    }
+                }
             }
         }
 
         private fun loadData() {
-            val monthStart = DateUtils.monthStartMillis()
-            val monthEnd = DateUtils.monthEndMillis()
-
-            combine(
-                budgetRepository.getBudgets(),
-                expenseRepository.getTransactionsBetween(monthStart, monthEnd),
-            ) { budgets, transactions ->
-                val spentByCategory =
-                    transactions
-                        .groupBy { it.category.trim().uppercase() }
-                        .mapValues { (_, list) -> list.sumOf { tx -> tx.amount } }
-
-                budgets.map { budget ->
-                    BudgetProgress(
-                        budget = budget,
-                        spentAmount = spentByCategory[budget.category.trim().uppercase()] ?: 0.0,
-                    )
-                }
-            }
+            observeBudgetProgressUseCase()
                 .onEach { progress ->
                     _uiState.update {
                         it.copy(
                             budgets = progress,
                             isLoading = false,
+                        )
+                    }
+                }
+                .catch { throwable ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = throwable.message ?: "Failed to load budgets",
                         )
                     }
                 }

@@ -1,9 +1,9 @@
+import org.gradle.api.GradleException
 import org.gradle.internal.os.OperatingSystem
 import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
@@ -27,6 +27,15 @@ val hasConfiguredReleaseSigning =
         releaseStorePassword.isNotBlank() &&
         releaseKeyAlias.isNotBlank() &&
         releaseKeyPassword.isNotBlank()
+val hasConfiguredRuntimeEnv =
+    localProperties.getProperty("SUPABASE_URL", "").isNotBlank() &&
+        localProperties.getProperty("SUPABASE_ANON_KEY", "").isNotBlank() &&
+        localProperties.getProperty("ASSISTANT_PROXY_URL", "").isNotBlank() &&
+        localProperties.getProperty("OTA_MANIFEST_URL", "").isNotBlank()
+val requireReleaseSigning =
+    providers.gradleProperty("requireReleaseSigning").orNull?.toBooleanStrictOrNull() ?: false
+val requireReleaseRuntimeConfig =
+    providers.gradleProperty("requireReleaseRuntimeConfig").orNull?.toBooleanStrictOrNull() ?: false
 
 android {
     namespace = "com.personal.lifeOS"
@@ -89,10 +98,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
     buildFeatures {
         compose = true
         buildConfig = true
@@ -119,6 +124,53 @@ ktlint {
 
 tasks.named("check") {
     dependsOn("detekt", "ktlintCheck", "architectureBoundaryCheck", "secretScan")
+}
+
+tasks.register("verifyReleaseSigningConfig") {
+    group = "verification"
+    description = "Fails when release signing credentials are missing or invalid."
+    doLast {
+        if (!hasConfiguredReleaseSigning) {
+            throw GradleException(
+                "Release signing is not configured. " +
+                    "Add RELEASE_STORE_FILE, RELEASE_STORE_PASSWORD, RELEASE_KEY_ALIAS, " +
+                    "RELEASE_KEY_PASSWORD to local.properties.",
+            )
+        }
+        if (!file(releaseStoreFilePath).exists()) {
+            throw GradleException("Release keystore file not found at: $releaseStoreFilePath")
+        }
+    }
+}
+
+tasks.register("verifyReleaseRuntimeConfig") {
+    group = "verification"
+    description = "Fails when runtime backend/OTA config is missing for release."
+    doLast {
+        if (!hasConfiguredRuntimeEnv) {
+            throw GradleException(
+                "Release runtime config is missing. " +
+                    "Add SUPABASE_URL, SUPABASE_ANON_KEY, ASSISTANT_PROXY_URL, " +
+                    "OTA_MANIFEST_URL to local.properties.",
+            )
+        }
+    }
+}
+
+if (requireReleaseSigning) {
+    tasks
+        .matching { it.name in listOf("assembleRelease", "bundleRelease", "buildReleasePreBundle") }
+        .configureEach {
+            dependsOn("verifyReleaseSigningConfig")
+        }
+}
+
+if (requireReleaseRuntimeConfig) {
+    tasks
+        .matching { it.name in listOf("assembleRelease", "bundleRelease", "buildReleasePreBundle") }
+        .configureEach {
+            dependsOn("verifyReleaseRuntimeConfig")
+        }
 }
 
 tasks.register<Exec>("architectureBoundaryCheck") {

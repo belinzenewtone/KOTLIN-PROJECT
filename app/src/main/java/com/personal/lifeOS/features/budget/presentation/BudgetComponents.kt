@@ -5,13 +5,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -22,48 +19,22 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.personal.lifeOS.core.ui.designsystem.AppCard
+import com.personal.lifeOS.core.ui.designsystem.BudgetProgressIndicator
+import com.personal.lifeOS.core.ui.designsystem.EmptyState
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.budget.domain.model.BudgetPeriod
 import com.personal.lifeOS.features.budget.domain.model.BudgetProgress
-import com.personal.lifeOS.ui.components.GlassCard
 import com.personal.lifeOS.ui.theme.Error
 import com.personal.lifeOS.ui.theme.TextSecondary
 
 @Composable
-internal fun BudgetHeader(onAdd: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = "Budgets",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.semantics { heading() },
-        )
-        FloatingActionButton(
-            onClick = onAdd,
-            modifier = Modifier.size(48.dp),
-        ) {
-            Icon(Icons.Filled.Add, contentDescription = "Add budget")
-        }
-    }
-}
-
-@Composable
 internal fun BudgetEmptyStateCard() {
-    GlassCard(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = "No budgets yet. Add one to track category limits against monthly spending.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = TextSecondary,
-        )
-    }
+    EmptyState(
+        title = "No budgets yet",
+        description = "Add one to track category limits against monthly spending.",
+    )
 }
 
 @Composable
@@ -71,7 +42,10 @@ internal fun BudgetCard(
     progress: BudgetProgress,
     onDelete: () -> Unit,
 ) {
-    GlassCard(modifier = Modifier.fillMaxWidth()) {
+    AppCard(
+        modifier = Modifier.fillMaxWidth(),
+        elevated = true,
+    ) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -90,6 +64,11 @@ internal fun BudgetCard(
                     Icon(Icons.Filled.Delete, contentDescription = "Delete budget")
                 }
             }
+
+            BudgetProgressIndicator(
+                spentAmount = progress.spentAmount,
+                budgetAmount = progress.budget.limitAmount,
+            )
 
             Text(
                 text = "Spent ${DateUtils.formatCurrency(

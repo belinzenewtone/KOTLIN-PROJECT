@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -18,16 +16,9 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.SmartToy
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -36,17 +27,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.personal.lifeOS.features.assistant.domain.model.AssistantActionProposal
 import com.personal.lifeOS.features.assistant.domain.model.ChatMessage
 import com.personal.lifeOS.features.assistant.domain.model.MessageSender
 import com.personal.lifeOS.features.assistant.domain.model.suggestedPrompts
 import com.personal.lifeOS.ui.theme.Accent
 import com.personal.lifeOS.ui.theme.AppSpacing
 import com.personal.lifeOS.ui.theme.BackgroundDark
-import com.personal.lifeOS.ui.theme.GlassBorder
 import com.personal.lifeOS.ui.theme.GlassWhite
 import com.personal.lifeOS.ui.theme.Primary
-import com.personal.lifeOS.ui.theme.SurfaceDark
 import com.personal.lifeOS.ui.theme.TextPrimary
 import com.personal.lifeOS.ui.theme.TextSecondary
 import com.personal.lifeOS.ui.theme.TextTertiary
@@ -55,10 +43,7 @@ import com.personal.lifeOS.ui.theme.Warning
 @Composable
 internal fun AssistantHeader(isProcessing: Boolean) {
     Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = AppSpacing.ScreenHorizontal, vertical = AppSpacing.ScreenHorizontal),
+        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -127,10 +112,7 @@ internal fun ChatBubble(message: ChatMessage) {
                             bottomStart = if (isUser) 20.dp else 4.dp,
                             bottomEnd = if (isUser) 4.dp else 20.dp,
                         ),
-                    )
-                    .background(
-                        if (isUser) Primary.copy(alpha = 0.85f) else GlassWhite,
-                    )
+                    ).background(if (isUser) Primary.copy(alpha = 0.85f) else GlassWhite)
                     .padding(horizontal = 16.dp, vertical = 12.dp),
         ) {
             Text(
@@ -224,128 +206,6 @@ private fun SuggestedPromptsGrid(onSelect: (String) -> Unit) {
                 if (row.size == 1) {
                     Spacer(Modifier.weight(1f))
                 }
-            }
-        }
-    }
-}
-
-@Composable
-internal fun AssistantActionProposalCard(
-    proposal: AssistantActionProposal,
-    isProcessing: Boolean,
-    onApprove: () -> Unit,
-    onReject: () -> Unit,
-) {
-    Column(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(GlassWhite)
-                .padding(14.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Text(
-            text = proposal.preview.title,
-            style = MaterialTheme.typography.titleMedium,
-            color = TextPrimary,
-            fontWeight = FontWeight.SemiBold,
-        )
-        Text(
-            text = proposal.preview.summary,
-            style = MaterialTheme.typography.bodyMedium,
-            color = TextSecondary,
-        )
-        Text(
-            text = "Risk: ${proposal.preview.riskLabel}",
-            style = MaterialTheme.typography.labelSmall,
-            color = Warning,
-        )
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(
-                onClick = onApprove,
-                enabled = !isProcessing,
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(if (isProcessing) "Applying..." else "Confirm")
-            }
-
-            OutlinedButton(
-                onClick = onReject,
-                enabled = !isProcessing,
-                modifier = Modifier.weight(1f),
-            ) {
-                Text("Cancel")
-            }
-        }
-    }
-}
-
-@Composable
-internal fun InputBar(
-    text: String,
-    onTextChange: (String) -> Unit,
-    onSend: () -> Unit,
-    isProcessing: Boolean,
-) {
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .background(SurfaceDark)
-                .padding(horizontal = AppSpacing.ScreenHorizontal, vertical = AppSpacing.Section)
-                .padding(bottom = AppSpacing.BottomSafe)
-                .navigationBarsPadding()
-                .imePadding(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        OutlinedTextField(
-            value = text,
-            onValueChange = onTextChange,
-            modifier = Modifier.weight(1f),
-            placeholder = { Text("Message BELTECH...", color = TextTertiary) },
-            shape = RoundedCornerShape(24.dp),
-            colors =
-                OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Primary,
-                    unfocusedBorderColor = GlassBorder,
-                    focusedContainerColor = GlassWhite,
-                    unfocusedContainerColor = GlassWhite,
-                    cursorColor = Primary,
-                ),
-            singleLine = false,
-            maxLines = 4,
-        )
-
-        IconButton(
-            onClick = onSend,
-            enabled = text.isNotBlank() && !isProcessing,
-            modifier =
-                Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (text.isNotBlank() && !isProcessing) {
-                            Primary
-                        } else {
-                            Primary.copy(alpha = 0.3f)
-                        },
-                    ),
-        ) {
-            if (isProcessing) {
-                CircularProgressIndicator(
-                    color = TextPrimary,
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp,
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Send,
-                    contentDescription = "Send",
-                    tint = TextPrimary,
-                )
             }
         }
     }

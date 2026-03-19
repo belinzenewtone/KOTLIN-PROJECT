@@ -1,51 +1,59 @@
 package com.personal.lifeOS.features.income.presentation
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.personal.lifeOS.ui.theme.AppSpacing
-import com.personal.lifeOS.ui.theme.BackgroundDark
+import com.personal.lifeOS.core.ui.designsystem.InlineBanner
+import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
+import com.personal.lifeOS.core.ui.designsystem.LoadingState
+import com.personal.lifeOS.core.ui.designsystem.PageScaffold
 
 @Composable
 fun IncomeScreen(viewModel: IncomeViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
 
-    Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .background(BackgroundDark)
-                .padding(horizontal = AppSpacing.ScreenHorizontal)
-                .padding(top = AppSpacing.ScreenTop, bottom = AppSpacing.Section),
-        verticalArrangement = Arrangement.spacedBy(AppSpacing.Section),
+    PageScaffold(
+        title = "Income",
+        subtitle = "${state.records.size} entries tracked",
+        actions = {
+            TextButton(onClick = viewModel::showAddDialog) {
+                Text("Add")
+            }
+        },
     ) {
-        IncomeHeader(
-            monthTotal = state.monthTotal,
-            onAdd = viewModel::showAddDialog,
-        )
+        state.error?.let {
+            InlineBanner(
+                message = it,
+                tone = InlineBannerTone.ERROR,
+            )
+        }
+
+        if (state.isLoading) {
+            LoadingState(label = "Loading income...")
+            return@PageScaffold
+        }
+
+        IncomeSummaryCard(monthTotal = state.monthTotal)
 
         if (state.records.isEmpty()) {
             IncomeEmptyStateCard()
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(AppSpacing.Section),
-            ) {
-                items(state.records, key = { it.id }) { item ->
-                    IncomeCard(
-                        item = item,
-                        onDelete = { viewModel.deleteIncome(item.id) },
-                    )
-                }
+            return@PageScaffold
+        }
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            state.records.forEach { item ->
+                IncomeCard(
+                    item = item,
+                    onDelete = { viewModel.deleteIncome(item.id) },
+                )
             }
         }
     }

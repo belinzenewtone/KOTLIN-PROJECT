@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
@@ -19,20 +18,29 @@ import androidx.compose.ui.unit.dp
 fun AppCard(
     modifier: Modifier = Modifier,
     glass: Boolean = false,
+    elevated: Boolean = false,
     contentPadding: PaddingValues = PaddingValues(20.dp),
     content: @Composable () -> Unit,
 ) {
-    val shape = RoundedCornerShape(24.dp)
+    val shape = RoundedCornerShape(AppDesignTokens.radius.lg)
     val baseColor =
-        if (glass) MaterialTheme.colorScheme.surface.copy(alpha = 0.78f) else MaterialTheme.colorScheme.surface
+        when {
+            glass -> MaterialTheme.colorScheme.surface.copy(alpha = 0.72f)
+            elevated -> AppDesignTokens.colors.surfaceContainerLowest
+            else -> MaterialTheme.colorScheme.surface
+        }
     Box(
         modifier =
             modifier
                 .fillMaxWidth()
-                .then(if (glass) Modifier.blur(0.dp) else Modifier)
                 .background(baseColor, shape)
                 .border(
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = if (glass) 0.35f else 0.15f)),
+                    // Ghost border to preserve soft edges without hard separators.
+                    border =
+                        BorderStroke(
+                            1.dp,
+                            Color.White.copy(alpha = if (glass) 0.30f else 0.14f),
+                        ),
                     shape = shape,
                 )
                 .padding(contentPadding),

@@ -82,6 +82,7 @@ Set runtime values in `local.properties` (gitignored):
 SUPABASE_URL=https://<project>.supabase.co
 SUPABASE_ANON_KEY=<anon-key>
 ASSISTANT_PROXY_URL=https://<project>.supabase.co/functions/v1/assistant-proxy
+OTA_MANIFEST_URL=https://<project>.supabase.co/functions/v1/ota-manifest
 ```
 
 Assistant calls are proxy-based. Do not place model provider secret keys in the Android app.
@@ -93,10 +94,24 @@ Assistant calls are proxy-based. Do not place model provider secret keys in the 
 - Run [`supabase_migration_v5_feature_parity.sql`](supabase_migration_v5_feature_parity.sql) to add `budgets`, `incomes`, and `recurring_rules` tables with RLS.
 - Run [`supabase_migration_v6_event_status.sql`](supabase_migration_v6_event_status.sql) to add event completion `status` support.
 - Run [`supabase_migration_v8_core_sync_bootstrap.sql`](supabase_migration_v8_core_sync_bootstrap.sql) to add canonical sync metadata, sync queue, import audit, assistant conversation/message storage, insight/review snapshots, and update diagnostics tables.
+- Run [`supabase_migration_v9_grant_hardening.sql`](supabase_migration_v9_grant_hardening.sql) to remove broad `anon` table grants and keep authenticated CRUD only (RLS still enforces user-scoped access).
 - Android auth sessions are now stored in encrypted shared preferences (`AuthSessionStore`), with legacy plaintext token migration from DataStore.
 - Cloud sync uses user-scoped conflict keys (`user_id,id` and `user_id,merchant`) with retry/backoff for transient HTTP/network failures.
 - Event/task reminders are alarm-backed, and respect the profile `notifications_enabled` toggle at both scheduling and delivery time.
 - Turning notifications off now cancels all currently scheduled event/task alarms immediately for the active user.
+
+## Supabase Edge Functions
+
+Deploy required backend endpoints:
+
+```powershell
+supabase functions deploy assistant-proxy --no-verify-jwt --use-api
+supabase functions deploy ota-manifest --no-verify-jwt --use-api
+```
+
+- `assistant-proxy` accepts `POST { prompt, context }` and returns `{ reply }`.
+- `ota-manifest` returns manifest JSON using snake_case fields expected by `OtaUpdateManager`.
+- `assistant-proxy` provider order: OpenAI (`OPENAI_API_KEY`) -> Gemini (`GEMINI_API_KEY`) -> deterministic local fallback.
 
 ## Supabase Isolation Smoke Test
 

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,9 +24,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.ui.components.StyledSnackbarHost
-import com.personal.lifeOS.ui.theme.AppSpacing
-import com.personal.lifeOS.ui.theme.BackgroundDark
 
 @Composable
 fun AuthScreen(
@@ -42,14 +42,14 @@ fun AuthScreen(
     LaunchedEffect(state.error) {
         state.error?.let {
             snackbarHostState.showSnackbar(it)
-            viewModel.clearError()
+            viewModel.onEvent(AuthUiEvent.ClearError)
         }
     }
 
     LaunchedEffect(state.successMessage) {
         state.successMessage?.let {
             snackbarHostState.showSnackbar(it)
-            viewModel.clearSuccess()
+            viewModel.onEvent(AuthUiEvent.ClearSuccess)
         }
     }
 
@@ -62,7 +62,7 @@ fun AuthScreen(
         modifier =
             Modifier
                 .fillMaxSize()
-                .background(BackgroundDark),
+                .background(MaterialTheme.colorScheme.background),
     ) {
         Column(
             modifier =
@@ -71,12 +71,13 @@ fun AuthScreen(
                     .verticalScroll(rememberScrollState())
                     .statusBarsPadding()
                     .navigationBarsPadding()
-                    .padding(horizontal = AppSpacing.ScreenHorizontal)
-                    .padding(top = AppSpacing.Section, bottom = AppSpacing.Section),
+                    .padding(horizontal = AppDesignTokens.spacing.lg)
+                    .padding(top = AppDesignTokens.spacing.lg, bottom = AppDesignTokens.spacing.lg),
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(AppDesignTokens.spacing.md),
         ) {
-            AuthBrandingHeader()
-            Spacer(Modifier.height(40.dp))
+            AuthBrandingHeader(isSignUpMode = state.isSignUpMode)
+            Spacer(Modifier.height(4.dp))
 
             AnimatedVisibility(
                 visible = !state.isSignUpMode,
@@ -101,7 +102,7 @@ fun AuthScreen(
                 Modifier
                     .align(Alignment.BottomCenter)
                     .navigationBarsPadding()
-                    .padding(AppSpacing.ScreenHorizontal),
+                    .padding(horizontal = 24.dp),
         )
     }
 }

@@ -4,10 +4,12 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.personal.lifeOS.core.database.UserDataOwnershipService
+import com.personal.lifeOS.core.preferences.AppSettingsStore
 import com.personal.lifeOS.core.security.AuthSessionStore
 import com.personal.lifeOS.features.auth.data.AuthResult
 import com.personal.lifeOS.features.auth.domain.repository.AuthRepository
@@ -16,6 +18,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -42,8 +46,12 @@ data class AuthUiState(
     val userEmail: String = "",
     val emailVerified: Boolean = false,
     val accountCreatedAt: String = "",
+    val onboardingCompleted: Boolean = false,
+    val onboardingStep: Int = 1,
+    val onboardingPrimaryGoal: String = "",
 )
 
+@Suppress("TooManyFunctions")
 @HiltViewModel
 class AuthViewModel
     @Inject
@@ -52,6 +60,7 @@ class AuthViewModel
         private val dataStore: DataStore<Preferences>,
         private val authSessionStore: AuthSessionStore,
         private val userDataOwnershipService: UserDataOwnershipService,
+        private val appSettingsStore: AppSettingsStore,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(AuthUiState())
         val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
@@ -64,10 +73,37 @@ class AuthViewModel
             val KEY_EMAIL_VERIFIED = booleanPreferencesKey("auth_email_verified")
             val KEY_CREATED_AT = stringPreferencesKey("auth_created_at")
             val KEY_LOGGED_IN = booleanPreferencesKey("auth_logged_in")
+            val KEY_PROFILE_NAME = stringPreferencesKey("user_name")
+            val KEY_PROFILE_EMAIL = stringPreferencesKey("user_email")
+            val KEY_MEMBER_SINCE = longPreferencesKey("member_since")
         }
 
         init {
+            observeOnboardingState()
             checkExistingSession()
+        }
+
+        @Suppress("CyclomaticComplexMethod")
+        fun onEvent(event: AuthUiEvent) {
+            when (event) {
+                is AuthUiEvent.UpdateEmail -> updateEmail(event.value)
+                is AuthUiEvent.UpdatePassword -> updatePassword(event.value)
+                is AuthUiEvent.UpdateSignUpUsername -> updateSignUpUsername(event.value)
+                is AuthUiEvent.UpdateSignUpEmail -> updateSignUpEmail(event.value)
+                is AuthUiEvent.UpdateSignUpPassword -> updateSignUpPassword(event.value)
+                is AuthUiEvent.UpdateSignUpConfirmPassword -> updateSignUpConfirmPassword(event.value)
+                AuthUiEvent.TogglePasswordVisibility -> togglePasswordVisibility()
+                AuthUiEvent.ClearError -> clearError()
+                AuthUiEvent.ClearSuccess -> clearSuccess()
+                AuthUiEvent.SwitchToSignUp -> switchToSignUp()
+                AuthUiEvent.SwitchToSignIn -> switchToSignIn()
+                AuthUiEvent.SignIn -> signIn()
+                AuthUiEvent.SignUp -> signUp()
+                AuthUiEvent.SendPasswordReset -> sendPasswordReset()
+                AuthUiEvent.ResendVerification -> resendVerification()
+                AuthUiEvent.SignOut -> signOut()
+                AuthUiEvent.RefreshUser -> refreshUser()
+            }
         }
 
         // Field updates
@@ -128,6 +164,7 @@ class AuthViewModel
                 when (val result = authRepository.signIn(state.email.trim(), state.password)) {
                     is AuthResult.Success -> {
                         saveSession(result)
+                        val onboardingCompleted = appSettingsStore.isOnboardingCompleted()
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
@@ -137,6 +174,7 @@ class AuthViewModel
                                 username = result.username,
                                 emailVerified = result.emailConfirmed,
                                 accountCreatedAt = result.createdAt,
+                                onboardingCompleted = onboardingCompleted,
                             )
                         }
                     }
@@ -181,6 +219,7 @@ class AuthViewModel
                         )
                 ) {
                     is AuthResult.Success -> {
+                        appSettingsStore.resetOnboarding()
                         saveSession(result)
                         _uiState.update {
                             it.copy(
@@ -191,6 +230,9 @@ class AuthViewModel
                                 username = result.username,
                                 emailVerified = result.emailConfirmed,
                                 accountCreatedAt = result.createdAt,
+                                onboardingCompleted = false,
+                                onboardingStep = 1,
+                                onboardingPrimaryGoal = "",
                                 successMessage = "Account created! Check your email for a verification link.",
                             )
                         }
@@ -229,7 +271,60 @@ class AuthViewModel
                     prefs.remove(KEY_LOGGED_IN)
                 }
                 _uiState.update {
-                    AuthUiState(isLoading = false, isLoggedIn = false)
+                    AuthUiState(
+                        isLoading = false,
+                        isLoggedIn = false,
+                        onboardingCompleted = false,
+                        onboardingStep = 1,
+                        onboardingPrimaryGoal = "",
+                    )
+                }
+            }
+        }
+
+        fun sendPasswordReset() {
+            val email = _uiState.value.email.trim()
+            if (email.isBlank() || !email.contains("@")) {
+                _uiState.update { it.copy(error = "Enter a valid email first, then tap Forgot.") }
+                return
+            }
+            viewModelScope.launch {
+                val sent = authRepository.sendPasswordReset(email)
+                _uiState.update {
+                    it.copy(
+                        successMessage =
+                            if (sent) {
+                                "Password reset link sent to $email"
+                            } else {
+                                "Unable to send password reset right now"
+                            },
+                    )
+                }
+            }
+        }
+
+        fun completeOnboarding(
+            fullName: String,
+            primaryGoal: String,
+        ) {
+            if (fullName.isBlank()) {
+                _uiState.update { it.copy(error = "Please provide your full name to continue") }
+                return
+            }
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            viewModelScope.launch {
+                appSettingsStore.completeOnboarding(
+                    fullName = fullName,
+                    primaryGoal = primaryGoal,
+                )
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        onboardingCompleted = true,
+                        onboardingStep = 4,
+                        onboardingPrimaryGoal = primaryGoal,
+                        successMessage = "Onboarding complete. Welcome to PersonalOS.",
+                    )
                 }
             }
         }
@@ -251,7 +346,11 @@ class AuthViewModel
                             it.copy(emailVerified = result.emailConfirmed)
                         }
                     }
-                    is AuthResult.Error -> { /* silently fail */ }
+                    is AuthResult.Error -> {
+                        _uiState.update {
+                            it.copy(error = "Unable to refresh account info: ${result.message}")
+                        }
+                    }
                 }
             }
         }
@@ -275,6 +374,7 @@ class AuthViewModel
                         is AuthResult.Success -> {
                             authSessionStore.saveSession(token, result.userId)
                             userDataOwnershipService.claimUnownedData(result.userId)
+                            val onboardingCompleted = appSettingsStore.isOnboardingCompleted()
                             dataStore.edit {
                                 it[KEY_USER_ID] = result.userId
                                 it[KEY_USER_EMAIL] = result.email
@@ -293,6 +393,7 @@ class AuthViewModel
                                     username = result.username,
                                     emailVerified = result.emailConfirmed,
                                     accountCreatedAt = result.createdAt,
+                                    onboardingCompleted = onboardingCompleted,
                                 )
                             }
                         }
@@ -319,7 +420,34 @@ class AuthViewModel
                 prefs[KEY_EMAIL_VERIFIED] = result.emailConfirmed
                 prefs[KEY_CREATED_AT] = result.createdAt
                 prefs[KEY_LOGGED_IN] = true
+                prefs[KEY_PROFILE_EMAIL] = result.email
+                if (prefs[KEY_PROFILE_NAME].isNullOrBlank()) {
+                    prefs[KEY_PROFILE_NAME] = result.username.ifBlank { result.email.substringBefore("@") }
+                }
+                if ((prefs[KEY_MEMBER_SINCE] ?: 0L) == 0L) {
+                    prefs[KEY_MEMBER_SINCE] = System.currentTimeMillis()
+                }
                 prefs.remove(KEY_ACCESS_TOKEN)
             }
+        }
+
+        private fun observeOnboardingState() {
+            appSettingsStore.onboardingCompletedFlow()
+                .onEach { completed ->
+                    _uiState.update { it.copy(onboardingCompleted = completed) }
+                }
+                .launchIn(viewModelScope)
+
+            appSettingsStore.onboardingStepFlow()
+                .onEach { step ->
+                    _uiState.update { it.copy(onboardingStep = step.coerceIn(1, 4)) }
+                }
+                .launchIn(viewModelScope)
+
+            appSettingsStore.onboardingPrimaryGoalFlow()
+                .onEach { goal ->
+                    _uiState.update { it.copy(onboardingPrimaryGoal = goal) }
+                }
+                .launchIn(viewModelScope)
         }
     }

@@ -74,3 +74,6 @@ Upgrade the Kotlin BELTECH app to match or exceed the Dart 2.0 engineering stand
 - [x] Release verification evidence captured: unit tests + blocking static checks + strict two-user Supabase smoke test (`FULL_PASS`).
 - [x] Calendar parity hardening: priority chip, swipe-to-complete/delete, edit flow, and event/due date-time selection implemented.
 - [x] OTA updates implemented for APK distribution (non-Play): remote manifest check, in-app APK download, and installer handoff from Settings.
+- [x] AGP 9 upgrade gate completed: migrated to AGP 9.1 + Gradle 9.3.1 + built-in Kotlin wiring, with compatible Hilt/KSP/Room versions and passing `check` without source-set suppression flags.
+- [x] Revamp foundation slice started: canonical engineering charter + Stitch-first design reference pack + design-system token/contracts + 5-tab navigation shell (`home/tasks/finance/calendar/assistant`) with legacy route aliases.
+- [x] Wave-1 shell revamp advanced: Finance, Tasks, Calendar, and Assistant screens now use shared design-system primitives (search, banners, cards, chips, status panels) while preserving existing ViewModel/use-case behavior and dialogs.

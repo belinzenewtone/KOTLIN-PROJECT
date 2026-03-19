@@ -15,12 +15,12 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.personal.lifeOS.features.budget.presentation.BudgetScreen
-import com.personal.lifeOS.features.export.presentation.ExportScreen
-import com.personal.lifeOS.features.income.presentation.IncomeScreen
-import com.personal.lifeOS.features.recurring.presentation.RecurringScreen
-import com.personal.lifeOS.features.search.presentation.SearchScreen
-import com.personal.lifeOS.features.settings.presentation.SettingsScreen
+import com.personal.lifeOS.feature.budget.presentation.BudgetScreen
+import com.personal.lifeOS.feature.export.presentation.ExportScreen
+import com.personal.lifeOS.feature.income.presentation.IncomeScreen
+import com.personal.lifeOS.feature.recurring.presentation.RecurringScreen
+import com.personal.lifeOS.feature.search.presentation.SearchScreen
+import com.personal.lifeOS.feature.settings.presentation.SettingsScreen
 import com.personal.lifeOS.ui.theme.AppSpacing
 import com.personal.lifeOS.ui.theme.BackgroundDark
 

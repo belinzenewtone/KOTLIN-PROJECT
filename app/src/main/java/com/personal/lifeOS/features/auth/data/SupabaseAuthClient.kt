@@ -174,6 +174,24 @@ class SupabaseAuthClient
                 }
             }
 
+        suspend fun sendPasswordReset(email: String): Boolean =
+            withContext(Dispatchers.IO) {
+                try {
+                    val body = gson.toJson(mapOf("email" to email))
+                    val request =
+                        Request.Builder()
+                            .url("$authUrl/recover")
+                            .post(body.toRequestBody(json))
+                            .addHeader("apikey", ApiConfig.SUPABASE_ANON_KEY)
+                            .addHeader("Content-Type", "application/json")
+                            .build()
+
+                    client.newCall(request).execute().isSuccessful
+                } catch (e: Exception) {
+                    false
+                }
+            }
+
         // Data classes
         data class SupabaseAuthResponse(
             @SerializedName("access_token") val accessToken: String?,

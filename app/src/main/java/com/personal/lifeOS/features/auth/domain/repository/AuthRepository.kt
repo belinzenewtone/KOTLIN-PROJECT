@@ -17,4 +17,6 @@ interface AuthRepository {
     suspend fun getUser(accessToken: String): AuthResult
 
     suspend fun resendVerification(email: String): Boolean
+
+    suspend fun sendPasswordReset(email: String): Boolean
 }

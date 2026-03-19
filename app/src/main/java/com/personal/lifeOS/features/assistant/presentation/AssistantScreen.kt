@@ -16,6 +16,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.personal.lifeOS.core.ui.designsystem.AssistantActionCard
+import com.personal.lifeOS.core.ui.designsystem.InlineBanner
+import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
 import com.personal.lifeOS.ui.theme.AppSpacing
 import com.personal.lifeOS.ui.theme.BackgroundDark
 
@@ -54,15 +57,23 @@ fun AssistantScreen(viewModel: AssistantViewModel = hiltViewModel()) {
                     .padding(horizontal = AppSpacing.ScreenHorizontal),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.Section),
         ) {
+            state.proposalResultMessage?.let { banner ->
+                item {
+                    InlineBanner(
+                        message = banner,
+                        tone = InlineBannerTone.INFO,
+                    )
+                }
+            }
+
             items(state.messages, key = { it.id }) { message ->
                 ChatBubble(message = message)
             }
 
             state.pendingProposal?.let { proposal ->
                 item {
-                    AssistantActionProposalCard(
-                        proposal = proposal,
-                        isProcessing = state.isProcessing,
+                    AssistantActionCard(
+                        proposal = proposal.toUiModel(),
                         onApprove = viewModel::approvePendingProposal,
                         onReject = viewModel::rejectPendingProposal,
                     )

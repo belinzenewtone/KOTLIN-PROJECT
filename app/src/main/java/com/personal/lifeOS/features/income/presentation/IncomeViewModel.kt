@@ -2,10 +2,12 @@ package com.personal.lifeOS.features.income.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.income.domain.model.IncomeRecord
-import com.personal.lifeOS.features.income.domain.repository.IncomeRepository
+import com.personal.lifeOS.features.income.domain.usecase.AddIncomeUseCase
+import com.personal.lifeOS.features.income.domain.usecase.DeleteIncomeUseCase
+import com.personal.lifeOS.features.income.domain.usecase.ObserveIncomeSnapshotUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,6 +20,7 @@ import javax.inject.Inject
 data class IncomeUiState(
     val records: List<IncomeRecord> = emptyList(),
     val monthTotal: Double = 0.0,
+    val isLoading: Boolean = true,
     val showDialog: Boolean = false,
     val sourceInput: String = "",
     val amountInput: String = "",
@@ -29,7 +32,9 @@ data class IncomeUiState(
 class IncomeViewModel
     @Inject
     constructor(
-        private val repository: IncomeRepository,
+        private val observeIncomeSnapshotUseCase: ObserveIncomeSnapshotUseCase,
+        private val addIncomeUseCase: AddIncomeUseCase,
+        private val deleteIncomeUseCase: DeleteIncomeUseCase,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(IncomeUiState())
         val uiState: StateFlow<IncomeUiState> = _uiState.asStateFlow()
@@ -81,37 +86,52 @@ class IncomeViewModel
             }
 
             viewModelScope.launch {
-                repository.addIncome(
-                    IncomeRecord(
-                        source = source,
-                        amount = amount,
-                        note = state.noteInput.trim(),
-                    ),
-                )
-                hideDialog()
+                runCatching {
+                    addIncomeUseCase(
+                        IncomeRecord(
+                            source = source,
+                            amount = amount,
+                            note = state.noteInput.trim(),
+                        ),
+                    )
+                }.onSuccess {
+                    hideDialog()
+                }.onFailure { throwable ->
+                    _uiState.update {
+                        it.copy(error = throwable.message ?: "Failed to add income")
+                    }
+                }
             }
         }
 
         fun deleteIncome(id: Long) {
             viewModelScope.launch {
-                repository.deleteIncome(id)
+                runCatching {
+                    deleteIncomeUseCase(id)
+                }.onFailure { throwable ->
+                    _uiState.update {
+                        it.copy(error = throwable.message ?: "Failed to delete income")
+                    }
+                }
             }
         }
 
         private fun loadData() {
-            repository.getIncomes()
-                .onEach { incomes ->
-                    val monthStart = DateUtils.monthStartMillis()
-                    val monthEnd = DateUtils.monthEndMillis()
-                    val monthlyTotal =
-                        incomes
-                            .filter { it.date in monthStart..monthEnd }
-                            .sumOf { it.amount }
-
+            observeIncomeSnapshotUseCase()
+                .onEach { snapshot ->
                     _uiState.update {
                         it.copy(
-                            records = incomes,
-                            monthTotal = monthlyTotal,
+                            records = snapshot.records,
+                            monthTotal = snapshot.monthTotal,
+                            isLoading = false,
+                        )
+                    }
+                }
+                .catch { throwable ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = throwable.message ?: "Failed to load income records",
                         )
                     }
                 }

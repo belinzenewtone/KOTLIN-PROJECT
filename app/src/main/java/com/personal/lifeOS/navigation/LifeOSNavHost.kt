@@ -1,3 +1,5 @@
+@file:Suppress("MaxLineLength")
+
 package com.personal.lifeOS.navigation
 
 import androidx.compose.animation.animateColorAsState
@@ -56,19 +58,24 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.personal.lifeOS.feature.analytics.presentation.AnalyticsScreen
+import com.personal.lifeOS.feature.assistant.presentation.AssistantScreen
+import com.personal.lifeOS.feature.auth.presentation.AuthScreen
+import com.personal.lifeOS.feature.auth.presentation.OnboardingScreen
+import com.personal.lifeOS.feature.calendar.presentation.CalendarScreen
+import com.personal.lifeOS.feature.export.presentation.ExportScreen
+import com.personal.lifeOS.feature.finance.presentation.FinanceScreen
+import com.personal.lifeOS.feature.home.presentation.HomeScreen
+import com.personal.lifeOS.feature.planner.presentation.PlannerScreen
+import com.personal.lifeOS.feature.profile.presentation.ProfileScreen
+import com.personal.lifeOS.feature.review.presentation.ReviewScreen
+import com.personal.lifeOS.feature.search.presentation.SearchScreen
+import com.personal.lifeOS.feature.settings.presentation.SettingsScreen
+import com.personal.lifeOS.feature.tasks.presentation.TasksScreen
 import com.personal.lifeOS.core.security.BiometricAuthManager
 import com.personal.lifeOS.core.update.presentation.OtaUpdatePromptHost
-import com.personal.lifeOS.features.analytics.presentation.AnalyticsScreen
-import com.personal.lifeOS.features.assistant.presentation.AssistantScreen
-import com.personal.lifeOS.features.auth.presentation.AuthScreen
+import com.personal.lifeOS.features.auth.presentation.AuthUiEvent
 import com.personal.lifeOS.features.auth.presentation.AuthViewModel
-import com.personal.lifeOS.features.calendar.presentation.CalendarScreen
-import com.personal.lifeOS.features.dashboard.presentation.DashboardScreen
-import com.personal.lifeOS.features.expenses.presentation.ExpensesScreen
-import com.personal.lifeOS.features.export.presentation.ExportScreen
-import com.personal.lifeOS.features.planner.presentation.PlannerScreen
-import com.personal.lifeOS.features.profile.presentation.ProfileScreen
-import com.personal.lifeOS.features.tasks.presentation.TasksScreen
 import com.personal.lifeOS.ui.theme.BackgroundDark
 import com.personal.lifeOS.ui.theme.Primary
 import com.personal.lifeOS.ui.theme.TextPrimary
@@ -82,9 +89,10 @@ private data class BiometricLockState(
 )
 
 @Composable
+@Suppress("CyclomaticComplexMethod")
 fun LifeOSNavHost(
     biometricEnabled: Boolean,
-    startDestination: String = "auth",
+    startDestination: String = AppRoute.Auth,
     shouldCheckForUpdates: Boolean = true,
 ) {
     val navController = rememberNavController()
@@ -93,23 +101,30 @@ fun LifeOSNavHost(
     val authViewModel: AuthViewModel = hiltViewModel()
     val authState by authViewModel.uiState.collectAsState()
 
-    val isOnAuthScreen = currentDestination?.route == "auth"
-    val requiresBiometricLock = authState.isLoggedIn && biometricEnabled && !isOnAuthScreen
+    val currentRoute = currentDestination?.route
+    val isOnPublicFlow = isPublicRoute(currentRoute)
+    val requiresBiometricLock = authState.isLoggedIn && biometricEnabled && !isOnPublicFlow
     val lockState = rememberBiometricLockState(requiresBiometricLock)
 
-    LaunchedEffect(authState.isLoggedIn, currentDestination?.route) {
-        val route = currentDestination?.route
-        when {
-            !authState.isLoggedIn && route != "auth" -> {
-                navController.navigateToAuth()
-            }
-
-            authState.isLoggedIn && route == "auth" -> {
-                navController.navigate(Screen.Dashboard.route) {
-                    popUpTo("auth") { inclusive = true }
-                    launchSingleTop = true
+    LaunchedEffect(authState.isLoggedIn, authState.onboardingCompleted, currentRoute) {
+        when (
+            val guardRoute =
+                resolveGuardNavigationTarget(
+                    isLoggedIn = authState.isLoggedIn,
+                    onboardingCompleted = authState.onboardingCompleted,
+                    currentRoute = currentRoute,
+                )
+        ) {
+            null -> Unit
+            else ->
+                if (guardRoute == AppRoute.Auth) {
+                    navController.navigateToAuth()
+                } else {
+                    navController.navigate(guardRoute) {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
                 }
-            }
         }
     }
 
@@ -125,7 +140,7 @@ fun LifeOSNavHost(
             startDestination = startDestination,
         )
 
-        if (!isOnAuthScreen && authState.isLoggedIn && lockState.appContentUnlocked) {
+        if (!isOnPublicFlow && authState.isLoggedIn && lockState.appContentUnlocked) {
             LifeOSBottomBar(
                 navController = navController,
                 currentDestination = currentDestination,
@@ -138,7 +153,7 @@ fun LifeOSNavHost(
                 errorMessage = lockState.errorMessage,
                 onRetry = lockState.onRetry,
                 onSignOut = {
-                    authViewModel.signOut()
+                    authViewModel.onEvent(AuthUiEvent.SignOut)
                     navController.navigateToAuth()
                 },
             )
@@ -222,36 +237,80 @@ private fun LifeOSNavigationGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = startDestination,
+        startDestination = canonicalRoute(startDestination),
         modifier = Modifier.fillMaxSize(),
     ) {
-        composable("auth") {
+        composable(AppRoute.Auth) {
             AuthScreen(
                 viewModel = authViewModel,
                 onAuthenticated = {
-                    navController.navigate(Screen.Dashboard.route) {
-                        popUpTo("auth") { inclusive = true }
+                    if (authViewModel.uiState.value.onboardingCompleted) {
+                        navController.navigate(AppRoute.Home) {
+                            popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    } else {
+                        navController.navigate(AppRoute.Onboarding) {
+                            popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
+                        }
                     }
                 },
             )
         }
-        composable(Screen.Dashboard.route) { DashboardScreen() }
-        composable(Screen.Calendar.route) { CalendarScreen() }
-        composable(Screen.Expenses.route) { ExpensesScreen() }
-        composable(Screen.Tasks.route) { TasksScreen() }
-        composable(Screen.Planner.route) { PlannerScreen() }
-        composable(Screen.Assistant.route) { AssistantScreen() }
-        composable(Screen.Analytics.route) { AnalyticsScreen() }
-        composable(Screen.Export.route) { ExportScreen() }
-        composable(Screen.Profile.route) {
-            ProfileScreen(
-                authViewModel = authViewModel,
-                onSignOut = {
-                    authViewModel.signOut()
+        composable(AppRoute.Onboarding) {
+            OnboardingScreen(
+                onFinished = {
+                    navController.navigate(AppRoute.Home) {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+                onBackToAuth = {
+                    authViewModel.onEvent(AuthUiEvent.SignOut)
                     navController.navigateToAuth()
                 },
             )
         }
+        composable(AppRoute.Home) {
+            HomeScreen(
+                onOpenTasks = { navController.navigate(AppRoute.Tasks) },
+                onOpenFinance = { navController.navigate(AppRoute.Finance) },
+                onOpenCalendar = { navController.navigate(AppRoute.Calendar) },
+                onOpenAssistant = { navController.navigate(AppRoute.Assistant) },
+                onOpenProfile = { navController.navigate(AppRoute.Profile) },
+            )
+        }
+        composable(AppRoute.LegacyDashboard) {
+            HomeScreen(
+                onOpenTasks = { navController.navigate(AppRoute.Tasks) },
+                onOpenFinance = { navController.navigate(AppRoute.Finance) },
+                onOpenCalendar = { navController.navigate(AppRoute.Calendar) },
+                onOpenAssistant = { navController.navigate(AppRoute.Assistant) },
+                onOpenProfile = { navController.navigate(AppRoute.Profile) },
+            )
+        }
+        composable(AppRoute.Tasks) { TasksScreen() }
+        composable(AppRoute.Finance) { FinanceScreen() }
+        composable(AppRoute.LegacyExpenses) { FinanceScreen() }
+        composable(AppRoute.Calendar) { CalendarScreen() }
+        composable(AppRoute.Assistant) { AssistantScreen() }
+
+        composable(AppRoute.Profile) {
+            ProfileScreen(
+                authViewModel = authViewModel,
+                onSignOut = {
+                    authViewModel.onEvent(AuthUiEvent.SignOut)
+                    navController.navigateToAuth()
+                },
+            )
+        }
+        composable(AppRoute.Settings) { SettingsScreen() }
+        composable(AppRoute.Export) { ExportScreen() }
+        composable(AppRoute.Analytics) { AnalyticsScreen() }
+        composable(AppRoute.Search) { SearchScreen() }
+        composable(AppRoute.Planner) { PlannerScreen() }
+        composable(AppRoute.Review) { ReviewScreen() }
     }
 }
 
@@ -304,15 +363,16 @@ private fun BoxScope.LifeOSBottomBar(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            bottomNavItems.forEach { item ->
-                val selected = currentDestination?.hierarchy?.any { it.route == item.screen.route } == true
+            val activeRoutes = currentDestination?.hierarchy?.mapNotNull { it.route }?.toSet().orEmpty()
+            primaryTabs.forEach { item ->
+                val selected = isPrimaryTabSelected(item, activeRoutes)
                 BottomNavItem(
                     label = item.label,
                     selected = selected,
                     selectedIcon = item.selectedIcon,
                     unselectedIcon = item.unselectedIcon,
                     onClick = {
-                        navController.navigate(item.screen.route) {
+                        navController.navigate(item.route) {
                             popUpTo(navController.graph.findStartDestination().id) {
                                 saveState = true
                             }
@@ -429,7 +489,7 @@ private fun BiometricLockOverlay(
 }
 
 private fun NavHostController.navigateToAuth() {
-    navigate("auth") {
+    navigate(AppRoute.Auth) {
         popUpTo(0) { inclusive = true }
     }
 }

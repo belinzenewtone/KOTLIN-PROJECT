@@ -2,7 +2,8 @@ package com.personal.lifeOS.bootstrap
 
 enum class StartDestination(val route: String) {
     AUTH("auth"),
-    HOME("dashboard"),
+    ONBOARDING("onboarding"),
+    HOME("home"),
 }
 
 data class BootstrapResult(

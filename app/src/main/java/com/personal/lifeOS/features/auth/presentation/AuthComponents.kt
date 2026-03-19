@@ -1,3 +1,5 @@
+@file:Suppress("MaxLineLength")
+
 package com.personal.lifeOS.features.auth.presentation
 
 import androidx.compose.foundation.Image
@@ -11,7 +13,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -21,7 +25,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,9 +34,14 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -41,15 +50,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.personal.lifeOS.R
-import com.personal.lifeOS.ui.components.GlassCard
-import com.personal.lifeOS.ui.theme.BackgroundDark
-import com.personal.lifeOS.ui.theme.GlassBorder
-import com.personal.lifeOS.ui.theme.GlassWhite
-import com.personal.lifeOS.ui.theme.Primary
-import com.personal.lifeOS.ui.theme.TextSecondary
-import com.personal.lifeOS.ui.theme.TextTertiary
+import com.personal.lifeOS.core.ui.designsystem.AppCard
+import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 
 @Composable
 internal fun AuthLoadingState() {
@@ -57,46 +60,92 @@ internal fun AuthLoadingState() {
         modifier =
             Modifier
                 .fillMaxSize()
-                .background(BackgroundDark),
+                .background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center,
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.sm),
+        ) {
             Image(
-                painter = painterResource(id = R.drawable.logo),
-                contentDescription = "BELTECH",
+                painter = painterResource(id = R.drawable.logo_personalos_mark),
+                contentDescription = "PersonalOS",
                 modifier =
                     Modifier
-                        .size(80.dp)
-                        .clip(RoundedCornerShape(16.dp)),
+                        .size(88.dp)
+                        .clip(RoundedCornerShape(22.dp)),
                 contentScale = ContentScale.Crop,
             )
-            Spacer(Modifier.height(16.dp))
-            CircularProgressIndicator(color = Primary, strokeWidth = 3.dp)
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.primary,
+                strokeWidth = 2.5.dp,
+            )
         }
     }
 }
 
 @Composable
-internal fun AuthBrandingHeader() {
-    Image(
-        painter = painterResource(id = R.drawable.logo),
-        contentDescription = "BELTECH",
-        modifier =
-            Modifier
-                .size(72.dp)
-                .clip(RoundedCornerShape(16.dp)),
-        contentScale = ContentScale.Crop,
-    )
-    Spacer(Modifier.height(16.dp))
+internal fun AuthBrandingHeader(isSignUpMode: Boolean) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.sm),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier =
+                    Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(
+                            brush =
+                                Brush.linearGradient(
+                                    listOf(
+                                        MaterialTheme.colorScheme.primary,
+                                        AppDesignTokens.colors.primaryContainer,
+                                    ),
+                                ),
+                        ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.logo_personalos_mark),
+                    contentDescription = "PersonalOS mark",
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+            Text(
+                text = "PersonalOS",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+        if (isSignUpMode) {
+            Text(
+                text = "Need help?",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+
     Text(
-        text = "BELTECH",
+        text = if (isSignUpMode) "Create your account" else "Welcome Back",
         style = MaterialTheme.typography.headlineLarge,
         fontWeight = FontWeight.Bold,
     )
     Text(
-        text = "Innovate and Create",
-        style = MaterialTheme.typography.bodyMedium,
-        color = TextTertiary,
+        text =
+            if (isSignUpMode) {
+                "Start your journey toward focused planning."
+            } else {
+                "Enter your details to access your digital sanctuary."
+            },
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
 
@@ -105,75 +154,52 @@ internal fun SignInCard(
     state: AuthUiState,
     viewModel: AuthViewModel,
 ) {
-    GlassCard(modifier = Modifier.fillMaxWidth()) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text("Welcome Back", style = MaterialTheme.typography.headlineMedium)
-            Text(
-                "Sign in to your account",
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary,
-            )
-
+    AppCard(elevated = true) {
+        Column(verticalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.md)) {
             AuthTextField(
                 value = state.email,
-                onValueChange = { viewModel.updateEmail(it) },
-                label = "Email",
+                onValueChange = { viewModel.onEvent(AuthUiEvent.UpdateEmail(it)) },
+                label = "Email Address",
                 leadingIcon = Icons.Filled.Email,
                 keyboardType = KeyboardType.Email,
+                placeholder = "name@example.com",
             )
-
             AuthTextField(
                 value = state.password,
-                onValueChange = { viewModel.updatePassword(it) },
+                onValueChange = { viewModel.onEvent(AuthUiEvent.UpdatePassword(it)) },
                 label = "Password",
                 leadingIcon = Icons.Filled.Lock,
                 isPassword = true,
                 showPassword = state.showPassword,
-                onTogglePassword = { viewModel.togglePasswordVisibility() },
+                onTogglePassword = { viewModel.onEvent(AuthUiEvent.TogglePasswordVisibility) },
+                placeholder = "........",
+                trailingTextAction = "Forgot?",
+                onTrailingTextAction = { viewModel.onEvent(AuthUiEvent.SendPasswordReset) },
             )
-
             Button(
-                onClick = { viewModel.signIn() },
+                onClick = { viewModel.onEvent(AuthUiEvent.SignIn) },
+                enabled = !state.isLoading,
                 modifier =
                     Modifier
                         .fillMaxWidth()
                         .height(52.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors =
-                    ButtonDefaults.buttonColors(
-                        containerColor = Primary,
-                        contentColor = BackgroundDark,
-                    ),
-                enabled = !state.isLoading,
             ) {
                 if (state.isLoading) {
                     CircularProgressIndicator(
-                        color = BackgroundDark,
-                        modifier = Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(18.dp),
                         strokeWidth = 2.dp,
                     )
                 } else {
-                    Text("Sign In", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                    Text("Sign In", fontWeight = FontWeight.SemiBold)
                 }
             }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                Text(
-                    "Don't have an account? ",
-                    color = TextSecondary,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                Text(
-                    "Sign Up",
-                    color = Primary,
-                    fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.clickable { viewModel.switchToSignUp() },
-                )
-            }
+            AuthSwitcherLabel(
+                prefix = "New here?",
+                action = "Create Account",
+                onClick = { viewModel.onEvent(AuthUiEvent.SwitchToSignUp) },
+            )
         }
     }
 }
@@ -183,141 +209,191 @@ internal fun SignUpCard(
     state: AuthUiState,
     viewModel: AuthViewModel,
 ) {
-    GlassCard(modifier = Modifier.fillMaxWidth()) {
-        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Text("Create Account", style = MaterialTheme.typography.headlineMedium)
-            Text("Join BELTECH today", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
-
+    var acceptedTerms by remember { mutableStateOf(true) }
+    AppCard(elevated = true) {
+        Column(verticalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.md)) {
             AuthTextField(
                 value = state.signUpUsername,
-                onValueChange = { viewModel.updateSignUpUsername(it) },
-                label = "Username",
+                onValueChange = { viewModel.onEvent(AuthUiEvent.UpdateSignUpUsername(it)) },
+                label = "Full Name",
                 leadingIcon = Icons.Filled.Person,
+                placeholder = "Your name",
             )
-
             AuthTextField(
                 value = state.signUpEmail,
-                onValueChange = { viewModel.updateSignUpEmail(it) },
-                label = "Email",
+                onValueChange = { viewModel.onEvent(AuthUiEvent.UpdateSignUpEmail(it)) },
+                label = "Email Address",
                 leadingIcon = Icons.Filled.Email,
                 keyboardType = KeyboardType.Email,
+                placeholder = "you@personal-os.com",
             )
-
             AuthTextField(
                 value = state.signUpPassword,
-                onValueChange = { viewModel.updateSignUpPassword(it) },
-                label = "Password",
+                onValueChange = { viewModel.onEvent(AuthUiEvent.UpdateSignUpPassword(it)) },
+                label = "Secure Password",
                 leadingIcon = Icons.Filled.Lock,
                 isPassword = true,
                 showPassword = state.showPassword,
-                onTogglePassword = { viewModel.togglePasswordVisibility() },
+                onTogglePassword = { viewModel.onEvent(AuthUiEvent.TogglePasswordVisibility) },
+                placeholder = "........",
             )
-
             AuthTextField(
                 value = state.signUpConfirmPassword,
-                onValueChange = { viewModel.updateSignUpConfirmPassword(it) },
+                onValueChange = { viewModel.onEvent(AuthUiEvent.UpdateSignUpConfirmPassword(it)) },
                 label = "Confirm Password",
                 leadingIcon = Icons.Filled.Lock,
                 isPassword = true,
                 showPassword = state.showPassword,
-                onTogglePassword = { viewModel.togglePasswordVisibility() },
+                onTogglePassword = { viewModel.onEvent(AuthUiEvent.TogglePasswordVisibility) },
+                placeholder = "........",
             )
 
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(
+                    checked = acceptedTerms,
+                    onCheckedChange = { acceptedTerms = it },
+                )
+                Text(
+                    text = "I agree to Terms and Privacy Policy.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
             Button(
-                onClick = { viewModel.signUp() },
+                onClick = { viewModel.onEvent(AuthUiEvent.SignUp) },
+                enabled = !state.isLoading && acceptedTerms,
                 modifier =
                     Modifier
                         .fillMaxWidth()
                         .height(52.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors =
-                    ButtonDefaults.buttonColors(
-                        containerColor = Primary,
-                        contentColor = BackgroundDark,
-                    ),
-                enabled = !state.isLoading,
             ) {
                 if (state.isLoading) {
                     CircularProgressIndicator(
-                        color = BackgroundDark,
-                        modifier = Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(18.dp),
                         strokeWidth = 2.dp,
                     )
                 } else {
-                    Text("Create Account", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                    Text("Get Started", fontWeight = FontWeight.SemiBold)
                 }
             }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                Text(
-                    "Already have an account? ",
-                    color = TextSecondary,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                Text(
-                    "Sign In",
-                    color = Primary,
-                    fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.clickable { viewModel.switchToSignIn() },
-                )
-            }
+            AuthSwitcherLabel(
+                prefix = "Already have an account?",
+                action = "Sign In",
+                onClick = { viewModel.onEvent(AuthUiEvent.SwitchToSignIn) },
+            )
         }
     }
 }
 
 @Composable
+private fun AuthSwitcherLabel(
+    prefix: String,
+    action: String,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = "$prefix ",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = action,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clickable(onClick = onClick),
+        )
+    }
+}
+
+@Composable
+@Suppress("LongParameterList")
 private fun AuthTextField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
     leadingIcon: ImageVector,
     keyboardType: KeyboardType = KeyboardType.Text,
+    placeholder: String,
     isPassword: Boolean = false,
     showPassword: Boolean = false,
     onTogglePassword: (() -> Unit)? = null,
+    trailingTextAction: String? = null,
+    onTrailingTextAction: (() -> Unit)? = null,
 ) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label) },
-        leadingIcon = { Icon(leadingIcon, null, tint = TextTertiary) },
-        trailingIcon =
-            if (isPassword) {
-                {
-                    IconButton(onClick = { onTogglePassword?.invoke() }) {
-                        Icon(
-                            imageVector = if (showPassword) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                            contentDescription = null,
-                            tint = TextTertiary,
-                        )
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = label.uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (!trailingTextAction.isNullOrBlank() && onTrailingTextAction != null) {
+                Text(
+                    text = trailingTextAction,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.clickable(onClick = onTrailingTextAction),
+                )
+            }
+        }
+
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            leadingIcon = { Icon(leadingIcon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+            trailingIcon =
+                if (isPassword) {
+                    {
+                        IconButton(onClick = { onTogglePassword?.invoke() }) {
+                            Icon(
+                                imageVector = if (showPassword) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                                contentDescription = "Toggle password",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
-                }
-            } else {
-                null
+                } else {
+                    null
+                },
+            placeholder = {
+                Text(
+                    text = placeholder,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                )
             },
-        modifier = Modifier.fillMaxWidth(),
-        singleLine = true,
-        shape = RoundedCornerShape(16.dp),
-        visualTransformation =
-            if (isPassword && !showPassword) {
-                PasswordVisualTransformation()
-            } else {
-                VisualTransformation.None
-            },
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        colors =
-            OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Primary,
-                unfocusedBorderColor = GlassBorder,
-                focusedContainerColor = GlassWhite,
-                unfocusedContainerColor = GlassWhite,
-                cursorColor = Primary,
-                focusedLabelColor = Primary,
-                unfocusedLabelColor = TextTertiary,
-            ),
-    )
+            visualTransformation =
+                if (isPassword && !showPassword) {
+                    PasswordVisualTransformation()
+                } else {
+                    VisualTransformation.None
+                },
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            shape = RoundedCornerShape(16.dp),
+            colors =
+                OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                ),
+        )
+    }
 }

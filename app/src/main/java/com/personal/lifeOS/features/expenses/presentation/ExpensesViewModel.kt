@@ -2,6 +2,7 @@ package com.personal.lifeOS.features.expenses.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.personal.lifeOS.core.telemetry.ImportHealthSummary
 import com.personal.lifeOS.features.expenses.domain.model.SpendingSummary
 import com.personal.lifeOS.features.expenses.domain.model.Transaction
 import com.personal.lifeOS.features.expenses.domain.model.TransactionFilter
@@ -9,6 +10,8 @@ import com.personal.lifeOS.features.expenses.domain.usecase.AddTransactionUseCas
 import com.personal.lifeOS.features.expenses.domain.usecase.DeleteTransactionUseCase
 import com.personal.lifeOS.features.expenses.domain.usecase.GetSpendingSummaryUseCase
 import com.personal.lifeOS.features.expenses.domain.usecase.GetTransactionsUseCase
+import com.personal.lifeOS.features.expenses.domain.usecase.ImportMpesaMessagesUseCase
+import com.personal.lifeOS.features.expenses.domain.usecase.ObserveImportHealthUseCase
 import com.personal.lifeOS.features.expenses.domain.usecase.UpdateMerchantCategoryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +21,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -31,9 +35,11 @@ data class ExpensesUiState(
     val showAddDialog: Boolean = false,
     val showImportDialog: Boolean = false,
     val importResult: String? = null,
+    val importHealth: ImportHealthSummary = ImportHealthSummary(),
     val showCategoryPicker: Transaction? = null,
 )
 
+@Suppress("LongParameterList")
 @HiltViewModel
 class ExpensesViewModel
     @Inject
@@ -43,13 +49,17 @@ class ExpensesViewModel
         private val addTransaction: AddTransactionUseCase,
         private val deleteTransaction: DeleteTransactionUseCase,
         private val updateMerchantCategory: UpdateMerchantCategoryUseCase,
+        private val importMpesaMessages: ImportMpesaMessagesUseCase,
+        private val observeImportHealthUseCase: ObserveImportHealthUseCase,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(ExpensesUiState())
         val uiState: StateFlow<ExpensesUiState> = _uiState.asStateFlow()
+        private var transactionsObservationJob: Job? = null
 
         init {
             loadTransactions()
             loadSummary()
+            observeImportHealth()
         }
 
         fun setFilter(filter: TransactionFilter) {
@@ -144,6 +154,7 @@ class ExpensesViewModel
         }
 
         private fun loadTransactions() {
+            transactionsObservationJob?.cancel()
             val state = _uiState.value
             val flow =
                 if (state.selectedCategory != null) {
@@ -152,14 +163,15 @@ class ExpensesViewModel
                     getTransactions(state.selectedFilter)
                 }
 
-            flow
-                .onEach { txList ->
-                    _uiState.update { it.copy(transactions = txList, isLoading = false) }
-                }
-                .catch { e ->
-                    _uiState.update { it.copy(error = e.message, isLoading = false) }
-                }
-                .launchIn(viewModelScope)
+            transactionsObservationJob =
+                flow
+                    .onEach { txList ->
+                        _uiState.update { it.copy(transactions = txList, isLoading = false) }
+                    }
+                    .catch { e ->
+                        _uiState.update { it.copy(error = e.message, isLoading = false) }
+                    }
+                    .launchIn(viewModelScope)
         }
 
         fun showImportDialog() {
@@ -170,45 +182,26 @@ class ExpensesViewModel
             _uiState.update { it.copy(showImportDialog = false, importResult = null) }
         }
 
-        fun importSmsMessages(
-            contentResolver: android.content.ContentResolver,
-            daysBack: Int,
-        ) {
+        fun importSmsMessages(daysBack: Int) {
             viewModelScope.launch {
                 try {
                     _uiState.update { it.copy(importResult = "Scanning SMS...") }
-                    val cutoff = System.currentTimeMillis() - (daysBack.toLong() * 86400000L)
-                    var imported = 0
-
-                    val cursor =
-                        contentResolver.query(
-                            android.net.Uri.parse("content://sms/inbox"),
-                            arrayOf("_id", "address", "body", "date"),
-                            "address LIKE ? AND date > ?",
-                            arrayOf("%MPESA%", cutoff.toString()),
-                            "date DESC",
-                        )
-
-                    cursor?.use {
-                        val bodyIdx = it.getColumnIndexOrThrow("body")
-                        while (it.moveToNext()) {
-                            val body = it.getString(bodyIdx) ?: continue
-                            try {
-                                val result = addTransaction.fromSms(body)
-                                if (result != null) imported++
-                            } catch (_: Exception) {
-                            }
+                    val summary = importMpesaMessages(daysBack)
+                    val message =
+                        when {
+                            !summary.permissionGranted -> "SMS permission is required before importing MPESA messages"
+                            summary.imported > 0 ->
+                                "Imported ${summary.imported} transactions • " +
+                                    "${summary.duplicates} duplicates • " +
+                                    "${summary.pendingReview} pending review"
+                            summary.scannedMessages == 0 -> "No MPESA messages found in the selected period"
+                            else ->
+                                "No new imports • ${summary.duplicates} duplicates • " +
+                                    "${summary.parseFailed} parse failed"
                         }
-                    }
-
                     _uiState.update {
                         it.copy(
-                            importResult =
-                                if (imported > 0) {
-                                    "Imported $imported transactions"
-                                } else {
-                                    "No new MPESA messages found"
-                                },
+                            importResult = message,
                             showImportDialog = false,
                         )
                     }
@@ -225,6 +218,17 @@ class ExpensesViewModel
                 }
                 .catch { e ->
                     _uiState.update { it.copy(error = e.message) }
+                }
+                .launchIn(viewModelScope)
+        }
+
+        private fun observeImportHealth() {
+            observeImportHealthUseCase()
+                .onEach { health ->
+                    _uiState.update { it.copy(importHealth = health) }
+                }
+                .catch { e ->
+                    _uiState.update { it.copy(error = e.message ?: "Failed to load import health") }
                 }
                 .launchIn(viewModelScope)
         }

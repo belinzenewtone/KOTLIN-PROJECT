@@ -4,7 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
@@ -20,6 +23,8 @@ import com.personal.lifeOS.ui.theme.AppSpacing
 fun PageScaffold(
     title: String,
     modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    actions: @Composable RowScope.() -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(bottom = AppSpacing.BottomSafe),
     content: @Composable () -> Unit,
 ) {
@@ -31,15 +36,30 @@ fun PageScaffold(
                 .statusBarsPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = AppSpacing.ScreenHorizontal)
-                .padding(top = 12.dp)
+                .padding(top = AppDesignTokens.spacing.sm)
                 .padding(contentPadding),
-        verticalArrangement = Arrangement.spacedBy(AppSpacing.Section),
+        verticalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.lg),
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                subtitle?.let {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            actions()
+        }
         content()
     }
 }

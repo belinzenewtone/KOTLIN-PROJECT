@@ -1,79 +1,149 @@
-# CODING_RULES.md
+# Kotlin Personal OS Engineering Charter
 
-## Global Engineering Rules
+This document is the canonical engineering charter for the native Android Kotlin Personal OS codebase.
+All changes must follow these rules unless a stronger architectural reason is documented in an architecture note.
 
-This document defines mandatory rules for the Kotlin BELTECH project.
-All contributors and agents must follow these constraints.
+## 1) Core Principles
 
-## KR-01: Architecture Boundaries
+- Prioritize clarity over cleverness.
+- Keep one architecture path: `UI -> ViewModel -> UseCase -> Repository -> Local DB / Network / Platform`.
+- Keep Room as local source of truth for user-visible state.
+- Prefer Android-native correctness for SMS, reminders, biometrics, OTA/install, files, and background work.
 
-- Required flow: `presentation -> domain -> data`.
-- `presentation` must not call Room/HTTP clients directly.
-- Business logic belongs in `domain`.
-- Data source and mapping logic belongs in `data`.
+## 2) Required Structure
 
-## KR-02: Feature Modularity
+- Feature-first organization with `data/domain/presentation/navigation/di` per feature where practical.
+- Shared foundational code belongs in `core/*`, platform integrations in `platform/*`.
+- Avoid dumping code into vague `utils/helpers/managers` buckets.
 
-- Each feature must include:
-  - `data/`
-  - `domain/`
-  - `presentation/`
-- Cross-feature dependencies must go through domain contracts or shared `core` abstractions.
+## 3) Compose / UI Rules
 
-## KR-03: File Size and Composition
+- Use unidirectional flow: state in, events out.
+- Keep composables thin: no DB/network/sync/parser/business logic.
+- One screen contract should expose explicit `UiState` and `UiEvent` (`UiEffect` only when required).
+- Prefer stateless reusable components and useful previews.
+- Split oversized screen files; avoid giant composable files.
 
-- Target max file length is 300 lines.
-- Files over 300 lines must be split by responsibility.
-- Screens should orchestrate composables, not contain all UI internals.
+## 4) ViewModel Rules
 
-## KR-04: UI and Theme
+- ViewModels orchestrate screen logic and expose immutable `StateFlow`.
+- Do not place low-level DB/parser/platform logic inside ViewModels.
+- Keep constructor dependencies focused; large constructor count is a design smell.
 
-- Shared styles/tokens live in `ui/theme` and `ui/components`.
-- Avoid one-off hardcoded colors in feature screens.
-- Reuse `GlassCard` and shared surface abstractions.
+## 5) Domain / Use Cases
 
-## KR-05: State and Async Handling
+- Business logic belongs in use cases/domain services with single, clear responsibility.
+- Domain models must represent real app concepts (Task, Transaction, Budget, ImportAudit, InsightCard, etc.).
+- Prefer pure functions for deterministic and testable logic.
 
-- ViewModels must expose explicit loading/success/error states.
-- Silent failure paths are forbidden.
-- Exceptions must map to actionable UI states.
+## 6) Repository Rules
 
-## KR-06: Security
+- Repositories coordinate data sources, mapping, and sync enqueueing.
+- Repositories should hide data source details from UI/ViewModels.
+- Keep repositories scoped to one domain area; avoid god repositories.
 
-- Plain-text passwords are forbidden.
-- Sensitive credentials/tokens must use encrypted storage.
-- Client apps must not embed provider secrets.
-- AI calls must go through a backend proxy endpoint.
+## 7) Room / Database Rules
 
-## KR-07: Data and Migrations
+- Room is authoritative for persistent, user-visible state.
+- Do not use destructive migration fallback in production paths.
+- Use explicit migrations and migration tests.
+- Keep entities explicit with ownership and lifecycle metadata where relevant:
+  `id, userId, createdAt, updatedAt, syncState, source, deletedAt`.
 
-- Destructive migration must not be default behavior for production paths.
-- Schema upgrades must use explicit Room migrations.
-- Sync models must include ownership fields compatible with Supabase RLS.
+## 8) Sync Rules
 
-## KR-08: Testing
+- Sync behavior must be explicit, retry-safe, idempotent, and observable.
+- Mutable synced records must carry sync metadata statuses:
+  `LOCAL_ONLY, QUEUED, SYNCING, SYNCED, FAILED, CONFLICT, TOMBSTONED`.
+- Never silently duplicate financial imports/transactions in retry or conflict paths.
 
-- Required tests for repositories, use cases, parsers, and security logic.
-- New business logic must ship with tests.
-- Priority tests:
-  - SMS parsing and dedupe
-  - Auth/session handling
-  - Sync/merge logic
+## 9) Platform / SMS Rules
 
-## KR-09: Tooling and Quality Gates
+- All SMS import runtime logic must stay in `platform/sms`.
+- Split SMS responsibilities: receiver/parser/ingestion/dedupe/audit/permissions/background.
+- Parser + dedupe must be heavily test-covered with fixtures and regression cases.
 
-- `detekt` and `ktlint` are required and must run in CI.
-- No new warnings in touched files without explicit justification.
+## 10) Network / Backend Rules
 
-## KR-10: Dependency Governance
+- UI must not call Supabase/HTTP directly.
+- Normalize network payloads via DTOs/mappers and explicit error models.
+- No secrets in app source.
+- Assistant/AI calls must be backend-mediated, and mutations must be previewable before commit.
 
-- Add dependencies only when existing platform/project tools are insufficient.
-- Prefer maintained and widely adopted libraries.
+## 11) Error Handling Rules
 
-## Compliance Checklist
+- No silent failures.
+- Use typed result/error models where practical.
+- Never swallow exceptions in critical paths: sync/import/migrations/auth/updates/export/reminders.
 
-- Architecture boundaries preserved.
-- No sensitive data stored in plaintext.
-- Async error handling present.
-- Test coverage added/updated for changed business logic.
-- New code follows module and style rules.
+## 12) File Size and Complexity
+
+- New files should remain easy to scan; ~300+ lines triggers decomposition.
+- One file should have one main responsibility.
+- Use intention-revealing filenames; avoid generic `Utils/Helper/Manager` naming.
+
+## 13) Naming Rules
+
+- Use clear names that reveal behavior and ownership.
+- Booleans should read as booleans (`isLoading`, `hasPendingImports`, `canRetry`).
+
+## 14) Modern Kotlin Rules
+
+- Use immutable data models by default.
+- Use sealed classes/interfaces for event/result/state models when useful.
+- Prefer coroutines + Flow (`suspend` for one-shot work, `Flow` for streams).
+- Favor composition over inheritance.
+
+## 15) Dependency Injection
+
+- Use Hilt with constructor injection by default.
+- Keep modules organized by feature/core boundary.
+- Avoid service locator patterns.
+
+## 16) Testing Rules
+
+- Prioritize business-critical tests: finance calculations, parser/dedupe, recurring, search, sync, migrations, assistant action parsing.
+- Add migration tests for Room changes.
+- Add repository integration tests for Room + sync behavior.
+
+## 17) Performance Rules
+
+- Optimize for low-end through flagship devices.
+- Avoid heavy recomposition and rendering overhead.
+- Keep startup coordinated and lightweight.
+- Keep background tasks battery/constraint aware.
+
+## 18) Documentation Rules
+
+- Major feature areas must have concise architecture notes:
+  purpose, entry points, data flow, constraints, and test notes.
+- Document tricky flows (SMS, sync, OTA, assistant actions, recurring, biometrics, export).
+
+## 19) Code Review Checklist
+
+- Does this preserve the architecture chain?
+- Is UI free from direct network/DB operations?
+- Is Room still source of truth?
+- Are sync/idempotency and financial dedupe guarantees preserved?
+- Are error handling and tests adequate for changed critical logic?
+- Is the change still easy to read and debug in 6+ months?
+
+## 20) Anti-Patterns to Avoid
+
+- God classes/repositories.
+- Hidden side effects and implicit sync behavior.
+- Business logic in composables.
+- Scattered SMS logic.
+- Assistant mutations without preview/confirmation.
+- Destructive migrations and silent catch blocks.
+
+## 21) Success Standard
+
+The codebase should remain:
+
+- easy to scan, debug, and extend,
+- robust in offline + sync-aware behavior,
+- safe for finance-related workflows,
+- strong in Android-native platform features,
+- maintainable for long-term ownership,
+- aligned with modern Kotlin/Android practice.

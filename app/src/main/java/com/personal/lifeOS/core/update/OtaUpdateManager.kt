@@ -66,14 +66,15 @@ data class OtaDownloadProgress(
     val bytesPerSecond: Long?,
 )
 
+private val otaManifestGson =
+    GsonBuilder()
+        .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+        .create()
+
 /**
  * APK OTA update manager for non-Play distribution.
  */
 object OtaUpdateManager {
-    private val gson =
-        GsonBuilder()
-            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-            .create()
     private val httpClient =
         OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS)
@@ -100,17 +101,12 @@ object OtaUpdateManager {
                     return@runCatching OtaCheckResult.Error("Empty OTA manifest response.")
                 }
 
-                val manifest = gson.fromJson(body, OtaUpdateManifest::class.java)
-                if (manifest.apkUrl.isBlank() || manifest.versionCode <= 0L) {
-                    return@runCatching OtaCheckResult.Error("Invalid OTA manifest fields.")
-                }
+                val manifest =
+                    parseManifestBody(body)
+                        ?: return@runCatching OtaCheckResult.Error("Invalid OTA manifest JSON.")
 
                 val currentVersionCode = getCurrentVersionCode(context)
-                if (manifest.versionCode > currentVersionCode) {
-                    OtaCheckResult.UpdateAvailable(manifest)
-                } else {
-                    OtaCheckResult.UpToDate
-                }
+                evaluateManifest(manifest, currentVersionCode)
             }.getOrElse { OtaCheckResult.Error(it.message ?: "Failed to check for updates.") }
         }
 
@@ -367,3 +363,23 @@ private fun Cursor.intColumnOrNull(name: String): Int? {
 }
 
 private fun Cursor.longColumn(name: String): Long = getLong(getColumnIndexOrThrow(name))
+
+internal fun parseManifestBody(body: String): OtaUpdateManifest? {
+    return runCatching {
+        otaManifestGson.fromJson(body, OtaUpdateManifest::class.java)
+    }.getOrNull()
+}
+
+internal fun evaluateManifest(
+    manifest: OtaUpdateManifest,
+    currentVersionCode: Long,
+): OtaCheckResult {
+    if (manifest.apkUrl.isBlank() || manifest.versionCode <= 0L) {
+        return OtaCheckResult.Error("Invalid OTA manifest fields.")
+    }
+    return if (manifest.versionCode > currentVersionCode) {
+        OtaCheckResult.UpdateAvailable(manifest)
+    } else {
+        OtaCheckResult.UpToDate
+    }
+}

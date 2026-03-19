@@ -54,6 +54,15 @@ class AssistantViewModel
             }
         }
 
+        fun onEvent(event: AssistantUiEvent) {
+            when (event) {
+                is AssistantUiEvent.InputChanged -> updateInput(event.text)
+                AssistantUiEvent.SendMessage -> sendMessage()
+                AssistantUiEvent.ApproveProposal -> approvePendingProposal()
+                AssistantUiEvent.RejectProposal -> rejectPendingProposal()
+            }
+        }
+
         fun updateInput(text: String) {
             _uiState.update { it.copy(inputText = text) }
         }

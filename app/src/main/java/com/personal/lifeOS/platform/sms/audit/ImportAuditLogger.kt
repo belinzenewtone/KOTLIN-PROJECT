@@ -1,5 +1,6 @@
 package com.personal.lifeOS.platform.sms.audit
 
+import com.personal.lifeOS.core.database.LocalIdGenerator
 import com.personal.lifeOS.core.database.dao.ImportAuditDao
 import com.personal.lifeOS.core.database.entity.ImportAuditEntity
 import com.personal.lifeOS.core.security.AuthSessionStore
@@ -25,7 +26,7 @@ class ImportAuditLogger
             if (userId.isBlank()) return
             importAuditDao.insert(
                 ImportAuditEntity(
-                    id = System.currentTimeMillis(),
+                    id = LocalIdGenerator.nextId(),
                     userId = userId,
                     rawMessage = rawMessage,
                     mpesaCode = mpesaCode,

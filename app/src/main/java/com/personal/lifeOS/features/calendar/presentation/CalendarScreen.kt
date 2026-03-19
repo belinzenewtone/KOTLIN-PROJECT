@@ -2,27 +2,34 @@ package com.personal.lifeOS.features.calendar.presentation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.personal.lifeOS.core.ui.designsystem.CalendarEventChip
+import com.personal.lifeOS.core.ui.designsystem.EmptyState
+import com.personal.lifeOS.core.ui.designsystem.InlineBanner
+import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
+import com.personal.lifeOS.core.ui.designsystem.PageScaffold
+import com.personal.lifeOS.core.ui.designsystem.SearchField
+import com.personal.lifeOS.core.utils.DateUtils
+import com.personal.lifeOS.features.calendar.domain.model.CalendarEvent
 import com.personal.lifeOS.ui.theme.AppSpacing
 import com.personal.lifeOS.ui.theme.BackgroundDark
 import com.personal.lifeOS.ui.theme.Primary
@@ -31,6 +38,8 @@ import com.personal.lifeOS.ui.theme.TextPrimary
 @Composable
 fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
+    var query by rememberSaveable { mutableStateOf("") }
+    val events = remember(state.selectedDayEvents, query) { state.selectedDayEvents.filterByQuery(query) }
 
     Scaffold(
         containerColor = BackgroundDark,
@@ -49,48 +58,18 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
             }
         },
     ) { padding ->
-        LazyColumn(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .statusBarsPadding()
-                    .padding(horizontal = AppSpacing.ScreenHorizontal),
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.Section),
-            contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFab),
-        ) {
-            item {
-                Spacer(Modifier.height(AppSpacing.ScreenTop))
-                Text("Calendar", style = MaterialTheme.typography.headlineLarge)
-                Spacer(Modifier.height(AppSpacing.ScreenTop))
-            }
-
-            item {
-                CalendarMonthCard(
-                    state = state,
-                    onPreviousMonth = { viewModel.navigateMonth(-1) },
-                    onNextMonth = { viewModel.navigateMonth(1) },
-                    onDateSelected = { viewModel.selectDate(it) },
-                )
-            }
-
-            item {
-                SelectedDateHeader(selectedDate = state.selectedDate)
-            }
-
-            if (state.selectedDayEvents.isEmpty()) {
-                item { EmptyDayEventsCard() }
-            }
-
-            items(state.selectedDayEvents, key = { it.id }) { event ->
-                CalendarEventCard(
-                    event = event,
-                    onComplete = { viewModel.markEventCompleted(event) },
-                    onEdit = { viewModel.showEditDialog(event) },
-                    onDelete = { viewModel.deleteEvent(event) },
-                )
-            }
-        }
+        CalendarBody(
+            state = state,
+            events = events,
+            query = query,
+            padding = padding,
+            onQueryChange = { query = it },
+            onNavigateMonth = { offset -> viewModel.navigateMonth(offset) },
+            onSelectDate = { selected -> viewModel.selectDate(selected) },
+            onComplete = { event -> viewModel.markEventCompleted(event) },
+            onEdit = { event -> viewModel.showEditDialog(event) },
+            onDelete = { event -> viewModel.deleteEvent(event) },
+        )
     }
 
     if (state.showAddDialog) {
@@ -102,5 +81,91 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
                 viewModel.saveEvent(title, desc, type, importance, eventDate, endDate)
             },
         )
+    }
+}
+
+@Composable
+@Suppress("LongParameterList")
+private fun CalendarBody(
+    state: CalendarUiState,
+    events: List<CalendarEvent>,
+    query: String,
+    padding: PaddingValues,
+    onQueryChange: (String) -> Unit,
+    onNavigateMonth: (Int) -> Unit,
+    onSelectDate: (java.time.LocalDate) -> Unit,
+    onComplete: (CalendarEvent) -> Unit,
+    onEdit: (CalendarEvent) -> Unit,
+    onDelete: (CalendarEvent) -> Unit,
+) {
+    PageScaffold(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(padding),
+        title = "Calendar",
+        subtitle = DateUtils.formatDate(System.currentTimeMillis(), "MMMM yyyy"),
+        contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFab),
+    ) {
+        state.error?.let {
+            InlineBanner(
+                message = it,
+                tone = InlineBannerTone.ERROR,
+            )
+        }
+
+        CalendarMonthCard(
+            state = state,
+            onPreviousMonth = { onNavigateMonth(-1) },
+            onNextMonth = { onNavigateMonth(1) },
+            onDateSelected = onSelectDate,
+        )
+
+        Text(
+            text = DateUtils.formatDate(
+                state.selectedDate.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                "EEEE, MMM dd",
+            ),
+            style = androidx.compose.material3.MaterialTheme.typography.titleMedium,
+        )
+
+        SearchField(
+            value = query,
+            onValueChange = onQueryChange,
+            placeholder = "Search events for selected day",
+        )
+
+        if (events.isEmpty()) {
+            EmptyState(
+                title = "No events on this day",
+                description = "Tap + to add an event or pick another date.",
+            )
+        } else {
+            androidx.compose.foundation.layout.Column(
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                events.forEach { event ->
+                    CalendarEventChip(
+                        title = event.title,
+                        timeLabel = DateUtils.formatTime(event.date),
+                    )
+                    CalendarEventCard(
+                        event = event,
+                        onComplete = { onComplete(event) },
+                        onEdit = { onEdit(event) },
+                        onDelete = { onDelete(event) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun List<CalendarEvent>.filterByQuery(query: String): List<CalendarEvent> {
+    if (query.isBlank()) return this
+    val search = query.trim()
+    return filter { event ->
+        event.title.contains(search, ignoreCase = true) ||
+            event.description.contains(search, ignoreCase = true)
     }
 }

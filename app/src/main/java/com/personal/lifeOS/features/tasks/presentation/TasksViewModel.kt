@@ -44,6 +44,24 @@ class TasksViewModel
             loadTasks()
         }
 
+        fun onEvent(event: TasksUiEvent) {
+            when (event) {
+                TasksUiEvent.AddTask -> showAddDialog()
+                is TasksUiEvent.EditTask -> {
+                    _uiState.value.pendingTasks.firstOrNull { it.id == event.taskId }?.let(::showEditDialog)
+                }
+                is TasksUiEvent.CompleteTask -> {
+                    _uiState.value.pendingTasks.firstOrNull { it.id == event.taskId }?.let(::completeTask)
+                }
+                is TasksUiEvent.DeleteTask -> {
+                    (_uiState.value.pendingTasks + _uiState.value.completedTasks)
+                        .firstOrNull { it.id == event.taskId }
+                        ?.let(::deleteTask)
+                }
+                TasksUiEvent.DismissDialog -> hideDialog()
+            }
+        }
+
         fun showAddDialog() {
             _uiState.update {
                 it.copy(

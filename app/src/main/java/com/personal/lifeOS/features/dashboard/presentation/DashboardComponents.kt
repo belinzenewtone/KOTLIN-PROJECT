@@ -57,8 +57,8 @@ internal fun DashboardHeader(greeting: String) {
         modifier = Modifier.fillMaxWidth(),
     ) {
         Image(
-            painter = painterResource(id = R.drawable.logo),
-            contentDescription = "BELTECH Logo",
+            painter = painterResource(id = R.drawable.logo_personalos_mark),
+            contentDescription = "PersonalOS logo",
             modifier =
                 Modifier
                     .size(44.dp)

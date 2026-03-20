@@ -1,8 +1,8 @@
 {
-  "version_code": 8,
-  "version_name": "1.0.7",
-  "download_url": "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.0.7/app-release-v1.0.7.apk",
-  "checksum_sha256": "013cb9020c1f2523cc21a69aa51e3d5d77ef4a7c3a4a2b2f4eca5edab1f84037",
+  "version_code": 9,
+  "version_name": "1.0.8",
+  "download_url": "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.0.8/app-release-v1.0.8.apk",
+  "checksum_sha256": "14eb2836ac6a9bc6f7fb7980abb95a22c7472c6c4dd342ee6f2f9c8a8347a091",
   "required": false,
-  "release_notes": "Hotfix: fix Room schema integrity crash by introducing DB migration 8->9 for transactions.source_hash, plus OTA/app version bump."
+  "release_notes": "Hotfix: complete Room 8->9 migration for legacy v8 installs by creating both transactions indexes (mpesa_code and source_hash) and resolving migration validation crash."
 }

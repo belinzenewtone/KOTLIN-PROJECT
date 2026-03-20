@@ -572,6 +572,9 @@ object DatabaseMigrations {
                     database.execSQL("ALTER TABLE transactions ADD COLUMN source_hash TEXT")
                 }
                 database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_transactions_mpesa_code ON transactions(mpesa_code)",
+                )
+                database.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_transactions_source_hash ON transactions(source_hash)",
                 )
             }

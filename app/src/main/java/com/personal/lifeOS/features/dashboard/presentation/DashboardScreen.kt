@@ -14,6 +14,8 @@ fun DashboardScreen(
     onOpenCalendar: () -> Unit = {},
     onOpenAssistant: () -> Unit = {},
     onOpenProfile: () -> Unit = {},
+    onOpenInsights: () -> Unit = {},
+    onOpenLearning: () -> Unit = {},
 ) {
     HomeScreen(
         onOpenTasks = onOpenTasks,
@@ -21,5 +23,7 @@ fun DashboardScreen(
         onOpenCalendar = onOpenCalendar,
         onOpenAssistant = onOpenAssistant,
         onOpenProfile = onOpenProfile,
+        onOpenInsights = onOpenInsights,
+        onOpenLearning = onOpenLearning,
     )
 }

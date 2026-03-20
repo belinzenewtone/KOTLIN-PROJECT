@@ -117,7 +117,7 @@ if ($release.assets) {
 }
 
 $uploadUrlBase = $release.upload_url -replace "\{\?name,label\}", ""
-$assetUploadUrl = "$uploadUrlBase?name=$([uri]::EscapeDataString($AssetName))"
+$assetUploadUrl = "${uploadUrlBase}?name=$([uri]::EscapeDataString($AssetName))"
 
 Write-Step "Uploading APK asset '$AssetName'"
 $uploadedAsset = Invoke-RestMethod `

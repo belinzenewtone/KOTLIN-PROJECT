@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
@@ -111,6 +112,7 @@ private data class BiometricLockState(
 
 @Composable
 @Suppress("CyclomaticComplexMethod")
+@OptIn(ExperimentalLayoutApi::class)
 fun LifeOSNavHost(
     biometricEnabled: Boolean,
     startDestination: String = AppRoute.Auth,
@@ -525,7 +527,7 @@ private fun RowScope.BottomNavItem(
     ) {
         Box(contentAlignment = Alignment.Center) {
             // Animated pill indicator — scales in/out smoothly
-            AnimatedVisibility(
+            androidx.compose.animation.AnimatedVisibility(
                 visible = selected,
                 enter = scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)) + fadeIn(tween(180)),
                 exit  = scaleOut(tween(140)) + fadeOut(tween(140)),

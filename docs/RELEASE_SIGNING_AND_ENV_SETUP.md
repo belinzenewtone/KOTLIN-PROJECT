@@ -18,6 +18,19 @@ ASSISTANT_PROXY_URL=...
 OTA_MANIFEST_URL=...
 ```
 
+For GitHub-hosted OTA, set:
+
+```properties
+OTA_MANIFEST_URL=https://raw.githubusercontent.com/belinzenewtone/KOTLIN-PROJECT/main/ota/manifest.json
+```
+
+To publish a GitHub release asset and refresh `ota/manifest.json`:
+
+```powershell
+$env:GITHUB_TOKEN="<token>"
+.\scripts\publish_github_ota_release.ps1 -VersionCode 12 -VersionName 1.2.0 -ReleaseNotes "Stability improvements" -BuildRelease
+```
+
 ## 2) Run strict release checks
 
 Use Gradle properties to force release-gate checks:

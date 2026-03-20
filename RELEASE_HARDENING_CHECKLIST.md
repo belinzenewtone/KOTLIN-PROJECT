@@ -52,6 +52,7 @@ Use this checklist before cutting a production release of the Kotlin BELTECH app
 - OTA updates:
   - Open `Planner > Settings > App Updates`.
   - Ensure `OTA_MANIFEST_URL` is configured in `local.properties`.
+  - If using GitHub Releases OTA, ensure `ota/manifest.json` points to the latest release asset URL and checksum.
   - Tap `Check for updates`, then `Download & install`, and verify:
     - APK downloads successfully
     - installer opens

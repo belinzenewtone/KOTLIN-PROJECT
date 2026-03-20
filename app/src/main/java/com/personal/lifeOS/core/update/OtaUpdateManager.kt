@@ -12,6 +12,7 @@ import android.provider.Settings
 import androidx.core.content.pm.PackageInfoCompat
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
+import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -22,14 +23,23 @@ import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
 
 data class OtaUpdateManifest(
+    @SerializedName("version_code")
     val versionCode: Long,
+    @SerializedName("version_name")
     val versionName: String? = null,
+    @SerializedName(value = "apk_url", alternate = ["download_url"])
     val apkUrl: String,
+    @SerializedName(value = "apk_sha256", alternate = ["checksum_sha256"])
     val apkSha256: String? = null,
+    @SerializedName(value = "changelog", alternate = ["release_notes"])
     val changelog: String? = null,
+    @SerializedName(value = "mandatory", alternate = ["required"])
     val mandatory: Boolean = false,
+    @SerializedName("title")
     val title: String? = null,
+    @SerializedName("message")
     val message: String? = null,
+    @SerializedName("website_url")
     val websiteUrl: String? = null,
 )
 

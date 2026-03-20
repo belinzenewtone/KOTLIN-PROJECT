@@ -83,6 +83,8 @@ SUPABASE_URL=https://<project>.supabase.co
 SUPABASE_ANON_KEY=<anon-key>
 ASSISTANT_PROXY_URL=https://<project>.supabase.co/functions/v1/assistant-proxy
 OTA_MANIFEST_URL=https://<project>.supabase.co/functions/v1/ota-manifest
+# OR (GitHub-hosted manifest):
+# OTA_MANIFEST_URL=https://raw.githubusercontent.com/belinzenewtone/KOTLIN-PROJECT/main/ota/manifest.json
 ```
 
 Assistant calls are proxy-based. Do not place model provider secret keys in the Android app.
@@ -112,6 +114,38 @@ supabase functions deploy ota-manifest --no-verify-jwt --use-api
 - `assistant-proxy` accepts `POST { prompt, context }` and returns `{ reply }`.
 - `ota-manifest` returns manifest JSON using snake_case fields expected by `OtaUpdateManager`.
 - `assistant-proxy` provider order: OpenAI (`OPENAI_API_KEY`) -> Gemini (`GEMINI_API_KEY`) -> deterministic local fallback.
+
+## OTA With GitHub Releases
+
+You can distribute updates without Play Store by hosting the OTA manifest in this repo and APK assets in GitHub Releases.
+
+1. Set your app to use the GitHub manifest endpoint:
+   - `OTA_MANIFEST_URL=https://raw.githubusercontent.com/belinzenewtone/KOTLIN-PROJECT/main/ota/manifest.json`
+2. Export a GitHub token for API upload (classic PAT with `repo` scope, or fine-grained token with release write access):
+   - PowerShell: `$env:GITHUB_TOKEN="<token>"`
+3. Publish/update release + OTA manifest with one script:
+   - `.\scripts\publish_github_ota_release.ps1 -VersionCode 12 -VersionName 1.2.0 -ReleaseNotes "Fixed dark mode issues, improved keyboard handling" -BuildRelease`
+4. Commit and push the updated manifest:
+   - `git add ota/manifest.json`
+   - `git commit -m "chore: update OTA manifest for v1.2.0"`
+   - `git push origin main`
+
+The script will:
+- build `app-release.apk` (when `-BuildRelease` is provided),
+- compute SHA-256,
+- create or reuse release tag `v<VersionName>`,
+- upload APK asset to GitHub Releases,
+- write `ota/manifest.json` using keys:
+  - `version_code`
+  - `version_name`
+  - `download_url`
+  - `checksum_sha256`
+  - `required`
+  - `release_notes`
+
+Compatibility note: the app accepts both manifest shapes:
+- legacy keys: `apk_url`, `apk_sha256`, `mandatory`, `changelog`
+- GitHub keys: `download_url`, `checksum_sha256`, `required`, `release_notes`
 
 ## Supabase Isolation Smoke Test
 

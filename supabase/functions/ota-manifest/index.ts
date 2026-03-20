@@ -42,7 +42,7 @@ Deno.serve((request: Request): Response => {
   const versionName = (Deno.env.get("OTA_VERSION_NAME") ?? "1.0.0").trim();
   const apkUrl = (
     Deno.env.get("OTA_APK_URL") ??
-    "https://github.com/belinzenewtone/DART-2.0/releases"
+    "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.0.0/app-release.apk"
   ).trim();
   const apkSha256 = (Deno.env.get("OTA_APK_SHA256") ?? "").trim();
   const changelog = (
@@ -57,7 +57,7 @@ Deno.serve((request: Request): Response => {
   ).trim();
   const websiteUrl = (
     Deno.env.get("OTA_WEBSITE_URL") ??
-    "https://github.com/belinzenewtone/DART-2.0"
+    "https://github.com/belinzenewtone/KOTLIN-PROJECT"
   ).trim();
 
   if (!apkUrl) {

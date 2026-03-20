@@ -30,6 +30,33 @@ class OtaManifestInterpretationTest {
     }
 
     @Test
+    fun `parseManifestBody parses github-style manifest payload`() {
+        val json =
+            """
+            {
+              "version_code": 121,
+              "version_name": "2.1.1",
+              "download_url": "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v2.1.1/app-release.apk",
+              "checksum_sha256": "def456",
+              "required": false,
+              "release_notes": "Fixes and improvements"
+            }
+            """.trimIndent()
+
+        val manifest = parseManifestBody(json)
+        assertNotNull(manifest)
+        assertEquals(121L, manifest?.versionCode)
+        assertEquals("2.1.1", manifest?.versionName)
+        assertEquals(
+            "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v2.1.1/app-release.apk",
+            manifest?.apkUrl,
+        )
+        assertEquals("def456", manifest?.apkSha256)
+        assertTrue(manifest?.mandatory == false)
+        assertEquals("Fixes and improvements", manifest?.changelog)
+    }
+
+    @Test
     fun `parseManifestBody returns null for malformed payload`() {
         val malformedJson = """{ "version_code": """
         val manifest = parseManifestBody(malformedJson)

@@ -34,7 +34,6 @@ import com.personal.lifeOS.core.ui.designsystem.SearchField
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.calendar.domain.model.CalendarEvent
 import com.personal.lifeOS.ui.theme.AppSpacing
-import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {

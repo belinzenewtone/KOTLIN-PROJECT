@@ -58,7 +58,7 @@ class EnhancedMpesaIngestionPipeline
                     mpesaCode = parsed.mpesaCode,
                     rawMessage = rawMessage,
                     amount = parsed.amount,
-                    merchant = parsed.counterparty,
+                    merchant = parsed.counterparty ?: "Unknown",
                     timestamp = parsed.date,
                 )
             ) {
@@ -66,7 +66,6 @@ class EnhancedMpesaIngestionPipeline
                     outcome = "duplicate_detected",
                     rawMessage = rawMessage,
                     mpesaCode = parsed.mpesaCode,
-                    sourceHash = computeSourceHash(rawMessage),
                     amount = parsed.amount,
                     merchant = parsed.counterparty,
                 )
@@ -85,8 +84,6 @@ class EnhancedMpesaIngestionPipeline
                     mpesaCode = parsed.mpesaCode,
                     amount = parsed.amount,
                     merchant = parsed.counterparty,
-                    confidence = parsed.confidence.name,
-                    importDecision = importDecision.name,
                     failureReason = "Repository import returned null",
                 )
                 return EnhancedMpesaIngestionOutcome.IMPORT_FAILED
@@ -94,15 +91,11 @@ class EnhancedMpesaIngestionPipeline
 
             // Log success with confidence level
             importAuditLogger.log(
-                outcome = "imported_success",
+                outcome = importDecision.name.lowercase(),
                 rawMessage = rawMessage,
                 mpesaCode = parsed.mpesaCode,
                 amount = parsed.amount,
                 merchant = parsed.counterparty,
-                category = imported.category,
-                confidence = parsed.confidence.name,
-                importDecision = importDecision.name,
-                description = parsed.description,
             )
 
             // Return outcome that indicates confidence level

@@ -55,6 +55,7 @@ private val EventType.dotColor: Color
         EventType.FINANCE -> Color(0xFFF59E0B)   // amber
         EventType.HEALTH -> Color(0xFF16A34A)    // green
         EventType.PERSONAL -> Color(0xFF94A3B8)  // slate
+        EventType.OTHER -> Color(0xFF64748B)     // muted slate
     }
 
 @Composable

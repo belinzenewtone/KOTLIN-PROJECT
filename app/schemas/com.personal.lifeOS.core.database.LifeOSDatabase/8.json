@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 8,
-    "identityHash": "4b159bf688a9b0966ad4b8e401b262b0",
+    "identityHash": "b82170ba32265a822efc367a96af752d",
     "entities": [
       {
         "tableName": "transactions",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `amount` REAL NOT NULL, `merchant` TEXT NOT NULL, `category` TEXT NOT NULL, `date` INTEGER NOT NULL, `source` TEXT NOT NULL, `transaction_type` TEXT NOT NULL, `mpesa_code` TEXT, `raw_sms` TEXT, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `sync_state` TEXT NOT NULL, `record_source` TEXT NOT NULL, `deleted_at` INTEGER, `revision` INTEGER NOT NULL, `user_id` TEXT NOT NULL, PRIMARY KEY(`user_id`, `id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `amount` REAL NOT NULL, `merchant` TEXT NOT NULL, `category` TEXT NOT NULL, `date` INTEGER NOT NULL, `source` TEXT NOT NULL, `transaction_type` TEXT NOT NULL, `mpesa_code` TEXT, `source_hash` TEXT, `raw_sms` TEXT, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `sync_state` TEXT NOT NULL, `record_source` TEXT NOT NULL, `deleted_at` INTEGER, `revision` INTEGER NOT NULL, `user_id` TEXT NOT NULL, PRIMARY KEY(`user_id`, `id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -53,14 +53,17 @@
           {
             "fieldPath": "mpesaCode",
             "columnName": "mpesa_code",
-            "affinity": "TEXT",
-            "notNull": false
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sourceHash",
+            "columnName": "source_hash",
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "rawSms",
             "columnName": "raw_sms",
-            "affinity": "TEXT",
-            "notNull": false
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "createdAt",
@@ -89,8 +92,7 @@
           {
             "fieldPath": "deletedAt",
             "columnName": "deleted_at",
-            "affinity": "INTEGER",
-            "notNull": false
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "revision",
@@ -148,9 +150,26 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_transactions_merchant` ON `${TABLE_NAME}` (`merchant`)"
+          },
+          {
+            "name": "index_transactions_mpesa_code",
+            "unique": false,
+            "columnNames": [
+              "mpesa_code"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_transactions_mpesa_code` ON `${TABLE_NAME}` (`mpesa_code`)"
+          },
+          {
+            "name": "index_transactions_source_hash",
+            "unique": false,
+            "columnNames": [
+              "source_hash"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_transactions_source_hash` ON `${TABLE_NAME}` (`source_hash`)"
           }
-        ],
-        "foreignKeys": []
+        ]
       },
       {
         "tableName": "merchant_categories",
@@ -213,8 +232,7 @@
           {
             "fieldPath": "deletedAt",
             "columnName": "deleted_at",
-            "affinity": "INTEGER",
-            "notNull": false
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "revision",
@@ -256,8 +274,7 @@
             "orders": [],
             "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_merchant_categories_user_id_merchant` ON `${TABLE_NAME}` (`user_id`, `merchant`)"
           }
-        ],
-        "foreignKeys": []
+        ]
       },
       {
         "tableName": "tasks",
@@ -290,8 +307,7 @@
           {
             "fieldPath": "deadline",
             "columnName": "deadline",
-            "affinity": "INTEGER",
-            "notNull": false
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "status",
@@ -302,8 +318,7 @@
           {
             "fieldPath": "completedAt",
             "columnName": "completed_at",
-            "affinity": "INTEGER",
-            "notNull": false
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "createdAt",
@@ -332,8 +347,7 @@
           {
             "fieldPath": "deletedAt",
             "columnName": "deleted_at",
-            "affinity": "INTEGER",
-            "notNull": false
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "revision",
@@ -392,8 +406,7 @@
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_tasks_priority` ON `${TABLE_NAME}` (`priority`)"
           }
-        ],
-        "foreignKeys": []
+        ]
       },
       {
         "tableName": "events",
@@ -426,8 +439,7 @@
           {
             "fieldPath": "endDate",
             "columnName": "end_date",
-            "affinity": "INTEGER",
-            "notNull": false
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "type",
@@ -486,8 +498,7 @@
           {
             "fieldPath": "deletedAt",
             "columnName": "deleted_at",
-            "affinity": "INTEGER",
-            "notNull": false
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "revision",
@@ -546,8 +557,7 @@
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_events_status` ON `${TABLE_NAME}` (`status`)"
           }
-        ],
-        "foreignKeys": []
+        ]
       },
       {
         "tableName": "budgets",
@@ -604,8 +614,7 @@
           {
             "fieldPath": "deletedAt",
             "columnName": "deleted_at",
-            "affinity": "INTEGER",
-            "notNull": false
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "revision",
@@ -655,8 +664,7 @@
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_budgets_period` ON `${TABLE_NAME}` (`period`)"
           }
-        ],
-        "foreignKeys": []
+        ]
       },
       {
         "tableName": "incomes",
@@ -725,8 +733,7 @@
           {
             "fieldPath": "deletedAt",
             "columnName": "deleted_at",
-            "affinity": "INTEGER",
-            "notNull": false
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "revision",
@@ -776,8 +783,7 @@
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_incomes_source` ON `${TABLE_NAME}` (`source`)"
           }
-        ],
-        "foreignKeys": []
+        ]
       },
       {
         "tableName": "recurring_rules",
@@ -816,8 +822,7 @@
           {
             "fieldPath": "amount",
             "columnName": "amount",
-            "affinity": "REAL",
-            "notNull": false
+            "affinity": "REAL"
           },
           {
             "fieldPath": "enabled",
@@ -852,8 +857,7 @@
           {
             "fieldPath": "deletedAt",
             "columnName": "deleted_at",
-            "affinity": "INTEGER",
-            "notNull": false
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "revision",
@@ -903,8 +907,7 @@
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_recurring_rules_enabled` ON `${TABLE_NAME}` (`enabled`)"
           }
-        ],
-        "foreignKeys": []
+        ]
       },
       {
         "tableName": "users",
@@ -925,8 +928,7 @@
           {
             "fieldPath": "email",
             "columnName": "email",
-            "affinity": "TEXT",
-            "notNull": false
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "createdAt",
@@ -940,9 +942,7 @@
           "columnNames": [
             "id"
           ]
-        },
-        "indices": [],
-        "foreignKeys": []
+        }
       },
       {
         "tableName": "sync_jobs",
@@ -993,8 +993,7 @@
           {
             "fieldPath": "lastError",
             "columnName": "last_error",
-            "affinity": "TEXT",
-            "notNull": false
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "nextRunAt",
@@ -1050,8 +1049,7 @@
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_sync_jobs_entity_type_entity_id` ON `${TABLE_NAME}` (`entity_type`, `entity_id`)"
           }
-        ],
-        "foreignKeys": []
+        ]
       },
       {
         "tableName": "import_audit",
@@ -1078,20 +1076,17 @@
           {
             "fieldPath": "mpesaCode",
             "columnName": "mpesa_code",
-            "affinity": "TEXT",
-            "notNull": false
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "amount",
             "columnName": "amount",
-            "affinity": "REAL",
-            "notNull": false
+            "affinity": "REAL"
           },
           {
             "fieldPath": "merchant",
             "columnName": "merchant",
-            "affinity": "TEXT",
-            "notNull": false
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "outcome",
@@ -1102,8 +1097,7 @@
           {
             "fieldPath": "failureReason",
             "columnName": "failure_reason",
-            "affinity": "TEXT",
-            "notNull": false
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "importedAt",
@@ -1168,8 +1162,7 @@
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_import_audit_mpesa_code` ON `${TABLE_NAME}` (`mpesa_code`)"
           }
-        ],
-        "foreignKeys": []
+        ]
       },
       {
         "tableName": "assistant_conversations",
@@ -1220,8 +1213,7 @@
           {
             "fieldPath": "deletedAt",
             "columnName": "deleted_at",
-            "affinity": "INTEGER",
-            "notNull": false
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "revision",
@@ -1256,8 +1248,7 @@
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_assistant_conversations_updated_at` ON `${TABLE_NAME}` (`updated_at`)"
           }
-        ],
-        "foreignKeys": []
+        ]
       },
       {
         "tableName": "assistant_messages",
@@ -1296,8 +1287,7 @@
           {
             "fieldPath": "actionPayload",
             "columnName": "action_payload",
-            "affinity": "TEXT",
-            "notNull": false
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "isPreview",
@@ -1332,8 +1322,7 @@
           {
             "fieldPath": "deletedAt",
             "columnName": "deleted_at",
-            "affinity": "INTEGER",
-            "notNull": false
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "revision",
@@ -1377,8 +1366,7 @@
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_assistant_messages_created_at` ON `${TABLE_NAME}` (`created_at`)"
           }
-        ],
-        "foreignKeys": []
+        ]
       },
       {
         "tableName": "insight_cards",
@@ -1417,8 +1405,7 @@
           {
             "fieldPath": "confidence",
             "columnName": "confidence",
-            "affinity": "REAL",
-            "notNull": false
+            "affinity": "REAL"
           },
           {
             "fieldPath": "isAiGenerated",
@@ -1429,8 +1416,7 @@
           {
             "fieldPath": "freshUntil",
             "columnName": "fresh_until",
-            "affinity": "INTEGER",
-            "notNull": false
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "createdAt",
@@ -1459,8 +1445,7 @@
           {
             "fieldPath": "deletedAt",
             "columnName": "deleted_at",
-            "affinity": "INTEGER",
-            "notNull": false
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "revision",
@@ -1513,8 +1498,7 @@
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_insight_cards_fresh_until` ON `${TABLE_NAME}` (`fresh_until`)"
           }
-        ],
-        "foreignKeys": []
+        ]
       },
       {
         "tableName": "review_snapshots",
@@ -1577,8 +1561,7 @@
           {
             "fieldPath": "deletedAt",
             "columnName": "deleted_at",
-            "affinity": "INTEGER",
-            "notNull": false
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "revision",
@@ -1622,8 +1605,7 @@
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_review_snapshots_period_end` ON `${TABLE_NAME}` (`period_end`)"
           }
-        ],
-        "foreignKeys": []
+        ]
       },
       {
         "tableName": "app_update_info",
@@ -1650,8 +1632,7 @@
           {
             "fieldPath": "versionName",
             "columnName": "version_name",
-            "affinity": "TEXT",
-            "notNull": false
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "isRequired",
@@ -1662,14 +1643,12 @@
           {
             "fieldPath": "downloadUrl",
             "columnName": "download_url",
-            "affinity": "TEXT",
-            "notNull": false
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "checksumSha256",
             "columnName": "checksum_sha256",
-            "affinity": "TEXT",
-            "notNull": false
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "checkedAt",
@@ -1725,8 +1704,7 @@
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_app_update_info_version_code` ON `${TABLE_NAME}` (`version_code`)"
           }
-        ],
-        "foreignKeys": []
+        ]
       },
       {
         "tableName": "export_history",
@@ -1759,20 +1737,17 @@
           {
             "fieldPath": "dateFrom",
             "columnName": "date_from",
-            "affinity": "INTEGER",
-            "notNull": false
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "dateTo",
             "columnName": "date_to",
-            "affinity": "INTEGER",
-            "notNull": false
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "filePath",
             "columnName": "file_path",
-            "affinity": "TEXT",
-            "notNull": false
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "itemCount",
@@ -1795,8 +1770,7 @@
           {
             "fieldPath": "errorMessage",
             "columnName": "error_message",
-            "affinity": "TEXT",
-            "notNull": false
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "exportedAt",
@@ -1870,14 +1844,12 @@
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_export_history_domain_scope` ON `${TABLE_NAME}` (`domain_scope`)"
           }
-        ],
-        "foreignKeys": []
+        ]
       }
     ],
-    "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4b159bf688a9b0966ad4b8e401b262b0')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b82170ba32265a822efc367a96af752d')"
     ]
   }
 }

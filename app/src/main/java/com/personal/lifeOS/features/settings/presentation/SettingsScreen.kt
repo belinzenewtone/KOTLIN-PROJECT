@@ -32,11 +32,25 @@ import com.personal.lifeOS.core.ui.designsystem.InlineBanner
 import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
 import com.personal.lifeOS.ui.theme.AppThemeMode
-import com.personal.lifeOS.ui.theme.TextSecondary
 import kotlinx.coroutines.flow.collectLatest
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.SettingsBrightness
+import androidx.compose.material3.Icon
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.tween
 
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
@@ -67,19 +81,17 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         }
 
         AppCard(elevated = true) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Theme Mode", style = MaterialTheme.typography.titleMedium)
-                Row(
-                    modifier = Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    AppThemeMode.entries.forEach { mode ->
-                        OutlinedButton(onClick = { viewModel.onEvent(SettingsUiEvent.SetThemeMode(mode)) }) {
-                            val marker = if (state.themeMode == mode) "• " else ""
-                            Text("$marker${mode.name.lowercase().replaceFirstChar { it.uppercase() }}")
-                        }
-                    }
-                }
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Appearance", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "Choose how the app looks on your device.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                ThemeModeToggle(
+                    selected = state.themeMode,
+                    onSelect = { mode -> viewModel.onEvent(SettingsUiEvent.SetThemeMode(mode)) },
+                )
             }
         }
 
@@ -94,7 +106,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     Text(
                         "Disable to stop new reminders and clear scheduled alarms",
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Switch(
@@ -137,10 +149,10 @@ private fun DiagnosticsHealthCard(
             Text(
                 text = "Last sync update: ${formatTimestamp(state.syncHealth.latestJobUpdatedAt)}",
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            HorizontalDivider(color = TextSecondary.copy(alpha = 0.2f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
 
             Text(
                 text =
@@ -153,10 +165,10 @@ private fun DiagnosticsHealthCard(
                     "Ignored ${state.importHealth.ignored}, recovered ${state.importHealth.recovered}, " +
                         "last import ${formatTimestamp(state.importHealth.latestImportAt)}",
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            HorizontalDivider(color = TextSecondary.copy(alpha = 0.2f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
 
             val update = state.latestUpdateInfo
             Text(
@@ -170,7 +182,7 @@ private fun DiagnosticsHealthCard(
                 style = MaterialTheme.typography.bodySmall,
             )
 
-            HorizontalDivider(color = TextSecondary.copy(alpha = 0.2f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
 
             Text("Feature flags", style = MaterialTheme.typography.titleSmall)
             FeatureFlag.entries.forEach { flag ->
@@ -178,7 +190,7 @@ private fun DiagnosticsHealthCard(
                 Text(
                     text = "${flag.key}: ${if (enabled) "enabled" else "disabled"}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
@@ -202,7 +214,7 @@ private fun OtaUpdateCard(
             Text(
                 text = state.statusMessage,
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             state.availableUpdate?.let { update ->
@@ -214,7 +226,7 @@ private fun OtaUpdateCard(
                     Text(
                         text = "Changelog: $it",
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -288,4 +300,66 @@ private fun formatTimestamp(epochMillis: Long?): String {
         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
             .withZone(ZoneId.systemDefault())
     return formatter.format(Instant.ofEpochMilli(epochMillis))
+}
+
+@Composable
+private fun ThemeModeToggle(
+    selected: com.personal.lifeOS.ui.theme.AppThemeMode,
+    onSelect: (com.personal.lifeOS.ui.theme.AppThemeMode) -> Unit,
+) {
+    val modes = listOf(
+        Triple(com.personal.lifeOS.ui.theme.AppThemeMode.LIGHT,  Icons.Filled.LightMode,         "Light"),
+        Triple(com.personal.lifeOS.ui.theme.AppThemeMode.SYSTEM, Icons.Filled.SettingsBrightness, "Auto"),
+        Triple(com.personal.lifeOS.ui.theme.AppThemeMode.DARK,   Icons.Filled.DarkMode,           "Dark"),
+    )
+    val shape = RoundedCornerShape(12.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, shape)
+            .height(48.dp),
+    ) {
+        modes.forEach { (mode, icon, label) ->
+            val isSelected = selected == mode
+            // Animate background and content colours for a smooth feel
+            val bgColor by animateColorAsState(
+                targetValue = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                              else MaterialTheme.colorScheme.surface,
+                animationSpec = tween(durationMillis = 240, easing = EaseInOut),
+                label = "toggleBg_$label",
+            )
+            val contentColor by animateColorAsState(
+                targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
+                              else MaterialTheme.colorScheme.onSurfaceVariant,
+                animationSpec = tween(durationMillis = 240, easing = EaseInOut),
+                label = "toggleContent_$label",
+            )
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .background(bgColor)
+                    .clickable { onSelect(mode) },
+                contentAlignment = androidx.compose.ui.Alignment.Center,
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = label,
+                        tint = contentColor,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = contentColor,
+                    )
+                }
+            }
+        }
+    }
 }

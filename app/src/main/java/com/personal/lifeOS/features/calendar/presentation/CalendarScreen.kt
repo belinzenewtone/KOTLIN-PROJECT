@@ -31,9 +31,7 @@ import com.personal.lifeOS.core.ui.designsystem.SearchField
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.calendar.domain.model.CalendarEvent
 import com.personal.lifeOS.ui.theme.AppSpacing
-import com.personal.lifeOS.ui.theme.BackgroundDark
-import com.personal.lifeOS.ui.theme.Primary
-import com.personal.lifeOS.ui.theme.TextPrimary
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
@@ -42,7 +40,7 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
     val events = remember(state.selectedDayEvents, query) { state.selectedDayEvents.filterByQuery(query) }
 
     Scaffold(
-        containerColor = BackgroundDark,
+        containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             FloatingActionButton(
                 modifier =
@@ -50,8 +48,8 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
                         .navigationBarsPadding()
                         .padding(bottom = AppSpacing.FabBottomOffset),
                 onClick = { viewModel.showAddDialog() },
-                containerColor = Primary,
-                contentColor = TextPrimary,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onSurface,
                 shape = CircleShape,
             ) {
                 Icon(Icons.Filled.Add, contentDescription = "Add event")

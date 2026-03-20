@@ -27,7 +27,6 @@ import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.budget.domain.model.BudgetPeriod
 import com.personal.lifeOS.features.budget.domain.model.BudgetProgress
 import com.personal.lifeOS.ui.theme.Error
-import com.personal.lifeOS.ui.theme.TextSecondary
 
 @Composable
 internal fun BudgetEmptyStateCard() {
@@ -57,7 +56,7 @@ internal fun BudgetCard(
                     Text(
                         text = "${progress.budget.period.name.lowercase().replaceFirstChar { it.uppercase() }} budget",
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 IconButton(onClick = onDelete) {
@@ -81,7 +80,7 @@ internal fun BudgetCard(
                     progress.remainingAmount,
                 )} • ${progress.usagePercent.toInt()}%",
                 style = MaterialTheme.typography.labelMedium,
-                color = if (progress.usagePercent >= 100f) Error else TextSecondary,
+                color = if (progress.usagePercent >= 100f) Error else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }

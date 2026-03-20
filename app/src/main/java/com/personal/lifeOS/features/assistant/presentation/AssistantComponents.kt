@@ -32,12 +32,6 @@ import com.personal.lifeOS.features.assistant.domain.model.MessageSender
 import com.personal.lifeOS.features.assistant.domain.model.suggestedPrompts
 import com.personal.lifeOS.ui.theme.Accent
 import com.personal.lifeOS.ui.theme.AppSpacing
-import com.personal.lifeOS.ui.theme.BackgroundDark
-import com.personal.lifeOS.ui.theme.GlassWhite
-import com.personal.lifeOS.ui.theme.Primary
-import com.personal.lifeOS.ui.theme.TextPrimary
-import com.personal.lifeOS.ui.theme.TextSecondary
-import com.personal.lifeOS.ui.theme.TextTertiary
 import com.personal.lifeOS.ui.theme.Warning
 
 @Composable
@@ -51,13 +45,13 @@ internal fun AssistantHeader(isProcessing: Boolean) {
                 Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(Primary.copy(alpha = 0.15f)),
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = Icons.Filled.SmartToy,
                 contentDescription = null,
-                tint = Primary,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(22.dp),
             )
         }
@@ -88,13 +82,13 @@ internal fun ChatBubble(message: ChatMessage) {
                     Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .background(Primary.copy(alpha = 0.15f)),
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = Icons.Filled.SmartToy,
                     contentDescription = null,
-                    tint = Primary,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(16.dp),
                 )
             }
@@ -112,13 +106,13 @@ internal fun ChatBubble(message: ChatMessage) {
                             bottomStart = if (isUser) 20.dp else 4.dp,
                             bottomEnd = if (isUser) 4.dp else 20.dp,
                         ),
-                    ).background(if (isUser) Primary.copy(alpha = 0.85f) else GlassWhite)
+                    ).background(if (isUser) MaterialTheme.colorScheme.primary.copy(alpha = 0.85f) else MaterialTheme.colorScheme.surfaceVariant)
                     .padding(horizontal = 16.dp, vertical = 12.dp),
         ) {
             Text(
                 text = message.content,
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (isUser) BackgroundDark else TextPrimary,
+                color = if (isUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                 fontWeight = if (isUser) FontWeight.Medium else FontWeight.Normal,
             )
         }
@@ -133,13 +127,13 @@ internal fun TypingIndicator() {
                 Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(Primary.copy(alpha = 0.15f)),
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = Icons.Filled.SmartToy,
                 contentDescription = null,
-                tint = Primary,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(16.dp),
             )
         }
@@ -148,7 +142,7 @@ internal fun TypingIndicator() {
             modifier =
                 Modifier
                     .clip(RoundedCornerShape(20.dp, 20.dp, 20.dp, 4.dp))
-                    .background(GlassWhite)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
                     .padding(horizontal = 20.dp, vertical = 12.dp),
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -158,7 +152,7 @@ internal fun TypingIndicator() {
                             Modifier
                                 .size(8.dp)
                                 .clip(CircleShape)
-                                .background(TextTertiary),
+                                .background(MaterialTheme.colorScheme.onSurfaceVariant),
                     )
                 }
             }
@@ -172,7 +166,7 @@ internal fun AssistantSuggestedPrompts(onSelect: (String) -> Unit) {
     Text(
         text = "Try asking:",
         style = MaterialTheme.typography.labelLarge,
-        color = TextTertiary,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(bottom = 8.dp),
     )
     SuggestedPromptsGrid(onSelect = onSelect)
@@ -192,14 +186,14 @@ private fun SuggestedPromptsGrid(onSelect: (String) -> Unit) {
                             Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(GlassWhite)
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
                                 .clickable { onSelect(prompt) }
                                 .padding(horizontal = 14.dp, vertical = 10.dp),
                     ) {
                         Text(
                             text = prompt,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = TextSecondary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }

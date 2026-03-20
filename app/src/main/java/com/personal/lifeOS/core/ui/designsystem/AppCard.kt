@@ -35,11 +35,13 @@ fun AppCard(
                 .fillMaxWidth()
                 .background(baseColor, shape)
                 .border(
-                    // Ghost border to preserve soft edges without hard separators.
+                    // Subtle border: glass gets white-alpha glow; solid cards use the
+                    // theme outlineVariant so the edge is visible in both light and dark.
                     border =
                         BorderStroke(
                             1.dp,
-                            Color.White.copy(alpha = if (glass) 0.30f else 0.14f),
+                            if (glass) Color.White.copy(alpha = 0.30f)
+                            else MaterialTheme.colorScheme.outlineVariant,
                         ),
                     shape = shape,
                 )

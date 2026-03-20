@@ -2,7 +2,20 @@
 
 package com.personal.lifeOS.navigation
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,6 +27,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
@@ -27,11 +41,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Fingerprint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -58,28 +75,32 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.personal.lifeOS.feature.analytics.presentation.AnalyticsScreen
+import com.personal.lifeOS.core.permissions.AppPermissionsOrchestrator
+import com.personal.lifeOS.core.security.BiometricAuthManager
+import com.personal.lifeOS.core.update.presentation.OtaUpdatePromptHost
 import com.personal.lifeOS.feature.assistant.presentation.AssistantScreen
 import com.personal.lifeOS.feature.auth.presentation.AuthScreen
 import com.personal.lifeOS.feature.auth.presentation.OnboardingScreen
+import com.personal.lifeOS.feature.budget.presentation.BudgetScreen
 import com.personal.lifeOS.feature.calendar.presentation.CalendarScreen
 import com.personal.lifeOS.feature.export.presentation.ExportScreen
 import com.personal.lifeOS.feature.finance.presentation.FinanceScreen
 import com.personal.lifeOS.feature.home.presentation.HomeScreen
-import com.personal.lifeOS.feature.planner.presentation.PlannerScreen
+import com.personal.lifeOS.feature.income.presentation.IncomeScreen
 import com.personal.lifeOS.feature.profile.presentation.ProfileScreen
-import com.personal.lifeOS.feature.review.presentation.ReviewScreen
+import com.personal.lifeOS.feature.recurring.presentation.RecurringScreen
 import com.personal.lifeOS.feature.search.presentation.SearchScreen
 import com.personal.lifeOS.feature.settings.presentation.SettingsScreen
 import com.personal.lifeOS.feature.tasks.presentation.TasksScreen
-import com.personal.lifeOS.core.security.BiometricAuthManager
-import com.personal.lifeOS.core.update.presentation.OtaUpdatePromptHost
 import com.personal.lifeOS.features.auth.presentation.AuthUiEvent
 import com.personal.lifeOS.features.auth.presentation.AuthViewModel
-import com.personal.lifeOS.ui.theme.BackgroundDark
-import com.personal.lifeOS.ui.theme.Primary
-import com.personal.lifeOS.ui.theme.TextPrimary
-import com.personal.lifeOS.ui.theme.TextTertiary
+import com.personal.lifeOS.features.insights.presentation.InsightsScreen
+import com.personal.lifeOS.features.learning.presentation.LearningScreen
+import com.personal.lifeOS.features.planner.presentation.PlannerScreen
+import com.personal.lifeOS.features.review.presentation.ReviewScreen
+
+// Re-prompt biometric only if app was backgrounded for longer than this threshold.
+private const val BIOMETRIC_LOCK_TIMEOUT_MS = 5 * 60 * 1000L
 
 private data class BiometricLockState(
     val requiresLock: Boolean,
@@ -132,7 +153,7 @@ fun LifeOSNavHost(
         modifier =
             Modifier
                 .fillMaxSize()
-                .background(BackgroundDark),
+                .background(MaterialTheme.colorScheme.background),
     ) {
         LifeOSNavigationGraph(
             navController = navController,
@@ -140,12 +161,28 @@ fun LifeOSNavHost(
             startDestination = startDestination,
         )
 
-        if (!isOnPublicFlow && authState.isLoggedIn && lockState.appContentUnlocked) {
+        // Hide the floating nav bar when the keyboard is visible — it otherwise
+        // overlaps the input bar and wastes vertical space while the user is typing.
+        val isImeVisible = WindowInsets.isImeVisible
+        val showBottomBar = !isOnPublicFlow && authState.isLoggedIn && lockState.appContentUnlocked && !isImeVisible
+        AnimatedVisibility(
+            visible = showBottomBar,
+            enter = fadeIn(tween(220, easing = EaseInOut)),
+            exit = fadeOut(tween(160, easing = EaseInOut)),
+        ) {
             LifeOSBottomBar(
                 navController = navController,
                 currentDestination = currentDestination,
             )
+        }
+        if (!isOnPublicFlow && authState.isLoggedIn && lockState.appContentUnlocked) {
             OtaUpdatePromptHost(shouldCheckForUpdates = shouldCheckForUpdates)
+        }
+
+        // Contextual, one-time permission rationale cards — appear at natural
+        // moments (Home → notifications, Finance → SMS/M-Pesa). Never nag.
+        if (!isOnPublicFlow && authState.isLoggedIn && lockState.appContentUnlocked) {
+            AppPermissionsOrchestrator(currentRoute = currentRoute)
         }
 
         if (lockState.requiresLock) {
@@ -169,6 +206,8 @@ private fun rememberBiometricLockState(requiresBiometricLock: Boolean): Biometri
     var isBiometricUnlocked by rememberSaveable { mutableStateOf(false) }
     var shouldPromptBiometric by rememberSaveable { mutableStateOf(false) }
     var biometricError by rememberSaveable { mutableStateOf<String?>(null) }
+    // Track when the app moved to background for session-timeout enforcement.
+    var backgroundedAtMs by remember { mutableLongStateOf(0L) }
 
     LaunchedEffect(requiresBiometricLock) {
         isBiometricUnlocked = false
@@ -179,10 +218,23 @@ private fun rememberBiometricLockState(requiresBiometricLock: Boolean): Biometri
     DisposableEffect(lifecycleOwner, requiresBiometricLock) {
         val observer =
             LifecycleEventObserver { _, event ->
-                if (event == Lifecycle.Event.ON_START && requiresBiometricLock) {
-                    isBiometricUnlocked = false
-                    shouldPromptBiometric = true
-                    biometricError = null
+                when (event) {
+                    Lifecycle.Event.ON_STOP -> {
+                        backgroundedAtMs = System.currentTimeMillis()
+                    }
+                    Lifecycle.Event.ON_START -> {
+                        if (requiresBiometricLock) {
+                            val elapsed = System.currentTimeMillis() - backgroundedAtMs
+                            // Only relock after the timeout; brief interruptions (permission
+                            // dialogs, notification shade) won't force a re-prompt.
+                            if (elapsed >= BIOMETRIC_LOCK_TIMEOUT_MS || !isBiometricUnlocked) {
+                                isBiometricUnlocked = false
+                                shouldPromptBiometric = true
+                                biometricError = null
+                            }
+                        }
+                    }
+                    else -> Unit
                 }
             }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -230,6 +282,7 @@ private fun rememberBiometricLockState(requiresBiometricLock: Boolean): Biometri
 }
 
 @Composable
+@Suppress("LongMethod")
 private fun LifeOSNavigationGraph(
     navController: NavHostController,
     authViewModel: AuthViewModel,
@@ -239,6 +292,22 @@ private fun LifeOSNavigationGraph(
         navController = navController,
         startDestination = canonicalRoute(startDestination),
         modifier = Modifier.fillMaxSize(),
+        // Screen transitions — forward: fade-slide in from right; back: fade-slide out to right.
+        // Keeps navigation feeling snappy (300ms) without being distracting.
+        enterTransition = {
+            fadeIn(tween(280, easing = EaseInOut)) +
+                slideInHorizontally(tween(280, easing = EaseInOut)) { it / 6 }
+        },
+        exitTransition = {
+            fadeOut(tween(200, easing = EaseInOut))
+        },
+        popEnterTransition = {
+            fadeIn(tween(200, easing = EaseInOut))
+        },
+        popExitTransition = {
+            fadeOut(tween(250, easing = EaseInOut)) +
+                slideOutHorizontally(tween(250, easing = EaseInOut)) { it / 6 }
+        },
     ) {
         composable(AppRoute.Auth) {
             AuthScreen(
@@ -272,6 +341,8 @@ private fun LifeOSNavigationGraph(
                 },
             )
         }
+
+        // ── Primary tab screens ──────────────────────────────────────────────
         composable(AppRoute.Home) {
             HomeScreen(
                 onOpenTasks = { navController.navigate(AppRoute.Tasks) },
@@ -279,6 +350,8 @@ private fun LifeOSNavigationGraph(
                 onOpenCalendar = { navController.navigate(AppRoute.Calendar) },
                 onOpenAssistant = { navController.navigate(AppRoute.Assistant) },
                 onOpenProfile = { navController.navigate(AppRoute.Profile) },
+                onOpenInsights = { navController.navigate(AppRoute.Insights) },
+                onOpenLearning = { navController.navigate(AppRoute.Learning) },
             )
         }
         composable(AppRoute.LegacyDashboard) {
@@ -288,14 +361,25 @@ private fun LifeOSNavigationGraph(
                 onOpenCalendar = { navController.navigate(AppRoute.Calendar) },
                 onOpenAssistant = { navController.navigate(AppRoute.Assistant) },
                 onOpenProfile = { navController.navigate(AppRoute.Profile) },
+                onOpenInsights = { navController.navigate(AppRoute.Insights) },
+                onOpenLearning = { navController.navigate(AppRoute.Learning) },
             )
         }
         composable(AppRoute.Tasks) { TasksScreen() }
-        composable(AppRoute.Finance) { FinanceScreen() }
-        composable(AppRoute.LegacyExpenses) { FinanceScreen() }
+        composable(AppRoute.Finance) {
+            FinanceScreen(
+                onOpenTools = { navController.navigate(AppRoute.Planner) },
+            )
+        }
+        composable(AppRoute.LegacyExpenses) {
+            FinanceScreen(
+                onOpenTools = { navController.navigate(AppRoute.Planner) },
+            )
+        }
         composable(AppRoute.Calendar) { CalendarScreen() }
         composable(AppRoute.Assistant) { AssistantScreen() }
 
+        // ── Secondary screens ────────────────────────────────────────────────
         composable(AppRoute.Profile) {
             ProfileScreen(
                 authViewModel = authViewModel,
@@ -307,10 +391,34 @@ private fun LifeOSNavigationGraph(
         }
         composable(AppRoute.Settings) { SettingsScreen() }
         composable(AppRoute.Export) { ExportScreen() }
-        composable(AppRoute.Analytics) { AnalyticsScreen() }
+
+        // Insights — accessible via Home header button (not a bottom tab per design decision)
+        composable(AppRoute.Analytics) { InsightsScreen() }
+        composable(AppRoute.Insights) { InsightsScreen() }
+
         composable(AppRoute.Search) { SearchScreen() }
-        composable(AppRoute.Planner) { PlannerScreen() }
+
+        // Finance Tools hub — launched from Finance screen's top bar
+        composable(AppRoute.Planner) {
+            PlannerScreen(
+                onOpenBudget = { navController.navigate(AppRoute.Budget) },
+                onOpenIncome = { navController.navigate(AppRoute.Income) },
+                onOpenRecurring = { navController.navigate(AppRoute.Recurring) },
+                onOpenExport = { navController.navigate(AppRoute.Export) },
+                onOpenSearch = { navController.navigate(AppRoute.Search) },
+            )
+        }
+
+        // Finance sub-screens
+        composable(AppRoute.Budget) { BudgetScreen() }
+        composable(AppRoute.Income) { IncomeScreen() }
+        composable(AppRoute.Recurring) { RecurringScreen() }
+
+        // Weekly/monthly personal digest
         composable(AppRoute.Review) { ReviewScreen() }
+
+        // Learning module
+        composable(AppRoute.Learning) { LearningScreen() }
     }
 }
 
@@ -337,13 +445,16 @@ private fun BoxScope.LifeOSBottomBar(
                         spotColor = Color.Black.copy(alpha = 0.4f),
                     )
                     .clip(RoundedCornerShape(24.dp))
+                    // Solid surface base — legible in both light and dark mode
+                    .background(MaterialTheme.colorScheme.surface)
+                    // Subtle glass sheen on top
                     .background(
                         brush =
                             Brush.verticalGradient(
                                 colors =
                                     listOf(
-                                        Color.White.copy(alpha = 0.12f),
-                                        Color.White.copy(alpha = 0.06f),
+                                        Color.White.copy(alpha = 0.10f),
+                                        Color.White.copy(alpha = 0.04f),
                                     ),
                             ),
                     )
@@ -395,7 +506,8 @@ private fun RowScope.BottomNavItem(
     onClick: () -> Unit,
 ) {
     val iconColor by animateColorAsState(
-        targetValue = if (selected) Primary else TextTertiary,
+        targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = tween(durationMillis = 220, easing = EaseInOut),
         label = "iconColor",
     )
 
@@ -412,21 +524,35 @@ private fun RowScope.BottomNavItem(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(contentAlignment = Alignment.Center) {
-            if (selected) {
+            // Animated pill indicator — scales in/out smoothly
+            AnimatedVisibility(
+                visible = selected,
+                enter = scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)) + fadeIn(tween(180)),
+                exit  = scaleOut(tween(140)) + fadeOut(tween(140)),
+            ) {
                 Box(
                     modifier =
                         Modifier
                             .size(30.dp)
                             .clip(CircleShape)
-                            .background(Primary.copy(alpha = 0.15f)),
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
                 )
             }
-            Icon(
-                imageVector = if (selected) selectedIcon else unselectedIcon,
-                contentDescription = label,
-                tint = iconColor,
-                modifier = Modifier.size(20.dp),
-            )
+            // Animated icon crossfade between selected and unselected variants
+            AnimatedContent(
+                targetState = selected,
+                transitionSpec = {
+                    fadeIn(tween(180)) togetherWith fadeOut(tween(120))
+                },
+                label = "tabIcon",
+            ) { isSelected ->
+                Icon(
+                    imageVector = if (isSelected) selectedIcon else unselectedIcon,
+                    contentDescription = label,
+                    tint = iconColor,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
         }
         Text(
             text = label,
@@ -448,40 +574,51 @@ private fun BiometricLockOverlay(
         modifier =
             Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.7f)),
+                .background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center,
     ) {
         Column(
             modifier =
                 Modifier
-                    .padding(24.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(BackgroundDark)
+                    .padding(32.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(MaterialTheme.colorScheme.surface)
                     .border(
                         width = 1.dp,
-                        color = Color.White.copy(alpha = 0.12f),
-                        shape = RoundedCornerShape(20.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                        shape = RoundedCornerShape(24.dp),
                     )
-                    .padding(20.dp),
+                    .padding(28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            // Fingerprint icon
+            Icon(
+                imageVector = Icons.Outlined.Fingerprint,
+                contentDescription = null,
+                tint = if (errorMessage != null)
+                    MaterialTheme.colorScheme.error
+                else
+                    MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(52.dp),
+            )
             Text(
-                text = "Biometric Unlock Required",
+                text = if (errorMessage != null) "Unlock failed" else "Unlock LifeOS",
                 style = MaterialTheme.typography.titleMedium,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                text = errorMessage ?: "Authenticate with fingerprint to continue.",
+                text = errorMessage
+                    ?: "Touch the fingerprint sensor or use your device PIN to continue.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextTertiary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onRetry) {
-                    Text("Retry")
-                }
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedButton(onClick = onSignOut) {
                     Text("Sign Out")
+                }
+                Button(onClick = onRetry) {
+                    Text(if (errorMessage != null) "Try Again" else "Unlock")
                 }
             }
         }

@@ -10,13 +10,29 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.personal.lifeOS.ui.theme.Error
+import com.personal.lifeOS.ui.theme.Info
+import com.personal.lifeOS.ui.theme.Warning
+
+/**
+ * Priority dot colors per the UI/UX guide:
+ *   High / Urgent  → Red (#EF5350)
+ *   Medium / Important → Amber (#FFB74D)
+ *   Low / Neutral  → Blue (#42A5F5)
+ */
+private fun priorityDotColor(priority: String): Color =
+    when (priority.uppercase()) {
+        "URGENT", "HIGH" -> Error
+        "IMPORTANT", "MEDIUM" -> Warning
+        else -> Info
+    }
 
 @Composable
 fun TaskRow(
@@ -24,6 +40,8 @@ fun TaskRow(
     subtitle: String,
     isCompleted: Boolean,
     modifier: Modifier = Modifier,
+    /** Pass the TaskPriority.name string, or "" to hide the dot. */
+    priority: String = "",
     onToggleComplete: () -> Unit = {},
     onClick: () -> Unit = {},
 ) {
@@ -39,6 +57,7 @@ fun TaskRow(
             horizontalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            // Completion toggle circle
             Box(
                 modifier =
                     Modifier
@@ -54,6 +73,7 @@ fun TaskRow(
                         )
                         .clickable(onClick = onToggleComplete),
             )
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
@@ -67,11 +87,18 @@ fun TaskRow(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Text(
-                text = if (isCompleted) "Done" else "Open",
-                style = MaterialTheme.typography.labelMedium,
-                color = AppDesignTokens.colors.primary,
-            )
+
+            // Priority dot — only shown when priority string is non-empty and task is pending
+            if (priority.isNotBlank() && !isCompleted) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .background(
+                            color = priorityDotColor(priority),
+                            shape = CircleShape,
+                        ),
+                )
+            }
         }
     }
 }

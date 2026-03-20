@@ -1,13 +1,12 @@
 package com.personal.lifeOS.feature.review.presentation
 
 import androidx.compose.runtime.Composable
-import com.personal.lifeOS.feature.planner.presentation.PlannerScreen
+import com.personal.lifeOS.features.review.presentation.ReviewScreen as ProperReviewScreen
 
 /**
- * Compatibility bridge retained during phased package migration.
- * Review currently reuses the planner workspace surface.
+ * Navigation bridge — delegates to the fully-implemented weekly digest screen.
  */
 @Composable
 fun ReviewScreen() {
-    PlannerScreen()
+    ProperReviewScreen()
 }

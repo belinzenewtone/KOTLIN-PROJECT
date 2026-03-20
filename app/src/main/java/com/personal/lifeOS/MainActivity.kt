@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
@@ -54,7 +55,7 @@ class MainActivity : ComponentActivity() {
                     val shouldShowSplash = !minSplashElapsed || bootstrapState.isLoading || bootstrapState.result == null
                     Crossfade(
                         targetState = shouldShowSplash,
-                        animationSpec = tween(durationMillis = 420),
+                        animationSpec = tween(durationMillis = 350, easing = EaseInOut),
                         label = "bootstrapCrossfade",
                     ) { loading ->
                         if (loading) {

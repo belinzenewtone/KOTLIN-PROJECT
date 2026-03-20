@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -52,15 +53,9 @@ import com.personal.lifeOS.features.analytics.domain.model.DailySpending
 import com.personal.lifeOS.ui.components.AccentGlassCard
 import com.personal.lifeOS.ui.components.GlassCard
 import com.personal.lifeOS.ui.theme.Accent
-import com.personal.lifeOS.ui.theme.BackgroundDark
 import com.personal.lifeOS.ui.theme.Error
-import com.personal.lifeOS.ui.theme.GlassWhite
 import com.personal.lifeOS.ui.theme.Info
-import com.personal.lifeOS.ui.theme.Primary
 import com.personal.lifeOS.ui.theme.Success
-import com.personal.lifeOS.ui.theme.TextPrimary
-import com.personal.lifeOS.ui.theme.TextSecondary
-import com.personal.lifeOS.ui.theme.TextTertiary
 import com.personal.lifeOS.ui.theme.Warning
 
 @Composable
@@ -74,7 +69,7 @@ internal fun AnalyticsMetricRows(data: AnalyticsData) {
             title = "Monthly Spend",
             value = DateUtils.formatCurrency(data.totalSpentThisMonth),
             icon = Icons.AutoMirrored.Filled.TrendingUp,
-            iconColor = Primary,
+            iconColor = MaterialTheme.colorScheme.primary,
             isAccent = true,
         )
         MetricCard(
@@ -129,7 +124,7 @@ private fun MetricCard(
                 Icon(icon, null, tint = iconColor, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.height(8.dp))
                 Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text(title, style = MaterialTheme.typography.labelSmall, color = TextTertiary)
+                Text(title, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     } else {
@@ -138,7 +133,7 @@ private fun MetricCard(
                 Icon(icon, null, tint = iconColor, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.height(8.dp))
                 Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text(title, style = MaterialTheme.typography.labelSmall, color = TextTertiary)
+                Text(title, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -158,7 +153,7 @@ internal fun ProductivityCard(score: Float) {
                             score >= 40 -> Warning
                             else -> Error
                         },
-                    trackColor = GlassWhite,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
                     strokeWidth = 6.dp,
                 )
                 Text(
@@ -179,7 +174,7 @@ internal fun ProductivityCard(score: Float) {
                             else -> "Complete tasks to build your score"
                         },
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -198,7 +193,7 @@ internal fun PeriodSelector(
                 modifier =
                     Modifier
                         .clip(RoundedCornerShape(20.dp))
-                        .background(if (isSelected) Primary else GlassWhite)
+                        .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                         .clickable { onSelect(period) }
                         .padding(horizontal = 20.dp, vertical = 8.dp),
             ) {
@@ -209,7 +204,7 @@ internal fun PeriodSelector(
                             AnalyticsPeriod.MONTH -> "This Month"
                         },
                     style = MaterialTheme.typography.labelLarge,
-                    color = if (isSelected) BackgroundDark else TextSecondary,
+                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -245,7 +240,7 @@ internal fun SpendingBarChart(
                         columns =
                             listOf(
                                 LineComponent(
-                                    color = android.graphics.Color.parseColor("#2979FF"),
+                                    color = MaterialTheme.colorScheme.primary.toArgb(),
                                     thicknessDp = if (data.size <= 7) 16f else 6f,
                                     shape = Shapes.roundedCornerShape(topLeftPercent = 40, topRightPercent = 40),
                                 ),
@@ -339,7 +334,7 @@ internal fun CategoryBreakdownCard(categories: List<CategorySpend>) {
                     Text(
                         text = category.category,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = TextPrimary,
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.width(100.dp),
                     )
                     Box(
@@ -348,7 +343,7 @@ internal fun CategoryBreakdownCard(categories: List<CategorySpend>) {
                                 .weight(1f)
                                 .height(8.dp)
                                 .clip(RoundedCornerShape(4.dp))
-                                .background(GlassWhite),
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
                     ) {
                         Box(
                             modifier =
@@ -356,14 +351,14 @@ internal fun CategoryBreakdownCard(categories: List<CategorySpend>) {
                                     .fillMaxWidth(fraction = (category.percentage / 100f).coerceIn(0f, 1f))
                                     .height(8.dp)
                                     .clip(RoundedCornerShape(4.dp))
-                                    .background(Primary),
+                                    .background(MaterialTheme.colorScheme.primary),
                         )
                     }
                     Spacer(Modifier.width(12.dp))
                     Text(
                         text = "${category.percentage.toInt()}%",
                         style = MaterialTheme.typography.labelLarge,
-                        color = TextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }

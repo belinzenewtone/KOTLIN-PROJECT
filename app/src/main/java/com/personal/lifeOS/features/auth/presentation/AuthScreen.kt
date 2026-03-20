@@ -1,8 +1,14 @@
 package com.personal.lifeOS.features.auth.presentation
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -81,16 +87,20 @@ fun AuthScreen(
 
             AnimatedVisibility(
                 visible = !state.isSignUpMode,
-                enter = fadeIn(),
-                exit = fadeOut(),
+                enter = fadeIn(tween(300, easing = EaseInOut)) +
+                    expandVertically(tween(320, easing = EaseInOut)),
+                exit = fadeOut(tween(200, easing = EaseInOut)) +
+                    shrinkVertically(tween(220, easing = EaseInOut)),
             ) {
                 SignInCard(state = state, viewModel = viewModel)
             }
 
             AnimatedVisibility(
                 visible = state.isSignUpMode,
-                enter = fadeIn(),
-                exit = fadeOut(),
+                enter = fadeIn(tween(300, easing = EaseInOut)) +
+                    expandVertically(tween(320, easing = EaseInOut)),
+                exit = fadeOut(tween(200, easing = EaseInOut)) +
+                    shrinkVertically(tween(220, easing = EaseInOut)),
             ) {
                 SignUpCard(state = state, viewModel = viewModel)
             }

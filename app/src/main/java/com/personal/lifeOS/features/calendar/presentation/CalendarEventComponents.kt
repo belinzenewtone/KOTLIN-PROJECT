@@ -45,11 +45,7 @@ import com.personal.lifeOS.features.calendar.domain.model.EventType
 import com.personal.lifeOS.ui.theme.CategoryOther
 import com.personal.lifeOS.ui.theme.Error
 import com.personal.lifeOS.ui.theme.Info
-import com.personal.lifeOS.ui.theme.Primary
 import com.personal.lifeOS.ui.theme.Success
-import com.personal.lifeOS.ui.theme.TextPrimary
-import com.personal.lifeOS.ui.theme.TextSecondary
-import com.personal.lifeOS.ui.theme.TextTertiary
 import com.personal.lifeOS.ui.theme.Warning
 
 @Composable
@@ -64,7 +60,7 @@ internal fun CalendarEventCard(
             EventType.WORK -> Info
             EventType.HEALTH -> Success
             EventType.FINANCE -> Warning
-            EventType.PERSONAL -> Primary
+            EventType.PERSONAL -> MaterialTheme.colorScheme.primary
             EventType.OTHER -> CategoryOther
         }
     val dismissState =
@@ -128,7 +124,7 @@ internal fun CalendarEventCard(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = TextPrimary,
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(28.dp),
                 )
             }
@@ -145,7 +141,7 @@ internal fun CalendarEventCard(
                             .width(4.dp)
                             .height(56.dp)
                             .clip(RoundedCornerShape(2.dp))
-                            .background(if (event.status == EventStatus.COMPLETED) TextTertiary else typeColor),
+                            .background(if (event.status == EventStatus.COMPLETED) MaterialTheme.colorScheme.outline else typeColor),
                 )
                 Spacer(Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
@@ -160,7 +156,7 @@ internal fun CalendarEventCard(
                             } else {
                                 null
                             },
-                        color = if (event.status == EventStatus.COMPLETED) TextTertiary else TextPrimary,
+                        color = if (event.status == EventStatus.COMPLETED) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         EventBadge(text = event.type.label, color = typeColor)
@@ -172,20 +168,20 @@ internal fun CalendarEventCard(
                     Text(
                         text = "Time: ${DateUtils.formatDate(event.date, "MMM dd, yyyy h:mm a")}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     if (event.endDate != null) {
                         Text(
                             text = "Due: ${DateUtils.formatDate(event.endDate, "MMM dd, yyyy h:mm a")}",
                             style = MaterialTheme.typography.labelSmall,
-                            color = TextSecondary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                     if (event.description.isNotBlank()) {
                         Text(
                             text = event.description,
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -195,7 +191,7 @@ internal fun CalendarEventCard(
                     Icon(
                         imageVector = Icons.Filled.Edit,
                         contentDescription = "Edit event",
-                        tint = TextTertiary,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(18.dp),
                     )
                 }

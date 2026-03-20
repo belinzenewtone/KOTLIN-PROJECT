@@ -64,6 +64,6 @@ object DateUtils {
     }
 
     fun formatCurrency(amount: Double): String {
-        return "KES ${String.format("%,.2f", amount)}"
+        return "KSh ${String.format("%,.0f", amount)}"
     }
 }

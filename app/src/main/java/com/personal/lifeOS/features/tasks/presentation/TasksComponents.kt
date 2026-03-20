@@ -6,6 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -37,15 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.tasks.domain.model.TaskPriority
-import com.personal.lifeOS.ui.theme.BackgroundDark
 import com.personal.lifeOS.ui.theme.Error
-import com.personal.lifeOS.ui.theme.GlassBorder
-import com.personal.lifeOS.ui.theme.GlassWhite
-import com.personal.lifeOS.ui.theme.Primary
-import com.personal.lifeOS.ui.theme.SurfaceDark
-import com.personal.lifeOS.ui.theme.TextPrimary
-import com.personal.lifeOS.ui.theme.TextSecondary
-import com.personal.lifeOS.ui.theme.TextTertiary
 import java.util.Calendar
 
 private fun priorityColor(priority: TaskPriority): Color =
@@ -66,11 +60,14 @@ internal fun TaskDialog(
 
     AlertDialog(
         onDismissRequest = { viewModel.hideDialog() },
-        containerColor = SurfaceDark,
+        containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(24.dp),
-        title = { Text(if (isEdit) "Edit Task" else "New Task", color = TextPrimary) },
+        title = { Text(if (isEdit) "Edit Task" else "New Task", color = MaterialTheme.colorScheme.onSurface) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
                 OutlinedTextField(
                     value = state.title,
                     onValueChange = { viewModel.setTitle(it) },
@@ -80,11 +77,11 @@ internal fun TaskDialog(
                     shape = RoundedCornerShape(16.dp),
                     colors =
                         OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Primary,
-                            unfocusedBorderColor = GlassBorder,
-                            focusedContainerColor = GlassWhite,
-                            unfocusedContainerColor = GlassWhite,
-                            cursorColor = Primary,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            cursorColor = MaterialTheme.colorScheme.primary,
                         ),
                 )
 
@@ -97,15 +94,15 @@ internal fun TaskDialog(
                     shape = RoundedCornerShape(16.dp),
                     colors =
                         OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Primary,
-                            unfocusedBorderColor = GlassBorder,
-                            focusedContainerColor = GlassWhite,
-                            unfocusedContainerColor = GlassWhite,
-                            cursorColor = Primary,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            cursorColor = MaterialTheme.colorScheme.primary,
                         ),
                 )
 
-                Text("Priority", style = MaterialTheme.typography.labelLarge, color = TextSecondary)
+                Text("Priority", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TaskPriority.entries.forEach { priority ->
                         val isSelected = priority == state.priority
@@ -128,7 +125,7 @@ internal fun TaskDialog(
                                 text = priority.label,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 13.sp,
-                                color = if (isSelected) BackgroundDark else priorityColor(priority),
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else priorityColor(priority),
                             )
                         }
                     }
@@ -224,8 +221,8 @@ internal fun TaskDialog(
                 onClick = { viewModel.saveTask() },
                 colors =
                     ButtonDefaults.buttonColors(
-                        containerColor = Primary,
-                        contentColor = BackgroundDark,
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.background,
                     ),
             ) {
                 Text(if (isEdit) "Save" else "Create", fontWeight = FontWeight.SemiBold)
@@ -233,7 +230,7 @@ internal fun TaskDialog(
         },
         dismissButton = {
             TextButton(onClick = { viewModel.hideDialog() }) {
-                Text("Cancel", color = TextSecondary)
+                Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
     )
@@ -251,7 +248,7 @@ private fun DeadlinePickerRow(
         modifier =
             modifier
                 .clip(RoundedCornerShape(16.dp))
-                .background(GlassWhite)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
                 .clickable(onClick = onClick)
                 .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -259,7 +256,7 @@ private fun DeadlinePickerRow(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = Primary,
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(18.dp),
         )
         Spacer(Modifier.width(8.dp))
@@ -267,12 +264,12 @@ private fun DeadlinePickerRow(
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
-                color = TextTertiary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
                 text = value,
                 style = MaterialTheme.typography.bodySmall,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
     }

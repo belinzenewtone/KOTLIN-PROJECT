@@ -26,9 +26,18 @@ object AppRoute {
     const val Settings = "settings"
     const val Export = "export"
     const val Analytics = "analytics"
+    const val Insights = "insights"   // Insights surface — accessible via Home card
     const val Search = "search"
-    const val Planner = "planner"
-    const val Review = "review"
+    const val Planner = "planner"     // Finance Tools hub (budget, income, recurring, export)
+    const val Review = "review"       // Weekly/monthly personal digest
+
+    // Finance sub-screens — navigated from Finance Tools hub
+    const val Budget = "budget"
+    const val Income = "income"
+    const val Recurring = "recurring"
+
+    // Learning module
+    const val Learning = "learning"
 
     // Compatibility aliases preserved during navigation migration.
     const val LegacyDashboard = "dashboard"

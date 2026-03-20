@@ -37,9 +37,7 @@ import com.personal.lifeOS.features.export.domain.model.ExportResult
 import com.personal.lifeOS.platform.files.ExportShareHelper
 import com.personal.lifeOS.ui.components.GlassCard
 import com.personal.lifeOS.ui.theme.AppSpacing
-import com.personal.lifeOS.ui.theme.BackgroundDark
 import com.personal.lifeOS.ui.theme.Error
-import com.personal.lifeOS.ui.theme.TextSecondary
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -53,7 +51,7 @@ fun ExportScreen(viewModel: ExportViewModel = hiltViewModel()) {
         modifier =
             Modifier
                 .fillMaxSize()
-                .background(BackgroundDark)
+                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = AppSpacing.ScreenHorizontal)
                 .padding(top = AppSpacing.ScreenTop, bottom = AppSpacing.Section),
@@ -99,7 +97,7 @@ private fun ExportConfigurationCard(
             Text(
                 "Create JSON or CSV exports for selected domains and date windows.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             Text("Format", style = MaterialTheme.typography.titleSmall)
@@ -133,7 +131,7 @@ private fun ExportConfigurationCard(
                     Text(
                         "Protect export with passphrase (AES-GCM).",
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Switch(
@@ -179,11 +177,11 @@ private fun ExportPreviewCard(
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Preview", style = MaterialTheme.typography.titleMedium)
             if (isLoading) {
-                Text("Preparing preview...", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                Text("Preparing preview...", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 return@Column
             }
             if (preview == null) {
-                Text("Preview unavailable.", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                Text("Preview unavailable.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 return@Column
             }
             Text("Total items: ${preview.totalItems}", style = MaterialTheme.typography.bodyMedium)
@@ -191,7 +189,7 @@ private fun ExportPreviewCard(
                 Text(
                     "${domain.name.lowercase().replace('_', ' ')}: $count",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -206,11 +204,11 @@ private fun ExportResultCard(result: ExportResult?) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Export complete", style = MaterialTheme.typography.titleMedium)
             Text("Items: ${result.itemCount}", style = MaterialTheme.typography.bodyMedium)
-            Text("Path: ${result.filePath}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+            Text("Path: ${result.filePath}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(
                 "Time: ${formatTimestamp(result.exportedAt)}",
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -222,7 +220,7 @@ private fun ExportHistoryCard(history: List<ExportHistoryItem>) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("History", style = MaterialTheme.typography.titleMedium)
             if (history.isEmpty()) {
-                Text("No exports yet.", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                Text("No exports yet.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 return@Column
             }
             history.take(8).forEachIndexed { index, item ->
@@ -234,14 +232,14 @@ private fun ExportHistoryCard(history: List<ExportHistoryItem>) {
                     Text(
                         "${formatTimestamp(item.exportedAt)} · items ${item.itemCount}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     item.errorMessage?.let { error ->
                         Text(error, style = MaterialTheme.typography.labelSmall, color = Error)
                     }
                 }
                 if (index < history.lastIndex) {
-                    HorizontalDivider(color = TextSecondary.copy(alpha = 0.2f))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
                 }
             }
         }

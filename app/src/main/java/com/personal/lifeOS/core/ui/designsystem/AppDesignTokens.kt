@@ -1,10 +1,17 @@
 package com.personal.lifeOS.core.ui.designsystem
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.personal.lifeOS.ui.theme.Error
+import com.personal.lifeOS.ui.theme.Primary
+import com.personal.lifeOS.ui.theme.Success
+import com.personal.lifeOS.ui.theme.Warning
 
 data class AppColorRoles(
     val primary: Color,
@@ -56,20 +63,27 @@ data class AppMotionSpec(
 )
 
 object AppDesignTokens {
-    // Stitch-first color roles.
-    val colors =
-        AppColorRoles(
-            primary = Color(0xFF006A6A),
-            primaryContainer = Color(0xFF00A8A8),
-            surface = Color(0xFFF7F9FC),
-            surfaceContainerLow = Color(0xFFF2F4F7),
-            surfaceContainerLowest = Color(0xFFFFFFFF),
-            onSurface = Color(0xFF191C1E),
-            onSurfaceVariant = Color(0xFF3C4949),
-            outlineVariant = Color(0xFFBBC9C8),
-            success = Color(0xFF2E7D32),
-            warning = Color(0xFFEF6C00),
-            error = Color(0xFFBA1A1A),
+
+    /**
+     * Theme-aware color roles derived from the active MaterialTheme.
+     * Always use this inside a @Composable context so colors adapt to
+     * light / dark mode automatically.
+     */
+    val colors: AppColorRoles
+        @Composable
+        @ReadOnlyComposable
+        get() = AppColorRoles(
+            primary = MaterialTheme.colorScheme.primary,
+            primaryContainer = MaterialTheme.colorScheme.primaryContainer,
+            surface = MaterialTheme.colorScheme.surface,
+            surfaceContainerLow = MaterialTheme.colorScheme.surfaceVariant,
+            surfaceContainerLowest = MaterialTheme.colorScheme.surface,
+            onSurface = MaterialTheme.colorScheme.onSurface,
+            onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant,
+            outlineVariant = MaterialTheme.colorScheme.outlineVariant,
+            success = Success,
+            warning = Warning,
+            error = Error,
         )
 
     val typography =

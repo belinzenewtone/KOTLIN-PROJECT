@@ -3,8 +3,10 @@ package com.personal.lifeOS.features.assistant.presentation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,12 +17,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.personal.lifeOS.core.ui.designsystem.AssistantActionCard
 import com.personal.lifeOS.core.ui.designsystem.InlineBanner
 import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
 import com.personal.lifeOS.ui.theme.AppSpacing
-import com.personal.lifeOS.ui.theme.BackgroundDark
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun AssistantScreen(viewModel: AssistantViewModel = hiltViewModel()) {
@@ -33,7 +36,8 @@ fun AssistantScreen(viewModel: AssistantViewModel = hiltViewModel()) {
         }
     }
 
-    LaunchedEffect(state.messages.size) {
+    // Auto-scroll to latest message whenever new content arrives
+    LaunchedEffect(state.messages.size, state.isProcessing) {
         if (state.messages.isNotEmpty()) {
             listState.animateScrollToItem(state.messages.size - 1)
         }
@@ -43,8 +47,12 @@ fun AssistantScreen(viewModel: AssistantViewModel = hiltViewModel()) {
         modifier =
             Modifier
                 .fillMaxSize()
-                .background(BackgroundDark)
-                .statusBarsPadding(),
+                .background(MaterialTheme.colorScheme.background)
+                .statusBarsPadding()
+                // imePadding on the Column is the correct place:
+                // when the keyboard opens, the Column's available height shrinks from
+                // the bottom by exactly the keyboard height, pushing InputBar up above it.
+                .imePadding(),
     ) {
         AssistantHeader(isProcessing = state.isProcessing)
 
@@ -56,6 +64,8 @@ fun AssistantScreen(viewModel: AssistantViewModel = hiltViewModel()) {
                     .fillMaxWidth()
                     .padding(horizontal = AppSpacing.ScreenHorizontal),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.Section),
+            // Small bottom padding so the last message doesn't sit flush against InputBar
+            contentPadding = PaddingValues(bottom = 8.dp),
         ) {
             state.proposalResultMessage?.let { banner ->
                 item {

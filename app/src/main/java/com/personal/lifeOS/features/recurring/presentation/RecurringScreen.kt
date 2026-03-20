@@ -13,7 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.personal.lifeOS.ui.theme.AppSpacing
-import com.personal.lifeOS.ui.theme.BackgroundDark
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun RecurringScreen(viewModel: RecurringViewModel = hiltViewModel()) {
@@ -23,7 +23,7 @@ fun RecurringScreen(viewModel: RecurringViewModel = hiltViewModel()) {
         modifier =
             Modifier
                 .fillMaxSize()
-                .background(BackgroundDark)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = AppSpacing.ScreenHorizontal)
                 .padding(top = AppSpacing.ScreenTop, bottom = AppSpacing.Section),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.Section),

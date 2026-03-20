@@ -30,11 +30,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.personal.lifeOS.core.ui.designsystem.AppCard
 import com.personal.lifeOS.features.calendar.domain.model.CalendarEvent
-import com.personal.lifeOS.ui.theme.Accent
-import com.personal.lifeOS.ui.theme.BackgroundDark
-import com.personal.lifeOS.ui.theme.Primary
-import com.personal.lifeOS.ui.theme.TextPrimary
-import com.personal.lifeOS.ui.theme.TextTertiary
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -66,7 +61,7 @@ internal fun CalendarMonthCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = onPreviousMonth) {
-                    Icon(Icons.Filled.ChevronLeft, contentDescription = "Previous", tint = TextPrimary)
+                    Icon(Icons.Filled.ChevronLeft, contentDescription = "Previous", tint = MaterialTheme.colorScheme.onSurface)
                 }
                 Text(
                     text = "$monthLabel ${state.currentMonth.year}",
@@ -74,7 +69,7 @@ internal fun CalendarMonthCard(
                     fontWeight = FontWeight.SemiBold,
                 )
                 IconButton(onClick = onNextMonth) {
-                    Icon(Icons.Filled.ChevronRight, contentDescription = "Next", tint = TextPrimary)
+                    Icon(Icons.Filled.ChevronRight, contentDescription = "Next", tint = MaterialTheme.colorScheme.onSurface)
                 }
             }
 
@@ -87,7 +82,7 @@ internal fun CalendarMonthCard(
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextTertiary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -138,8 +133,8 @@ private fun CalendarGrid(
                                     .clip(CircleShape)
                                     .background(
                                         when {
-                                            isSelected -> Primary
-                                            isToday -> Primary.copy(alpha = 0.2f)
+                                            isSelected -> MaterialTheme.colorScheme.primary
+                                            isToday -> MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                                             else -> Color.Transparent
                                         },
                                     ).clickable { onDateSelected(date) },
@@ -151,9 +146,9 @@ private fun CalendarGrid(
                                     style = MaterialTheme.typography.bodyMedium,
                                     color =
                                         when {
-                                            isSelected -> BackgroundDark
-                                            isToday -> Primary
-                                            else -> TextPrimary
+                                            isSelected -> MaterialTheme.colorScheme.onPrimary
+                                            isToday -> MaterialTheme.colorScheme.primary
+                                            else -> MaterialTheme.colorScheme.onSurface
                                         },
                                     fontWeight = if (isToday || isSelected) FontWeight.Bold else FontWeight.Normal,
                                 )
@@ -163,7 +158,7 @@ private fun CalendarGrid(
                                             Modifier
                                                 .size(4.dp)
                                                 .clip(CircleShape)
-                                                .background(if (isSelected) BackgroundDark else Accent),
+                                                .background(if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.secondary),
                                     )
                                 }
                             }

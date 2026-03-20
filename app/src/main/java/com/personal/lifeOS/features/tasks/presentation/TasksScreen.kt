@@ -31,9 +31,7 @@ import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.tasks.domain.model.Task
 import com.personal.lifeOS.ui.components.StyledSnackbarHost
 import com.personal.lifeOS.ui.theme.AppSpacing
-import com.personal.lifeOS.ui.theme.BackgroundDark
-import com.personal.lifeOS.ui.theme.Primary
-import com.personal.lifeOS.ui.theme.TextPrimary
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun TasksScreen(viewModel: TasksViewModel = hiltViewModel()) {
@@ -56,7 +54,7 @@ fun TasksScreen(viewModel: TasksViewModel = hiltViewModel()) {
     }
 
     Scaffold(
-        containerColor = BackgroundDark,
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { StyledSnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
@@ -65,8 +63,8 @@ fun TasksScreen(viewModel: TasksViewModel = hiltViewModel()) {
                         .navigationBarsPadding()
                         .padding(bottom = AppSpacing.FabBottomOffset),
                 onClick = { viewModel.showAddDialog() },
-                containerColor = Primary,
-                contentColor = TextPrimary,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onSurface,
                 shape = CircleShape,
             ) {
                 Icon(Icons.Filled.Add, contentDescription = "Add task")
@@ -135,6 +133,7 @@ private fun TasksBody(
                         title = task.title,
                         subtitle = task.subtitle(),
                         isCompleted = false,
+                        priority = task.priority.name,
                         onToggleComplete = { onCompleteTask(task) },
                         onClick = { onEditTask(task) },
                     )

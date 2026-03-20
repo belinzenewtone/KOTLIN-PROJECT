@@ -38,7 +38,10 @@ import com.personal.lifeOS.feature.finance.domain.model.FinanceTransactionFilter
 
 @Composable
 @Suppress("LongMethod", "CyclomaticComplexMethod")
-fun FinanceScreen(viewModel: FinanceViewModel = hiltViewModel()) {
+fun FinanceScreen(
+    viewModel: FinanceViewModel = hiltViewModel(),
+    onOpenTools: () -> Unit = {},
+) {
     val uiState by viewModel.uiState.collectAsState()
     var query by rememberSaveable { mutableStateOf("") }
 
@@ -70,6 +73,7 @@ fun FinanceScreen(viewModel: FinanceViewModel = hiltViewModel()) {
         actions = {
             TextButton(onClick = { viewModel.onEvent(FinanceUiEvent.ShowAddDialog) }) { Text("Add") }
             TextButton(onClick = { viewModel.onEvent(FinanceUiEvent.ShowImportDialog) }) { Text("Import") }
+            TextButton(onClick = onOpenTools) { Text("Tools") }
         },
         contentPadding = PaddingValues(bottom = 140.dp),
     ) {

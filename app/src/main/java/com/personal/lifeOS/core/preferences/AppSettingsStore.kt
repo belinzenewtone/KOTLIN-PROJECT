@@ -23,6 +23,10 @@ object AppSettingsKeys {
     val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
     val ONBOARDING_STEP = intPreferencesKey("onboarding_step")
     val ONBOARDING_PRIMARY_GOAL = stringPreferencesKey("onboarding_primary_goal")
+    // Runtime permission ask-tracking — set true after we show the in-app rationale once.
+    // We never nag the user; if they dismiss, we respect that forever.
+    val NOTIFICATION_PERMISSION_ASKED = booleanPreferencesKey("notification_permission_asked")
+    val SMS_PERMISSION_ASKED = booleanPreferencesKey("sms_permission_asked")
 }
 
 @Singleton
@@ -133,6 +137,26 @@ class AppSettingsStore
                 prefs[AppSettingsKeys.ONBOARDING_COMPLETED] = false
                 prefs[AppSettingsKeys.ONBOARDING_STEP] = 1
                 prefs[AppSettingsKeys.ONBOARDING_PRIMARY_GOAL] = ""
+            }
+        }
+
+        // ── Permission ask-tracking ──────────────────────────────────────────
+
+        suspend fun wasNotificationPermissionAsked(): Boolean =
+            dataStore.data.first()[AppSettingsKeys.NOTIFICATION_PERMISSION_ASKED] ?: false
+
+        suspend fun markNotificationPermissionAsked() {
+            dataStore.edit { prefs ->
+                prefs[AppSettingsKeys.NOTIFICATION_PERMISSION_ASKED] = true
+            }
+        }
+
+        suspend fun wasSmsPermissionAsked(): Boolean =
+            dataStore.data.first()[AppSettingsKeys.SMS_PERMISSION_ASKED] ?: false
+
+        suspend fun markSmsPermissionAsked() {
+            dataStore.edit { prefs ->
+                prefs[AppSettingsKeys.SMS_PERMISSION_ASKED] = true
             }
         }
 

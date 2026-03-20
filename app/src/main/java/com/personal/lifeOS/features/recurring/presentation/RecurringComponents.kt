@@ -33,7 +33,6 @@ import com.personal.lifeOS.features.recurring.domain.model.RecurringRule
 import com.personal.lifeOS.features.recurring.domain.model.RecurringType
 import com.personal.lifeOS.ui.components.GlassCard
 import com.personal.lifeOS.ui.theme.Error
-import com.personal.lifeOS.ui.theme.TextSecondary
 
 @Composable
 internal fun RecurringHeader(onAdd: () -> Unit) {
@@ -63,7 +62,7 @@ internal fun RecurringEmptyStateCard() {
         Text(
             text = "No recurring rules yet. Add subscriptions, salary cycles, or recurring tasks.",
             style = MaterialTheme.typography.bodyMedium,
-            color = TextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -85,14 +84,14 @@ internal fun RecurringRuleCard(
                 Text(
                     text = "${rule.type.name} • ${rule.cadence.name}",
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 val amountText = rule.amount?.let { DateUtils.formatCurrency(it) } ?: "No amount"
-                Text(amountText, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                Text(amountText, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(
                     text = "Next run: ${DateUtils.formatDate(rule.nextRunAt, "MMM dd, yyyy")}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {

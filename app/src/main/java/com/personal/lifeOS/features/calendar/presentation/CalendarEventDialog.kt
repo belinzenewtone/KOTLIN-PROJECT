@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -45,15 +46,7 @@ import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.calendar.domain.model.CalendarEvent
 import com.personal.lifeOS.features.calendar.domain.model.EventImportance
 import com.personal.lifeOS.features.calendar.domain.model.EventType
-import com.personal.lifeOS.ui.theme.BackgroundDark
 import com.personal.lifeOS.ui.theme.Error
-import com.personal.lifeOS.ui.theme.GlassBorder
-import com.personal.lifeOS.ui.theme.GlassWhite
-import com.personal.lifeOS.ui.theme.Primary
-import com.personal.lifeOS.ui.theme.SurfaceDark
-import com.personal.lifeOS.ui.theme.TextPrimary
-import com.personal.lifeOS.ui.theme.TextSecondary
-import com.personal.lifeOS.ui.theme.TextTertiary
 import java.time.LocalDate
 import java.util.Calendar
 
@@ -81,11 +74,14 @@ internal fun AddEventDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = SurfaceDark,
+        containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(24.dp),
-        title = { Text(if (isEdit) "Edit Event" else "New Event", color = TextPrimary) },
+        title = { Text(if (isEdit) "Edit Event" else "New Event", color = MaterialTheme.colorScheme.onSurface) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
@@ -95,11 +91,11 @@ internal fun AddEventDialog(
                     shape = RoundedCornerShape(16.dp),
                     colors =
                         OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Primary,
-                            unfocusedBorderColor = GlassBorder,
-                            focusedContainerColor = GlassWhite,
-                            unfocusedContainerColor = GlassWhite,
-                            cursorColor = Primary,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                            cursorColor = MaterialTheme.colorScheme.primary,
                         ),
                 )
                 OutlinedTextField(
@@ -111,15 +107,15 @@ internal fun AddEventDialog(
                     shape = RoundedCornerShape(16.dp),
                     colors =
                         OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Primary,
-                            unfocusedBorderColor = GlassBorder,
-                            focusedContainerColor = GlassWhite,
-                            unfocusedContainerColor = GlassWhite,
-                            cursorColor = Primary,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                            cursorColor = MaterialTheme.colorScheme.primary,
                         ),
                 )
 
-                Text("Type", style = MaterialTheme.typography.labelLarge, color = TextSecondary)
+                Text("Type", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -129,20 +125,20 @@ internal fun AddEventDialog(
                             modifier =
                                 Modifier
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(if (type == selectedType) Primary else GlassWhite)
+                                    .background(if (type == selectedType) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                                     .clickable { selectedType = type }
                                     .padding(horizontal = 10.dp, vertical = 6.dp),
                         ) {
                             Text(
                                 text = type.label,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = if (type == selectedType) BackgroundDark else TextSecondary,
+                                color = if (type == selectedType) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
                 }
 
-                Text("Priority", style = MaterialTheme.typography.labelLarge, color = TextSecondary)
+                Text("Priority", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     EventImportance.entries.forEach { importance ->
                         val selected = importance == selectedImportance
@@ -165,7 +161,7 @@ internal fun AddEventDialog(
                                 text = importance.label,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 12.sp,
-                                color = if (selected) BackgroundDark else importanceColor(importance),
+                                color = if (selected) MaterialTheme.colorScheme.onPrimary else importanceColor(importance),
                             )
                         }
                     }
@@ -287,12 +283,12 @@ internal fun AddEventDialog(
                     }
                 },
             ) {
-                Text(if (isEdit) "Save" else "Add", color = Primary, fontWeight = FontWeight.SemiBold)
+                Text(if (isEdit) "Save" else "Add", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = TextSecondary)
+                Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
     )
@@ -310,7 +306,7 @@ private fun DateTimePickerRow(
             Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
-                .background(GlassWhite)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
                 .clickable(onClick = onClick)
                 .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -318,7 +314,7 @@ private fun DateTimePickerRow(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = Primary,
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(20.dp),
         )
         Spacer(Modifier.width(12.dp))
@@ -326,11 +322,11 @@ private fun DateTimePickerRow(
             Text(
                 text = title,
                 style = MaterialTheme.typography.labelSmall,
-                color = TextTertiary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
                 text = value,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.bodyMedium,
             )
         }

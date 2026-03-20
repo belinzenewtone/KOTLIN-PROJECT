@@ -8,15 +8,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -39,6 +42,8 @@ fun HomeScreen(
     onOpenCalendar: () -> Unit,
     onOpenAssistant: () -> Unit,
     onOpenProfile: () -> Unit,
+    onOpenInsights: () -> Unit,
+    onOpenLearning: () -> Unit = {},
 ) {
     val dashboardState by viewModel.uiState.collectAsState()
     val uiState = dashboardState.toHomeUiState()
@@ -47,6 +52,14 @@ fun HomeScreen(
         title = "Today",
         subtitle = uiState.dateLabel,
         actions = {
+            // Insights icon — visible in the header, not hidden, not a nav tab
+            IconButton(onClick = onOpenInsights) {
+                Icon(
+                    imageVector = Icons.Filled.BarChart,
+                    contentDescription = "Open Insights",
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
             IconButton(onClick = onOpenProfile) {
                 Icon(
                     imageVector = Icons.Filled.Person,
@@ -72,8 +85,10 @@ fun HomeScreen(
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface,
         )
+
         HomeSummaryStrip(uiState = uiState)
         HomeFocusCard(uiState = uiState, onOpenTasks = onOpenTasks)
+        HomeInsightsTeaser(uiState = uiState, onOpenInsights = onOpenInsights)
         HomeCalendarCard(uiState = uiState, onOpenCalendar = onOpenCalendar)
 
         ImportHealthPanel(
@@ -81,6 +96,7 @@ fun HomeScreen(
             onReview = onOpenFinance,
         )
         HomeAssistantCard(uiState = uiState, onOpenAssistant = onOpenAssistant)
+        HomeLearningCard(onOpenLearning = onOpenLearning)
         HomeSyncRow(uiState = uiState)
     }
 }
@@ -136,6 +152,57 @@ private fun HomeFocusCard(
     }
 }
 
+/**
+ * Insights teaser card — sits naturally in the Home feed so users discover Insights
+ * without it being a full tab. Tapping the card or the "View all" button opens the
+ * Insights screen.
+ */
+@Composable
+private fun HomeInsightsTeaser(
+    uiState: HomeUiState,
+    onOpenInsights: () -> Unit,
+    onOpenLearning: () -> Unit = {},
+) {
+    AppCard(elevated = true) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.BarChart,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.width(18.dp),
+                    )
+                    Text(
+                        text = "Insights",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+                Text(
+                    text = uiState.topInsight
+                        ?: "Trends and patterns across your tasks, spending, and habits.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            TextButton(onClick = onOpenInsights) {
+                Text("View all")
+            }
+        }
+    }
+}
+
 @Composable
 private fun HomeCalendarCard(
     uiState: HomeUiState,
@@ -180,7 +247,7 @@ private fun HomeAssistantCard(
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                text = uiState.topInsight ?: "No new insight yet. Ask the assistant for a quick review.",
+                text = "Ask about your day, tasks, or finances.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -200,5 +267,32 @@ private fun HomeSyncRow(uiState: HomeUiState) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         SyncStatusPill(status = uiState.syncStatus)
+    }
+}
+
+@Composable
+private fun HomeLearningCard(onOpenLearning: () -> Unit) {
+    AppCard(elevated = true) {
+        androidx.compose.foundation.layout.Row(
+            modifier = androidx.compose.ui.Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = "Learn",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = "Bite-sized sessions on finance, productivity, and more.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            TextButton(onClick = onOpenLearning) {
+                Text("Explore")
+            }
+        }
     }
 }

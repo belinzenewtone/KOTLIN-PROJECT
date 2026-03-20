@@ -6,6 +6,8 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -58,8 +60,6 @@ import com.personal.lifeOS.features.expenses.domain.model.Transaction
 import com.personal.lifeOS.features.expenses.domain.model.TransactionFilter
 import com.personal.lifeOS.ui.components.AccentGlassCard
 import com.personal.lifeOS.ui.components.GlassCard
-import com.personal.lifeOS.ui.theme.Accent
-import com.personal.lifeOS.ui.theme.BackgroundDark
 import com.personal.lifeOS.ui.theme.CategoryBills
 import com.personal.lifeOS.ui.theme.CategoryEntertainment
 import com.personal.lifeOS.ui.theme.CategoryFood
@@ -69,13 +69,6 @@ import com.personal.lifeOS.ui.theme.CategoryShopping
 import com.personal.lifeOS.ui.theme.CategorySubscriptions
 import com.personal.lifeOS.ui.theme.CategoryTransport
 import com.personal.lifeOS.ui.theme.Error
-import com.personal.lifeOS.ui.theme.GlassBorder
-import com.personal.lifeOS.ui.theme.GlassWhite
-import com.personal.lifeOS.ui.theme.Primary
-import com.personal.lifeOS.ui.theme.SurfaceDark
-import com.personal.lifeOS.ui.theme.TextPrimary
-import com.personal.lifeOS.ui.theme.TextSecondary
-import com.personal.lifeOS.ui.theme.TextTertiary
 
 private val EXPENSE_CATEGORIES =
     listOf(
@@ -111,11 +104,11 @@ internal fun ExpensesHeader(onImportSms: () -> Unit) {
             Text(
                 "Track your MPESA transactions",
                 style = MaterialTheme.typography.bodyLarge,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         TextButton(onClick = onImportSms) {
-            Text("Import SMS", color = Primary)
+            Text("Import SMS", color = MaterialTheme.colorScheme.primary)
         }
     }
 }
@@ -185,7 +178,7 @@ internal fun FilterChips(
                 modifier =
                     Modifier
                         .clip(RoundedCornerShape(20.dp))
-                        .background(if (isSelected) Primary else GlassWhite)
+                        .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                         .clickable { onSelect(filter) }
                         .padding(horizontal = 16.dp, vertical = 8.dp),
             ) {
@@ -198,7 +191,7 @@ internal fun FilterChips(
                             TransactionFilter.THIS_MONTH -> "This Month"
                         },
                     style = MaterialTheme.typography.labelLarge,
-                    color = if (isSelected) BackgroundDark else TextSecondary,
+                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -262,14 +255,14 @@ private fun CategoryRow(
         }
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(category, style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
+            Text(category, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
             Box(
                 modifier =
                     Modifier
                         .fillMaxWidth()
                         .height(4.dp)
                         .clip(RoundedCornerShape(2.dp))
-                        .background(GlassWhite),
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
             ) {
                 Box(
                     modifier =
@@ -285,7 +278,7 @@ private fun CategoryRow(
         Text(
             text = DateUtils.formatCurrency(amount),
             style = MaterialTheme.typography.labelLarge,
-            color = TextPrimary,
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
@@ -303,7 +296,7 @@ internal fun TransactionsHeader(
         Text("Transactions", style = MaterialTheme.typography.titleMedium)
         if (selectedCategory != null) {
             TextButton(onClick = onClearFilter) {
-                Text("Clear filter", color = Primary)
+                Text("Clear filter", color = MaterialTheme.colorScheme.primary)
             }
         }
     }
@@ -312,7 +305,7 @@ internal fun TransactionsHeader(
 @Composable
 internal fun ExpensesLoadingState() {
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator(color = Primary)
+        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
     }
 }
 
@@ -325,7 +318,7 @@ internal fun ExpensesEmptyStateCard() {
             Text(
                 "MPESA transactions will appear automatically, or tap + to add manually",
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -378,7 +371,7 @@ internal fun TransactionItem(
                     Text(
                         text = transaction.mpesaCode,
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextTertiary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -388,14 +381,14 @@ internal fun TransactionItem(
                     text = DateUtils.formatCurrency(transaction.amount),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (transaction.transactionType == "RECEIVED") Accent else TextPrimary,
+                    color = if (transaction.transactionType == "RECEIVED") MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface,
                 )
                 Row {
                     IconButton(onClick = onRecategorize, modifier = Modifier.size(28.dp)) {
                         Icon(
                             imageVector = Icons.Filled.Edit,
                             contentDescription = "Edit",
-                            tint = TextTertiary,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(16.dp),
                         )
                     }
@@ -424,10 +417,13 @@ internal fun AddTransactionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = SurfaceDark,
-        title = { Text("Add Transaction", color = TextPrimary) },
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = { Text("Add Transaction", color = MaterialTheme.colorScheme.onSurface) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
                 OutlinedTextField(
                     value = amount,
                     onValueChange = { amount = it },
@@ -436,8 +432,8 @@ internal fun AddTransactionDialog(
                     singleLine = true,
                     colors =
                         OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Primary,
-                            unfocusedBorderColor = GlassBorder,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
                         ),
                 )
                 OutlinedTextField(
@@ -447,11 +443,11 @@ internal fun AddTransactionDialog(
                     singleLine = true,
                     colors =
                         OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Primary,
-                            unfocusedBorderColor = GlassBorder,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
                         ),
                 )
-                Text("Category", style = MaterialTheme.typography.labelLarge, color = TextSecondary)
+                Text("Category", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -461,14 +457,14 @@ internal fun AddTransactionDialog(
                             modifier =
                                 Modifier
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(if (cat == category) Primary else GlassWhite)
+                                    .background(if (cat == category) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                                     .clickable { category = cat }
                                     .padding(horizontal = 12.dp, vertical = 6.dp),
                         ) {
                             Text(
                                 text = cat,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = if (cat == category) BackgroundDark else TextSecondary,
+                                color = if (cat == category) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
@@ -484,12 +480,12 @@ internal fun AddTransactionDialog(
                     }
                 },
             ) {
-                Text("Add", color = Primary)
+                Text("Add", color = MaterialTheme.colorScheme.primary)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = TextSecondary)
+                Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
     )
@@ -503,8 +499,8 @@ internal fun CategoryPickerDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = SurfaceDark,
-        title = { Text("Change Category", color = TextPrimary) },
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = { Text("Change Category", color = MaterialTheme.colorScheme.onSurface) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 EXPENSE_CATEGORIES.forEach { category ->
@@ -515,7 +511,7 @@ internal fun CategoryPickerDialog(
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(
                                     if (category == currentCategory) {
-                                        Primary.copy(alpha = 0.15f)
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                                     } else {
                                         Color.Transparent
                                     },
@@ -533,7 +529,7 @@ internal fun CategoryPickerDialog(
                         Spacer(Modifier.width(12.dp))
                         Text(
                             text = category,
-                            color = TextPrimary,
+                            color = MaterialTheme.colorScheme.onSurface,
                             style = MaterialTheme.typography.bodyLarge,
                         )
                     }
@@ -543,7 +539,7 @@ internal fun CategoryPickerDialog(
         confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = TextSecondary)
+                Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
     )
@@ -556,14 +552,14 @@ internal fun SmsImportDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = SurfaceDark,
+        containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(24.dp),
-        title = { Text("Import MPESA SMS", color = TextPrimary) },
+        title = { Text("Import MPESA SMS", color = MaterialTheme.colorScheme.onSurface) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text = "Select time period to scan:",
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 SMS_IMPORT_WINDOWS.forEach { (label, days) ->
@@ -572,13 +568,13 @@ internal fun SmsImportDialog(
                             Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(14.dp))
-                                .background(GlassWhite)
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
                                 .clickable { onImportDays(days) }
                                 .padding(16.dp),
                     ) {
                         Text(
                             text = label,
-                            color = TextPrimary,
+                            color = MaterialTheme.colorScheme.onSurface,
                             style = MaterialTheme.typography.bodyLarge,
                         )
                     }
@@ -588,7 +584,7 @@ internal fun SmsImportDialog(
         confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = TextSecondary)
+                Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
     )

@@ -41,13 +41,8 @@ import com.personal.lifeOS.features.dashboard.domain.model.UpcomingEvent
 import com.personal.lifeOS.ui.components.AccentGlassCard
 import com.personal.lifeOS.ui.components.GlassCard
 import com.personal.lifeOS.ui.theme.Accent
-import com.personal.lifeOS.ui.theme.GlassWhite
 import com.personal.lifeOS.ui.theme.Info
-import com.personal.lifeOS.ui.theme.Primary
 import com.personal.lifeOS.ui.theme.Success
-import com.personal.lifeOS.ui.theme.TextPrimary
-import com.personal.lifeOS.ui.theme.TextSecondary
-import com.personal.lifeOS.ui.theme.TextTertiary
 import com.personal.lifeOS.ui.theme.Warning
 
 @Composable
@@ -71,7 +66,7 @@ internal fun DashboardHeader(greeting: String) {
             Text(
                 "Here's your day at a glance",
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -140,10 +135,10 @@ internal fun ProductivityCard(
                     Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .background(Primary.copy(alpha = 0.15f)),
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Filled.CheckCircle, null, tint = Primary, modifier = Modifier.size(24.dp))
+                Icon(Icons.Filled.CheckCircle, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
             }
             Spacer(Modifier.width(16.dp))
             Column {
@@ -151,7 +146,7 @@ internal fun ProductivityCard(
                 Text(
                     "$completedTodayCount completed today · $pendingTaskCount pending",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -163,7 +158,7 @@ internal fun UpcomingEventsCard(events: List<UpcomingEvent>) {
     GlassCard(modifier = Modifier.fillMaxWidth()) {
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.CalendarMonth, null, tint = Primary, modifier = Modifier.size(20.dp))
+                Icon(Icons.Filled.CalendarMonth, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
                 Text("Upcoming Events", style = MaterialTheme.typography.titleMedium)
             }
@@ -172,7 +167,7 @@ internal fun UpcomingEventsCard(events: List<UpcomingEvent>) {
                 Text(
                     "No upcoming events",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             } else {
                 events.forEach { event ->
@@ -200,13 +195,13 @@ private fun EventRow(event: UpcomingEvent) {
                             "WORK" -> Info
                             "HEALTH" -> Success
                             "FINANCE" -> Warning
-                            else -> Primary
+                            else -> MaterialTheme.colorScheme.primary
                         },
                     ),
         )
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(event.title, style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
+            Text(event.title, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
             Text(
                 DateUtils.formatDate(event.date, "EEE, MMM dd · h:mm a"),
                 style = MaterialTheme.typography.labelSmall,
@@ -236,7 +231,7 @@ private fun WeeklyBarChart(data: List<DailySpending>) {
         Text(
             "No spending data this week",
             style = MaterialTheme.typography.bodyMedium,
-            color = TextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         return
     }
@@ -258,7 +253,7 @@ private fun WeeklyBarChart(data: List<DailySpending>) {
                     Text(
                         DateUtils.formatCurrency(day.amount).replace("KES ", ""),
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextTertiary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(Modifier.height(4.dp))
                 }
@@ -274,9 +269,9 @@ private fun WeeklyBarChart(data: List<DailySpending>) {
                             .clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
                             .background(
                                 if (day.amount > 0) {
-                                    Primary.copy(alpha = 0.7f + fraction * 0.3f)
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.7f + fraction * 0.3f)
                                 } else {
-                                    GlassWhite
+                                    MaterialTheme.colorScheme.surfaceVariant
                                 },
                             ),
                 )
@@ -303,12 +298,12 @@ internal fun DashboardInsightsCard(insights: List<DashboardInsight>) {
 
             insights.forEachIndexed { index, insight ->
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(insight.title, style = MaterialTheme.typography.bodyLarge, color = TextPrimary)
+                    Text(insight.title, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
                     Spacer(Modifier.height(4.dp))
-                    Text(insight.body, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+                    Text(insight.body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     if (insight.isAiGenerated) {
                         Spacer(Modifier.height(4.dp))
-                        Text("AI generated", style = MaterialTheme.typography.labelSmall, color = TextTertiary)
+                        Text("AI generated", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
 
@@ -338,7 +333,7 @@ internal fun RecentTransactionsCard(transactions: List<RecentTransaction>) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(tx.merchant, style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
+                        Text(tx.merchant, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
                         Text(tx.category, style = MaterialTheme.typography.labelSmall)
                     }
                     Text(

@@ -33,9 +33,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.personal.lifeOS.R
-import com.personal.lifeOS.ui.theme.BackgroundDark
-import com.personal.lifeOS.ui.theme.Primary
-import com.personal.lifeOS.ui.theme.TextSecondary
 
 @Composable
 @Suppress("LongMethod")
@@ -80,8 +77,8 @@ fun PersonalOsSplashScreen(modifier: Modifier = Modifier) {
                         Brush.verticalGradient(
                             colors =
                                 listOf(
-                                    BackgroundDark,
-                                    BackgroundDark.copy(alpha = 0.96f),
+                                    MaterialTheme.colorScheme.background,
+                                    MaterialTheme.colorScheme.background.copy(alpha = 0.96f),
                                 ),
                         ),
                 ),
@@ -105,7 +102,7 @@ fun PersonalOsSplashScreen(modifier: Modifier = Modifier) {
                             .background(
                                 brush =
                                     Brush.radialGradient(
-                                        colors = listOf(Primary.copy(alpha = 0.35f), Primary.copy(alpha = 0f)),
+                                        colors = listOf(MaterialTheme.colorScheme.primary.copy(alpha = 0.35f), MaterialTheme.colorScheme.primary.copy(alpha = 0f)),
                                     ),
                             ),
                 )
@@ -126,11 +123,11 @@ fun PersonalOsSplashScreen(modifier: Modifier = Modifier) {
             Text(
                 text = "Master your plan",
                 style = MaterialTheme.typography.bodyLarge,
-                color = TextSecondary.copy(alpha = subtitleAlpha),
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = subtitleAlpha),
             )
 
             CircularProgressIndicator(
-                color = Primary.copy(alpha = 0.9f),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
                 strokeWidth = 2.5.dp,
                 modifier = Modifier.width(28.dp),
             )

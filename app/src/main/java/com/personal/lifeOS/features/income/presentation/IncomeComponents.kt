@@ -24,7 +24,6 @@ import com.personal.lifeOS.core.ui.designsystem.FinanceSummaryCard
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.income.domain.model.IncomeRecord
 import com.personal.lifeOS.ui.theme.Error
-import com.personal.lifeOS.ui.theme.TextSecondary
 
 @Composable
 internal fun IncomeSummaryCard(
@@ -64,10 +63,10 @@ internal fun IncomeCard(
                 Text(
                     text = DateUtils.formatDate(item.date, "MMM dd, yyyy"),
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 if (item.note.isNotBlank()) {
-                    Text(item.note, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                    Text(item.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {

@@ -12,7 +12,8 @@ param(
     [string]$ManifestPath = "ota/manifest.json",
     [switch]$Required,
     [switch]$BuildRelease,
-    [switch]$UpdateLocalProperties
+    [switch]$UpdateLocalProperties,
+    [switch]$SkipRuntimeConfigValidation
 )
 
 Set-StrictMode -Version Latest
@@ -42,8 +43,53 @@ function Get-StatusCode {
     return [int]$response.StatusCode
 }
 
+function Read-LocalPropertiesMap {
+    param([string]$Path)
+
+    $map = @{}
+    if (-not (Test-Path $Path)) {
+        return $map
+    }
+
+    Get-Content $Path | ForEach-Object {
+        $line = $_.Trim()
+        if ($line.StartsWith("#") -or [string]::IsNullOrWhiteSpace($line)) {
+            return
+        }
+        $idx = $line.IndexOf("=")
+        if ($idx -lt 0) {
+            return
+        }
+        $key = $line.Substring(0, $idx).Trim()
+        $value = $line.Substring($idx + 1).Trim()
+        $map[$key] = $value
+    }
+
+    return $map
+}
+
+function Assert-RuntimeConfig {
+    param([hashtable]$Props)
+
+    $supabaseUrl = $Props["SUPABASE_URL"]
+    $anonKey = $Props["SUPABASE_ANON_KEY"]
+
+    if ([string]::IsNullOrWhiteSpace($supabaseUrl) -or [string]::IsNullOrWhiteSpace($anonKey)) {
+        throw "Missing SUPABASE_URL and/or SUPABASE_ANON_KEY in local.properties. Refusing to publish a broken auth build."
+    }
+    if ($supabaseUrl -notmatch "^https?://") {
+        throw "SUPABASE_URL must start with http:// or https://. Current value: '$supabaseUrl'"
+    }
+}
+
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $repoRoot
+
+$localPropertiesPath = "local.properties"
+$localProps = Read-LocalPropertiesMap -Path $localPropertiesPath
+if (-not $SkipRuntimeConfigValidation) {
+    Assert-RuntimeConfig -Props $localProps
+}
 
 if ([string]::IsNullOrWhiteSpace($Repo)) {
     $Repo = Resolve-RepoFromOrigin

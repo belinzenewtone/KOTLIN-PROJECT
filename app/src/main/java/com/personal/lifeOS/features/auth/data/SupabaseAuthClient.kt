@@ -28,12 +28,21 @@ class SupabaseAuthClient
 
         private val authUrl get() = "${ApiConfig.SUPABASE_URL}/auth/v1"
 
+        private fun missingConfigError(): AuthResult.Error {
+            return AuthResult.Error(
+                "Backend is not configured in this build. Set SUPABASE_URL and SUPABASE_ANON_KEY, then rebuild.",
+            )
+        }
+
         suspend fun signUp(
             email: String,
             password: String,
             username: String,
         ): AuthResult =
             withContext(Dispatchers.IO) {
+                if (!ApiConfig.isSupabaseConfigured()) {
+                    return@withContext missingConfigError()
+                }
                 try {
                     val body =
                         gson.toJson(
@@ -84,6 +93,9 @@ class SupabaseAuthClient
             password: String,
         ): AuthResult =
             withContext(Dispatchers.IO) {
+                if (!ApiConfig.isSupabaseConfigured()) {
+                    return@withContext missingConfigError()
+                }
                 try {
                     val body = gson.toJson(mapOf("email" to email, "password" to password))
 
@@ -125,6 +137,9 @@ class SupabaseAuthClient
 
         suspend fun getUser(accessToken: String): AuthResult =
             withContext(Dispatchers.IO) {
+                if (!ApiConfig.isSupabaseConfigured()) {
+                    return@withContext missingConfigError()
+                }
                 try {
                     val request =
                         Request.Builder()
@@ -158,6 +173,9 @@ class SupabaseAuthClient
 
         suspend fun resendVerification(email: String): Boolean =
             withContext(Dispatchers.IO) {
+                if (!ApiConfig.isSupabaseConfigured()) {
+                    return@withContext false
+                }
                 try {
                     val body = gson.toJson(mapOf("email" to email))
                     val request =
@@ -176,6 +194,9 @@ class SupabaseAuthClient
 
         suspend fun sendPasswordReset(email: String): Boolean =
             withContext(Dispatchers.IO) {
+                if (!ApiConfig.isSupabaseConfigured()) {
+                    return@withContext false
+                }
                 try {
                     val body = gson.toJson(mapOf("email" to email))
                     val request =

@@ -1,8 +1,8 @@
 {
-  "version_code": 2,
-  "version_name": "1.0.1",
-  "download_url": "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.0.1/app-release-v1.0.1.apk",
-  "checksum_sha256": "8cd5672cf33c8f7570e356e710d0e6ab2ae95e6a389c125aada202235c9369a5",
+  "version_code": 3,
+  "version_name": "1.0.2",
+  "download_url": "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.0.2/app-release-v1.0.2.apk",
+  "checksum_sha256": "39a1a5c2ee89cd4038fffec9a3bd0697ed3b1e388f3e1e2c8a1a9a9749f064dd",
   "required": false,
-  "release_notes": "OTA update: GitHub Releases publishing flow, manifest compatibility, and build stability fixes."
+  "release_notes": "Hotfix: restore Supabase auth endpoint configuration and prevent misconfigured releases."
 }

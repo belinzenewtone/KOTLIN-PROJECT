@@ -177,7 +177,13 @@ fun LifeOSNavHost(
                 currentDestination = currentDestination,
             )
         }
-        if (!isOnPublicFlow && authState.isLoggedIn && lockState.appContentUnlocked) {
+        val shouldShowOtaPrompt =
+            shouldCheckForUpdates &&
+                (
+                    isOnPublicFlow ||
+                        (authState.isLoggedIn && lockState.appContentUnlocked)
+                )
+        if (shouldShowOtaPrompt) {
             OtaUpdatePromptHost(shouldCheckForUpdates = shouldCheckForUpdates)
         }
 

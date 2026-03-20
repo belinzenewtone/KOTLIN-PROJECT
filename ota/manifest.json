@@ -1,8 +1,8 @@
 {
-  "version_code": 3,
-  "version_name": "1.0.2",
-  "download_url": "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.0.2/app-release-v1.0.2.apk",
-  "checksum_sha256": "39a1a5c2ee89cd4038fffec9a3bd0697ed3b1e388f3e1e2c8a1a9a9749f064dd",
+  "version_code": 4,
+  "version_name": "1.0.3",
+  "download_url": "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.0.3/app-release-v1.0.3.apk",
+  "checksum_sha256": "96bf65095ccaad4c50c724ae94d3fe4bb8a5b205e05b5bc5670fc4ab6d42645a",
   "required": false,
-  "release_notes": "Hotfix: restore Supabase auth endpoint configuration and prevent misconfigured releases."
+  "release_notes": "Hotfix: OTA update check now runs on auth/public flow, plus release signing hardening."
 }

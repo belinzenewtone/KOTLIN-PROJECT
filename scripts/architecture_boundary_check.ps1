@@ -19,7 +19,7 @@ $bannedPatterns = @(
     "import\s+com\.personal\.lifeOS\.core\.utils\.CloudSyncService",
     "import\s+com\.personal\.lifeOS\.core\.utils\.SupabaseClient",
     "import\s+com\.personal\.lifeOS\.features\.auth\.data\.SupabaseAuthClient",
-    "import\s+com\.personal\.lifeOS\.features\.assistant\.data\.datasource\.OpenAIClient"
+    "import\s+com\.personal\.lifeOS\.features\.assistant\.data\.datasource\.AssistantProxyClient"
 )
 
 $violations = New-Object System.Collections.Generic.List[string]

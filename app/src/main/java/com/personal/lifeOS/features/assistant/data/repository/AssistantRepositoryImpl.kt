@@ -7,9 +7,9 @@ import com.personal.lifeOS.core.database.entity.AssistantConversationEntity
 import com.personal.lifeOS.core.database.entity.AssistantMessageEntity
 import com.personal.lifeOS.core.security.AuthSessionStore
 import com.personal.lifeOS.core.utils.ApiConfig
+import com.personal.lifeOS.features.assistant.data.datasource.AssistantProxyClient
 import com.personal.lifeOS.features.assistant.data.datasource.DataContextBuilder
 import com.personal.lifeOS.features.assistant.data.datasource.LocalAIEngine
-import com.personal.lifeOS.features.assistant.data.datasource.OpenAIClient
 import com.personal.lifeOS.features.assistant.domain.model.ChatMessage
 import com.personal.lifeOS.features.assistant.domain.model.MessageSender
 import com.personal.lifeOS.features.assistant.domain.repository.AssistantRepository
@@ -29,7 +29,7 @@ class AssistantRepositoryImpl
     @Inject
     constructor(
         private val localAIEngine: LocalAIEngine,
-        private val openAIClient: OpenAIClient,
+        private val assistantProxyClient: AssistantProxyClient,
         private val contextBuilder: DataContextBuilder,
         private val authSessionStore: AuthSessionStore,
         private val conversationDao: AssistantConversationDao,
@@ -40,7 +40,7 @@ class AssistantRepositoryImpl
             if (ApiConfig.isAssistantProxyConfigured()) {
                 try {
                     val context = contextBuilder.buildContext()
-                    val aiResponse = openAIClient.chat(userMessage, context)
+                    val aiResponse = assistantProxyClient.chat(userMessage, context)
 
                     if (aiResponse != null) {
                         return ChatMessage(

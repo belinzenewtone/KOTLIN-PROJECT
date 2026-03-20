@@ -62,9 +62,8 @@ This document is the canonical handoff brief for another AI agent to audit the c
   - `authenticated` has CRUD grants, still constrained by RLS policies.
 - Edge functions:
   - `assistant-proxy` provider order:
-    1. OpenAI (`OPENAI_API_KEY`)
-    2. Gemini (`GEMINI_API_KEY`)
-    3. deterministic fallback
+    1. Gemini (`GEMINI_API_KEY`)
+    2. deterministic fallback
   - `ota-manifest` serves snake_case manifest contract used by app update flow.
 
 ## 7) Current Verification Baseline

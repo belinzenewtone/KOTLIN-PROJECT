@@ -17,7 +17,7 @@ import javax.inject.Singleton
  * No model provider API keys are stored in the Android app.
  */
 @Singleton
-class OpenAIClient
+class AssistantProxyClient
     @Inject
     constructor() {
         private val gson = Gson()

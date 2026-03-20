@@ -113,7 +113,7 @@ supabase functions deploy ota-manifest --no-verify-jwt --use-api
 
 - `assistant-proxy` accepts `POST { prompt, context }` and returns `{ reply }`.
 - `ota-manifest` returns manifest JSON using snake_case fields expected by `OtaUpdateManager`.
-- `assistant-proxy` provider order: OpenAI (`OPENAI_API_KEY`) -> Gemini (`GEMINI_API_KEY`) -> deterministic local fallback.
+- `assistant-proxy` provider order: Gemini (`GEMINI_API_KEY`) -> deterministic local fallback.
 
 ## OTA With GitHub Releases
 

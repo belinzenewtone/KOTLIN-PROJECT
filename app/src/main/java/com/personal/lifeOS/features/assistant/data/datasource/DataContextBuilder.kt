@@ -11,7 +11,7 @@ import javax.inject.Singleton
 
 /**
  * Builds an aggregated context string from local data.
- * This is sent to OpenAI so the AI can give intelligent answers.
+ * This is sent to the assistant proxy so the AI can give intelligent answers.
  *
  * PRIVACY: Only sends summaries and aggregates, never raw SMS messages.
  */

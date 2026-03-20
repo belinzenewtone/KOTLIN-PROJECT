@@ -31,10 +31,9 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -166,7 +165,12 @@ fun LifeOSNavHost(
         // Hide the floating nav bar when the keyboard is visible — it otherwise
         // overlaps the input bar and wastes vertical space while the user is typing.
         val isImeVisible = WindowInsets.isImeVisible
-        val showBottomBar = !isOnPublicFlow && authState.isLoggedIn && lockState.appContentUnlocked && !isImeVisible
+        val showBottomBar =
+            currentRoute != null &&
+                !isOnPublicFlow &&
+                authState.isLoggedIn &&
+                lockState.appContentUnlocked &&
+                !isImeVisible
         AnimatedVisibility(
             visible = showBottomBar,
             enter = fadeIn(tween(220, easing = EaseInOut)),
@@ -439,8 +443,9 @@ private fun BoxScope.LifeOSBottomBar(
         modifier =
             Modifier
                 .align(Alignment.BottomCenter)
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(horizontal = 24.dp, vertical = 8.dp),
+                .padding(horizontal = 24.dp)
+                .navigationBarsPadding()
+                .padding(bottom = 10.dp),
     ) {
         Row(
             modifier =

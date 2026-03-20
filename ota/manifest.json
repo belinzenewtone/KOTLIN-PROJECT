@@ -1,8 +1,8 @@
 {
-  "version_code": 4,
-  "version_name": "1.0.3",
-  "download_url": "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.0.3/app-release-v1.0.3.apk",
-  "checksum_sha256": "96bf65095ccaad4c50c724ae94d3fe4bb8a5b205e05b5bc5670fc4ab6d42645a",
+  "version_code": 5,
+  "version_name": "1.0.4",
+  "download_url": "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.0.4/app-release-v1.0.4.apk",
+  "checksum_sha256": "156b02be5f3c81fcf4e9a6903444e9091babc66580321222727d3c809cbbebd6",
   "required": false,
-  "release_notes": "Hotfix: OTA update check now runs on auth/public flow, plus release signing hardening."
+  "release_notes": "Hotfix: fix bottom navigation placement and route-gating behavior."
 }

@@ -1,6 +1,7 @@
 package com.personal.lifeOS.navigation
 
 internal fun isPublicRoute(route: String?): Boolean {
+    if (route == null) return true
     return route == AppRoute.Auth || route == AppRoute.Onboarding
 }
 

@@ -1,152 +1,83 @@
 package com.personal.lifeOS.features.expenses.data.parser
 
-import java.text.SimpleDateFormat
-import java.util.Locale
+import com.personal.lifeOS.platform.sms.parser.MpesaParserEnhanced
+import com.personal.lifeOS.platform.sms.parser.MpesaParsingConfig
 
 /**
- * Parses MPESA SMS messages and extracts structured transaction data.
+ * M-Pesa SMS parser — public facade over [MpesaParserEnhanced].
  *
- * Handles the following MPESA transaction types:
- * - Sent (to person or till)
- * - Received
- * - Paid (Lipa Na MPESA)
- * - Withdrawn
- * - Bought airtime
+ * This object provides the app-layer API used by [ExpenseRepositoryImpl] and tests.
+ * All classification and extraction logic lives in [MpesaParserEnhanced]; this facade
+ * maps the richer enhanced result into the leaner [ParsedTransaction] shape that the
+ * repository expects.
+ *
+ * Breaking change from the previous version
+ * ──────────────────────────────────────────
+ * The inner [TransactionType] enum has been removed. Transaction semantics are now
+ * expressed through [MpesaParsingConfig.TransactionCategory], which is strictly more
+ * expressive:
+ *
+ *   Old                  New
+ *   ────────────────────────────────────────
+ *   TransactionType.PAID → PAYBILL or BUY_GOODS (correctly disambiguated)
+ *   TransactionType.WITHDRAWN → WITHDRAW
+ *   TransactionType.UNKNOWN → UNKNOWN
+ *   … etc.
  */
 object MpesaSmsParser {
+
+    /**
+     * A parsed M-Pesa transaction ready for persistence.
+     *
+     * @param mpesaCode       10-character Safaricom transaction reference
+     * @param amount          Transaction amount (always positive)
+     * @param merchant        Counterparty / merchant name extracted from the SMS
+     * @param category        Semantic transaction category (replaces old TransactionType)
+     * @param confidence      Parser confidence for this classification
+     * @param date            Transaction epoch-millis parsed from the SMS body
+     * @param rawSms          Original unmodified SMS body for audit / hashing
+     */
     data class ParsedTransaction(
         val mpesaCode: String,
         val amount: Double,
         val merchant: String,
-        val transactionType: TransactionType,
+        val category: MpesaParsingConfig.TransactionCategory,
+        val confidence: MpesaParsingConfig.Confidence,
         val date: Long,
         val rawSms: String,
     )
 
-    enum class TransactionType {
-        SENT,
-        RECEIVED,
-        PAID,
-        WITHDRAWN,
-        AIRTIME,
-        DEPOSIT,
-        UNKNOWN,
-    }
-
-    private val MPESA_CODE_REGEX = Regex("[A-Z0-9]{10}")
-    private val AMOUNT_REGEX = Regex("Ksh([\\d,]+\\.?\\d*)")
-    private val DATE_REGEX = Regex("on (\\d{1,2}/\\d{1,2}/\\d{2,4})")
-    private val TIME_REGEX = Regex("at (\\d{1,2}:\\d{2} [AP]M)")
-    private val SUPPORTED_DATE_PATTERNS = listOf("d/M/yy h:mm a", "d/M/yyyy h:mm a")
-
     /**
-     * Check if an SMS is an MPESA message.
+     * Returns true when [message] is an M-Pesa transaction or notice SMS.
+     * Cheap pre-filter — use before calling [parse] on large inbox batches.
      */
-    fun isMpesaSms(message: String): Boolean {
-        val upperMsg = message.uppercase()
-        return upperMsg.contains("MPESA") ||
-            upperMsg.contains("M-PESA") ||
-            (MPESA_CODE_REGEX.containsMatchIn(message) && AMOUNT_REGEX.containsMatchIn(message))
-    }
+    fun isMpesaSms(message: String): Boolean = MpesaParserEnhanced.isMpesaSms(message)
 
     /**
-     * Parse an MPESA SMS and return structured transaction data.
-     * Returns null if parsing fails.
+     * Parse an M-Pesa SMS and return a [ParsedTransaction], or null when:
+     *  - The message is not M-Pesa
+     *  - No valid 10-char transaction code is found
+     *  - No positive amount is found
+     *  - The message is a Fuliza service/fee notice (not a real transaction)
+     *  - The transaction type cannot be reliably classified
      */
     fun parse(sms: String): ParsedTransaction? {
-        return try {
-            val code = extractMpesaCode(sms) ?: return null
-            val amount = extractAmount(sms) ?: return null
-            val type = detectTransactionType(sms)
-            val merchant = extractMerchant(sms, type)
-            val date = extractDate(sms)
+        val enhanced = MpesaParserEnhanced.parse(sms) ?: return null
 
-            ParsedTransaction(
-                mpesaCode = code,
-                amount = amount,
-                merchant = merchant,
-                transactionType = type,
-                date = date,
-                rawSms = sms,
-            )
-        } catch (e: Exception) {
-            // Fault resistance: ignore malformed messages
-            null
-        }
-    }
+        // Derive a usable merchant/counterparty string from the enhanced result.
+        // Priority: extracted counterparty → category display label
+        val merchant = enhanced.counterparty
+            ?: MpesaParsingConfig.CATEGORY_DISPLAY[enhanced.category]
+            ?: enhanced.category.name.lowercase().replaceFirstChar { it.uppercase() }
 
-    private fun extractMpesaCode(sms: String): String? {
-        return MPESA_CODE_REGEX.find(sms)?.value
-    }
-
-    private fun extractAmount(sms: String): Double? {
-        val match = AMOUNT_REGEX.find(sms) ?: return null
-        val amountStr = match.groupValues[1].replace(",", "")
-        return amountStr.toDoubleOrNull()
-    }
-
-    private fun detectTransactionType(sms: String): TransactionType {
-        val lower = sms.lowercase()
-        return when {
-            lower.contains("sent to") -> TransactionType.SENT
-            lower.contains("received") -> TransactionType.RECEIVED
-            lower.contains("paid to") || lower.contains("buy goods") -> TransactionType.PAID
-            lower.contains("withdraw") -> TransactionType.WITHDRAWN
-            lower.contains("airtime") -> TransactionType.AIRTIME
-            lower.contains("deposit") -> TransactionType.DEPOSIT
-            else -> TransactionType.UNKNOWN
-        }
-    }
-
-    private fun extractMerchant(
-        sms: String,
-        type: TransactionType,
-    ): String {
-        return try {
-            when (type) {
-                TransactionType.SENT -> {
-                    // "sent to JOHN DOE" or "sent to 0712345678"
-                    val regex = Regex("sent to ([A-Z\\s]+?)(?:\\s+\\d|\\.|on )", RegexOption.IGNORE_CASE)
-                    regex.find(sms)?.groupValues?.get(1)?.trim() ?: "Unknown"
-                }
-                TransactionType.PAID -> {
-                    // "paid to KFC WESTLANDS" or "Buy Goods from NAIVAS"
-                    val regex =
-                        Regex("(?:paid to|from)\\s+([A-Z0-9\\s&'-]+?)(?:\\s+on |\\.|New)", RegexOption.IGNORE_CASE)
-                    regex.find(sms)?.groupValues?.get(1)?.trim() ?: "Unknown"
-                }
-                TransactionType.RECEIVED -> {
-                    val regex = Regex("from ([A-Z\\s]+?)(?:\\s+\\d|\\.|on )", RegexOption.IGNORE_CASE)
-                    regex.find(sms)?.groupValues?.get(1)?.trim() ?: "Unknown"
-                }
-                TransactionType.WITHDRAWN -> "ATM Withdrawal"
-                TransactionType.AIRTIME -> "Airtime"
-                TransactionType.DEPOSIT -> "Deposit"
-                TransactionType.UNKNOWN -> "Unknown"
-            }
-        } catch (e: Exception) {
-            "Unknown"
-        }
-    }
-
-    private fun extractDate(sms: String): Long {
-        return try {
-            val dateMatch = DATE_REGEX.find(sms)?.groupValues?.get(1) ?: return System.currentTimeMillis()
-            val timeMatch = TIME_REGEX.find(sms)?.groupValues?.get(1) ?: "12:00 PM"
-            val dateTimeStr = "$dateMatch $timeMatch"
-            parseSupportedDateTime(dateTimeStr) ?: System.currentTimeMillis()
-        } catch (e: Exception) {
-            System.currentTimeMillis()
-        }
-    }
-
-    private fun parseSupportedDateTime(dateTimeStr: String): Long? {
-        return SUPPORTED_DATE_PATTERNS.firstNotNullOfOrNull { pattern ->
-            runCatching {
-                SimpleDateFormat(pattern, Locale.ENGLISH).apply { isLenient = false }
-                    .parse(dateTimeStr)
-                    ?.time
-            }.getOrNull()
-        }
+        return ParsedTransaction(
+            mpesaCode  = enhanced.mpesaCode,
+            amount     = enhanced.amount,
+            merchant   = merchant,
+            category   = enhanced.category,
+            confidence = enhanced.confidence,
+            date       = enhanced.date,
+            rawSms     = enhanced.rawSms,
+        )
     }
 }

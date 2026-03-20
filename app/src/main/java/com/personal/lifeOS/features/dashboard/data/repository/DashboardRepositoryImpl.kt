@@ -4,6 +4,7 @@ import com.personal.lifeOS.core.database.dao.EventDao
 import com.personal.lifeOS.core.database.dao.TaskDao
 import com.personal.lifeOS.core.database.dao.TransactionDao
 import com.personal.lifeOS.core.database.entity.EventEntity
+import com.personal.lifeOS.core.preferences.AppSettingsStore
 import com.personal.lifeOS.core.security.AuthSessionStore
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.dashboard.domain.model.DailySpending
@@ -16,6 +17,8 @@ import com.personal.lifeOS.features.insights.domain.model.InsightCard
 import com.personal.lifeOS.features.insights.domain.repository.InsightRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -32,6 +35,7 @@ class DashboardRepositoryImpl
         private val eventDao: EventDao,
         private val taskDao: TaskDao,
         private val authSessionStore: AuthSessionStore,
+        private val appSettingsStore: AppSettingsStore,
         private val insightRepository: InsightRepository,
     ) : DashboardRepository {
         override fun getDashboardData(): Flow<DashboardData> {
@@ -138,11 +142,16 @@ class DashboardRepositoryImpl
 
         private fun getGreeting(): String {
             val hour = LocalTime.now().hour
-            return when {
+            val timeGreeting = when {
                 hour < 12 -> "Good Morning"
                 hour < 17 -> "Good Afternoon"
                 else -> "Good Evening"
             }
+            // Read name synchronously — it's a DataStore read from a fast local prefs file.
+            // We cap at 10 chars so the greeting never wraps or dominates the header.
+            val rawName = runBlocking { appSettingsStore.getProfileName() }.trim()
+            val firstName = rawName.split(" ").firstOrNull()?.take(10)?.ifBlank { null }
+            return if (firstName != null) "$timeGreeting, $firstName" else timeGreeting
         }
 
         private fun buildWeeklySpending(transactions: List<RecentTransaction>): List<DailySpending> {

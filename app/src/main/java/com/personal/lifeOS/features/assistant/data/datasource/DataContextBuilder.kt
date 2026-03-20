@@ -1,8 +1,10 @@
 package com.personal.lifeOS.features.assistant.data.datasource
 
 import com.personal.lifeOS.core.database.dao.EventDao
+import com.personal.lifeOS.core.database.dao.IncomeDao
 import com.personal.lifeOS.core.database.dao.TaskDao
 import com.personal.lifeOS.core.database.dao.TransactionDao
+import com.personal.lifeOS.core.preferences.AppSettingsStore
 import com.personal.lifeOS.core.security.AuthSessionStore
 import com.personal.lifeOS.core.utils.DateUtils
 import kotlinx.coroutines.flow.first
@@ -22,11 +24,19 @@ class DataContextBuilder
         private val transactionDao: TransactionDao,
         private val taskDao: TaskDao,
         private val eventDao: EventDao,
+        private val incomeDao: IncomeDao,
         private val authSessionStore: AuthSessionStore,
+        private val appSettingsStore: AppSettingsStore,
     ) {
         suspend fun buildContext(): String {
             val userId = authSessionStore.getUserId()
+            val userName = appSettingsStore.getProfileName().ifBlank { "the user" }
             val sb = StringBuilder()
+
+            // Identity context — always first so the AI knows who it's talking to
+            sb.appendLine("=== IDENTITY ===")
+            sb.appendLine("User's name: $userName")
+            sb.appendLine("User ID: $userId")
 
             // Spending context
             try {
@@ -85,6 +95,31 @@ class DataContextBuilder
                 sb.appendLine("Total transactions recorded: $txCount")
             } catch (e: Exception) {
                 sb.appendLine("Spending data unavailable")
+            }
+
+            // Income context
+            try {
+                val allIncome = incomeDao.getAll(userId).first()
+                val monthIncome = allIncome.filter {
+                    it.date >= DateUtils.monthStartMillis() && it.date <= DateUtils.monthEndMillis()
+                }
+                val totalMonthIncome = monthIncome.sumOf { it.amount }
+                val totalAllTime = allIncome.sumOf { it.amount }
+
+                sb.appendLine()
+                sb.appendLine("=== INCOME ===")
+                sb.appendLine("This month income: KES ${String.format("%,.0f", totalMonthIncome)}")
+                sb.appendLine("All-time income recorded: KES ${String.format("%,.0f", totalAllTime)}")
+                sb.appendLine("Income entries this month: ${monthIncome.size}")
+
+                if (monthIncome.isNotEmpty()) {
+                    sb.appendLine("Recent income:")
+                    monthIncome.take(5).forEach {
+                        sb.appendLine("  ${it.source} - KES ${String.format("%,.0f", it.amount)} (${DateUtils.formatDate(it.date)})")
+                    }
+                }
+            } catch (e: Exception) {
+                sb.appendLine("Income data unavailable")
             }
 
             // Tasks context

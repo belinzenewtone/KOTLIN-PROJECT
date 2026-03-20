@@ -1,6 +1,6 @@
 package com.personal.lifeOS.platform.sms.parser
 
-import com.personal.lifeOS.features.expenses.data.parser.MpesaSmsParser
+import com.personal.lifeOS.platform.sms.parser.MpesaParsingConfig.TransactionCategory
 
 data class MpesaParserFixture(
     val name: String,
@@ -8,7 +8,7 @@ data class MpesaParserFixture(
     val code: String,
     val amount: Double,
     val merchant: String,
-    val type: MpesaSmsParser.TransactionType,
+    val category: TransactionCategory,
 )
 
 object MpesaParserFixtures {
@@ -20,7 +20,7 @@ object MpesaParserFixtures {
                 code = "QH12345678",
                 amount = 1250.0,
                 merchant = "JOHN DOE",
-                type = MpesaSmsParser.TransactionType.SENT,
+                category = TransactionCategory.SENT,
             ),
             MpesaParserFixture(
                 name = "received_from_contact",
@@ -30,7 +30,7 @@ object MpesaParserFixtures {
                 code = "QJ22334455",
                 amount = 2300.0,
                 merchant = "JANE DOE",
-                type = MpesaSmsParser.TransactionType.RECEIVED,
+                category = TransactionCategory.RECEIVED,
             ),
             MpesaParserFixture(
                 name = "lipa_na_mpesa_paid_to_till",
@@ -40,7 +40,7 @@ object MpesaParserFixtures {
                 code = "QK99887766",
                 amount = 540.0,
                 merchant = "NAIVAS WESTLANDS",
-                type = MpesaSmsParser.TransactionType.PAID,
+                category = TransactionCategory.BUY_GOODS,
             ),
             MpesaParserFixture(
                 name = "buy_goods_from_merchant",
@@ -48,7 +48,7 @@ object MpesaParserFixtures {
                 code = "QN55443322",
                 amount = 799.0,
                 merchant = "JAVA HOUSE KAREN",
-                type = MpesaSmsParser.TransactionType.PAID,
+                category = TransactionCategory.BUY_GOODS,
             ),
             MpesaParserFixture(
                 name = "atm_withdrawal",
@@ -56,15 +56,15 @@ object MpesaParserFixtures {
                 code = "QL33445566",
                 amount = 3000.0,
                 merchant = "ATM Withdrawal",
-                type = MpesaSmsParser.TransactionType.WITHDRAWN,
+                category = TransactionCategory.WITHDRAW,
             ),
             MpesaParserFixture(
                 name = "airtime_purchase",
-                sms = "QM77665544 Confirmed. Ksh50.00 airtime purchased on 12/3/26 at 11:30 AM.",
+                sms = "QM77665544 Confirmed. You bought Ksh50.00 of airtime on 12/3/26 at 11:30 AM.",
                 code = "QM77665544",
                 amount = 50.0,
-                merchant = "Airtime",
-                type = MpesaSmsParser.TransactionType.AIRTIME,
+                merchant = "Airtime Purchase",
+                category = TransactionCategory.AIRTIME,
             ),
         )
 }

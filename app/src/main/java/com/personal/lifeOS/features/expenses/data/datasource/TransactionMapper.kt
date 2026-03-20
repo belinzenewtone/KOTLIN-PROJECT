@@ -13,6 +13,7 @@ fun TransactionEntity.toDomain(): Transaction {
         source = source,
         transactionType = transactionType,
         mpesaCode = mpesaCode,
+        sourceHash = sourceHash,
         rawSms = rawSms,
         createdAt = createdAt,
     )
@@ -28,6 +29,7 @@ fun Transaction.toEntity(): TransactionEntity {
         source = source,
         transactionType = transactionType,
         mpesaCode = mpesaCode,
+        sourceHash = sourceHash,
         rawSms = rawSms,
         createdAt = createdAt,
     )

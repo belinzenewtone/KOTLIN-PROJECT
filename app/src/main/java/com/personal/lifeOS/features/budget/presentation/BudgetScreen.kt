@@ -12,6 +12,8 @@ import com.personal.lifeOS.core.ui.designsystem.InlineBanner
 import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
 import com.personal.lifeOS.core.ui.designsystem.LoadingState
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
+import com.personal.lifeOS.core.ui.designsystem.TopBanner
+import com.personal.lifeOS.core.ui.designsystem.TopBannerTone
 
 @Composable
 fun BudgetScreen(viewModel: BudgetViewModel = hiltViewModel()) {
@@ -20,6 +22,14 @@ fun BudgetScreen(viewModel: BudgetViewModel = hiltViewModel()) {
     PageScaffold(
         title = "Budgets",
         subtitle = "${state.budgets.size} categories tracked",
+        topBanner = {
+            state.error?.let {
+                TopBanner(
+                    message = it,
+                    tone = TopBannerTone.ERROR,
+                )
+            }
+        },
         actions = {
             androidx.compose.material3.TextButton(onClick = viewModel::showAddDialog) {
                 androidx.compose.material3.Text("Add")
@@ -27,12 +37,6 @@ fun BudgetScreen(viewModel: BudgetViewModel = hiltViewModel()) {
         },
         contentPadding = PaddingValues(bottom = 140.dp),
     ) {
-        state.error?.let {
-            InlineBanner(
-                message = it,
-                tone = InlineBannerTone.ERROR,
-            )
-        }
 
         if (state.isLoading) {
             LoadingState(label = "Loading budgets...")

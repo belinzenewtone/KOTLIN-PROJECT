@@ -10,6 +10,7 @@ import com.personal.lifeOS.features.expenses.data.datasource.toDomain
 import com.personal.lifeOS.features.expenses.data.datasource.toEntity
 import com.personal.lifeOS.features.expenses.data.parser.MerchantCategorizer
 import com.personal.lifeOS.features.expenses.data.parser.MpesaSmsParser
+import com.personal.lifeOS.platform.sms.parser.MpesaParsingConfig.TransactionCategory
 import com.personal.lifeOS.features.expenses.domain.model.CategoryBreakdown
 import com.personal.lifeOS.features.expenses.domain.model.Transaction
 import com.personal.lifeOS.features.expenses.domain.repository.ExpenseRepository
@@ -125,6 +126,10 @@ class ExpenseRepositoryImpl
             return transactionDao.getByMpesaCode(code, activeUserId()) != null
         }
 
+        override suspend fun existsBySourceHash(sourceHash: String): Boolean {
+            return transactionDao.getBySourceHash(sourceHash, activeUserId()) != null
+        }
+
         override suspend fun existsPotentialDuplicate(
             amount: Double,
             merchant: String,
@@ -154,12 +159,18 @@ class ExpenseRepositoryImpl
 
             val parsed = MpesaSmsParser.parse(smsBody) ?: return null
 
-            // Check for duplicates
+            // Compute source hash for deduplication
+            val sourceHash = computeSourceHash(smsBody)
+
+            // Check for duplicates (primary: mpesa_code, secondary: source_hash, tertiary: heuristic)
             if (existsByMpesaCode(parsed.mpesaCode)) return null
+            if (existsBySourceHash(sourceHash)) return null
             if (existsPotentialDuplicate(parsed.amount, parsed.merchant, parsed.date)) return null
 
-            // Determine category: check user-corrected first, then auto-categorize
-            val category = resolveCategory(parsed.merchant)
+            // Determine category: user-corrected overrides first, then M-Pesa semantic type,
+            // then merchant name lookup. This ensures SENT-to-person shows "Transfer" rather
+            // than "Other", and RECEIVED shows "M-Pesa Received", etc.
+            val category = resolveCategoryFromMpesa(parsed.merchant, parsed.category)
 
             val transaction =
                 Transaction(
@@ -168,13 +179,28 @@ class ExpenseRepositoryImpl
                     category = category,
                     date = parsed.date,
                     source = "MPESA",
-                    transactionType = parsed.transactionType.name,
+                    transactionType = parsed.category.name,
                     mpesaCode = parsed.mpesaCode,
+                    sourceHash = sourceHash,
                     rawSms = parsed.rawSms,
                 )
 
             val id = addTransaction(transaction)
             return transaction.copy(id = id)
+        }
+
+        /**
+         * Compute SHA-256 hash of raw SMS body for deduplication.
+         */
+        private fun computeSourceHash(rawMessage: String): String {
+            return try {
+                val digest = java.security.MessageDigest.getInstance("SHA-256")
+                val hashBytes = digest.digest(rawMessage.toByteArray(Charsets.UTF_8))
+                hashBytes.joinToString("") { "%02x".format(it) }
+            } catch (e: Exception) {
+                // Fallback: use string hashCode if SHA-256 fails
+                rawMessage.hashCode().toString()
+            }
         }
 
         override suspend fun updateMerchantCategory(
@@ -202,7 +228,44 @@ class ExpenseRepositoryImpl
         }
 
         /**
+         * Resolve category for an M-Pesa imported transaction.
+         *
+         * Priority:
+         *  1. User-corrected merchant mapping (always wins)
+         *  2. M-Pesa semantic transaction type (SENT → Transfer, RECEIVED → M-Pesa Received, …)
+         *  3. MerchantCategorizer by name (for real businesses on Paybill / Buy Goods)
+         *
+         * This prevents person-to-person transfers (e.g. "ROSE MATU") from landing in "Other"
+         * just because the recipient's name isn't in our merchant dictionary.
+         */
+        private suspend fun resolveCategoryFromMpesa(
+            merchant: String,
+            transactionType: TransactionCategory,
+        ): String {
+            // User-corrected mapping always takes priority
+            val userMapping = merchantCategoryDao.getByMerchant(merchant.uppercase(), activeUserId())
+            if (userMapping != null) return userMapping.category
+
+            // Map M-Pesa semantic type to a human-readable category
+            return when (transactionType) {
+                TransactionCategory.SENT -> "Transfer"
+                TransactionCategory.RECEIVED -> "M-Pesa Received"
+                TransactionCategory.AIRTIME -> "Airtime"
+                TransactionCategory.WITHDRAW -> "Withdrawal"
+                TransactionCategory.DEPOSIT -> "Deposit"
+                TransactionCategory.REVERSED -> "Reversal"
+                TransactionCategory.LOAN -> "Loans & Credit"
+                // Paybill and Buy Goods are real merchants — let the name lookup handle them
+                TransactionCategory.PAYBILL,
+                TransactionCategory.BUY_GOODS,
+                TransactionCategory.UNKNOWN,
+                -> MerchantCategorizer.categorize(merchant).label
+            }
+        }
+
+        /**
          * Resolve category: user-corrected mappings take priority over auto-categorization.
+         * Used for manually-added transactions (no M-Pesa type available).
          */
         private suspend fun resolveCategory(merchant: String): String {
             // Check if user has corrected this merchant before

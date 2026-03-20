@@ -24,6 +24,7 @@ fun PageScaffold(
     title: String,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
+    topBanner: @Composable (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(bottom = AppSpacing.BottomSafe),
     content: @Composable () -> Unit,
@@ -33,33 +34,44 @@ fun PageScaffold(
             modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .statusBarsPadding()
+                .statusBarsPadding(),
+    ) {
+        // Top banner - placed above everything else
+        if (topBanner != null) {
+            topBanner()
+        }
+
+        // Scrollable content area
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = AppSpacing.ScreenHorizontal)
                 .padding(top = AppDesignTokens.spacing.sm)
                 .padding(contentPadding),
-        verticalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.lg),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.lg),
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-                subtitle?.let {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        text = title,
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = MaterialTheme.colorScheme.onBackground,
                     )
+                    subtitle?.let {
+                        Text(
+                            text = subtitle,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
+                actions()
             }
-            actions()
+            content()
         }
-        content()
     }
 }

@@ -26,12 +26,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.personal.lifeOS.core.ui.designsystem.AppCard
 import com.personal.lifeOS.core.ui.designsystem.CalendarEventChip
 import com.personal.lifeOS.core.ui.designsystem.FinanceSummaryCard
-import com.personal.lifeOS.core.ui.designsystem.ImportHealthPanel
 import com.personal.lifeOS.core.ui.designsystem.InlineBanner
 import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
 import com.personal.lifeOS.core.ui.designsystem.LoadingState
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
 import com.personal.lifeOS.core.ui.designsystem.SyncStatusPill
+import com.personal.lifeOS.core.ui.designsystem.TopBanner
+import com.personal.lifeOS.core.ui.designsystem.TopBannerTone
 import com.personal.lifeOS.features.dashboard.presentation.DashboardViewModel
 
 @Composable
@@ -43,7 +44,7 @@ fun HomeScreen(
     onOpenAssistant: () -> Unit,
     onOpenProfile: () -> Unit,
     onOpenInsights: () -> Unit,
-    onOpenLearning: () -> Unit = {},
+    onOpenLearning: () -> Unit = {}, // kept for nav compat — Learn card removed from Home
 ) {
     val dashboardState by viewModel.uiState.collectAsState()
     val uiState = dashboardState.toHomeUiState()
@@ -51,6 +52,14 @@ fun HomeScreen(
     PageScaffold(
         title = "Today",
         subtitle = uiState.dateLabel,
+        topBanner = {
+            uiState.errorMessage?.let {
+                TopBanner(
+                    message = it,
+                    tone = TopBannerTone.ERROR,
+                )
+            }
+        },
         actions = {
             // Insights icon — visible in the header, not hidden, not a nav tab
             IconButton(onClick = onOpenInsights) {
@@ -73,13 +82,6 @@ fun HomeScreen(
             return@PageScaffold
         }
 
-        uiState.errorMessage?.let {
-            InlineBanner(
-                message = it,
-                tone = InlineBannerTone.ERROR,
-            )
-        }
-
         Text(
             text = uiState.greeting,
             style = MaterialTheme.typography.titleLarge,
@@ -91,12 +93,7 @@ fun HomeScreen(
         HomeInsightsTeaser(uiState = uiState, onOpenInsights = onOpenInsights)
         HomeCalendarCard(uiState = uiState, onOpenCalendar = onOpenCalendar)
 
-        ImportHealthPanel(
-            model = uiState.importHealth,
-            onReview = onOpenFinance,
-        )
         HomeAssistantCard(uiState = uiState, onOpenAssistant = onOpenAssistant)
-        HomeLearningCard(onOpenLearning = onOpenLearning)
         HomeSyncRow(uiState = uiState)
     }
 }
@@ -270,29 +267,4 @@ private fun HomeSyncRow(uiState: HomeUiState) {
     }
 }
 
-@Composable
-private fun HomeLearningCard(onOpenLearning: () -> Unit) {
-    AppCard(elevated = true) {
-        androidx.compose.foundation.layout.Row(
-            modifier = androidx.compose.ui.Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = "Learn",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = "Bite-sized sessions on finance, productivity, and more.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            TextButton(onClick = onOpenLearning) {
-                Text("Explore")
-            }
-        }
-    }
-}
+// HomeLearningCard removed — Learn section not yet built; dead card removed to keep Home clean.

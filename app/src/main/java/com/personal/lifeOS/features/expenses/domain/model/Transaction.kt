@@ -9,6 +9,7 @@ data class Transaction(
     val source: String = "MPESA",
     val transactionType: String = "SENT",
     val mpesaCode: String? = null,
+    val sourceHash: String? = null,
     val rawSms: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
 )

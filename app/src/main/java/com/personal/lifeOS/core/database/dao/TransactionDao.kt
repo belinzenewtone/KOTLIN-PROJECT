@@ -91,6 +91,12 @@ interface TransactionDao {
         userId: String,
     ): TransactionEntity?
 
+    @Query("SELECT * FROM transactions WHERE source_hash = :sourceHash AND user_id = :userId LIMIT 1")
+    suspend fun getBySourceHash(
+        sourceHash: String,
+        userId: String,
+    ): TransactionEntity?
+
     @Query(
         """
         SELECT * FROM transactions

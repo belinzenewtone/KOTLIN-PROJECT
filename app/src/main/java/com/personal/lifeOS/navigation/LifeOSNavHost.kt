@@ -449,9 +449,11 @@ private fun LifeOSBottomBar(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp)
+                // Narrower side margins so the bar stretches wider and feels balanced
+                .padding(horizontal = 16.dp)
                 .navigationBarsPadding()
-                .padding(bottom = 10.dp),
+                // Sit just above the system nav keys / gesture bar — no extra gap
+                .padding(bottom = 4.dp),
     ) {
         Row(
             modifier =
@@ -489,7 +491,8 @@ private fun LifeOSBottomBar(
                             ),
                         shape = RoundedCornerShape(24.dp),
                     )
-                    .padding(horizontal = 6.dp, vertical = 4.dp),
+                    // Reduced vertical padding → slimmer bar height
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -547,7 +550,7 @@ private fun RowScope.BottomNavItem(
                     indication = null,
                     onClick = onClick,
                 )
-                .padding(vertical = 4.dp),
+                .padding(vertical = 3.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(contentAlignment = Alignment.Center) {

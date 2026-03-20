@@ -1,7 +1,14 @@
 package com.personal.lifeOS.features.calendar.presentation
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,61 +27,115 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.personal.lifeOS.core.ui.designsystem.AppCard
 import com.personal.lifeOS.features.calendar.domain.model.CalendarEvent
+import com.personal.lifeOS.features.calendar.domain.model.EventType
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.TextStyle
 import java.util.Locale
+
+// ── Event type colour palette ────────────────────────────────────────────────
+private val EventType.dotColor: Color
+    get() = when (this) {
+        EventType.WORK -> Color(0xFF0D9488)      // teal
+        EventType.FINANCE -> Color(0xFFF59E0B)   // amber
+        EventType.HEALTH -> Color(0xFF16A34A)    // green
+        EventType.PERSONAL -> Color(0xFF94A3B8)  // slate
+    }
 
 @Composable
 internal fun CalendarMonthCard(
     state: CalendarUiState,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
+    onGoToToday: () -> Unit,
     onDateSelected: (LocalDate) -> Unit,
 ) {
-    val monthLabel =
-        state.currentMonth.month.getDisplayName(
-            TextStyle.FULL,
-            Locale.ENGLISH,
-        )
+    val monthLabel = state.currentMonth.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
 
     AppCard(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            // Swipe left → next month, swipe right → previous month
+            .pointerInput(Unit) {
+                var accumulated = 0f
+                detectHorizontalDragGestures(
+                    onDragStart = { accumulated = 0f },
+                    onDragEnd = { accumulated = 0f },
+                    onHorizontalDrag = { change, dragAmount ->
+                        accumulated += dragAmount
+                        change.consume()
+                        when {
+                            accumulated > 80f -> { accumulated = 0f; onPreviousMonth() }
+                            accumulated < -80f -> { accumulated = 0f; onNextMonth() }
+                        }
+                    },
+                )
+            },
         elevated = true,
     ) {
         Column {
+            // ── Month header row ─────────────────────────────────────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = onPreviousMonth) {
-                    Icon(Icons.Filled.ChevronLeft, contentDescription = "Previous", tint = MaterialTheme.colorScheme.onSurface)
+                    Icon(
+                        Icons.Filled.ChevronLeft,
+                        contentDescription = "Previous month",
+                        tint = MaterialTheme.colorScheme.onSurface,
+                    )
                 }
-                Text(
-                    text = "$monthLabel ${state.currentMonth.year}",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
-                )
+
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "$monthLabel ${state.currentMonth.year}",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    // "Today" jump button — visible only when browsing away from the current month
+                    if (!state.isViewingCurrentMonth) {
+                        TextButton(
+                            onClick = onGoToToday,
+                            modifier = Modifier.height(28.dp),
+                        ) {
+                            Text(
+                                text = "Today",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                }
+
                 IconButton(onClick = onNextMonth) {
-                    Icon(Icons.Filled.ChevronRight, contentDescription = "Next", tint = MaterialTheme.colorScheme.onSurface)
+                    Icon(
+                        Icons.Filled.ChevronRight,
+                        contentDescription = "Next month",
+                        tint = MaterialTheme.colorScheme.onSurface,
+                    )
                 }
             }
 
             Spacer(Modifier.height(8.dp))
 
+            // ── Day-of-week header ───────────────────────────────────────────
             Row(modifier = Modifier.fillMaxWidth()) {
                 listOf("Mo", "Tu", "We", "Th", "Fr", "Sa", "Su").forEach { day ->
                     Text(
@@ -89,27 +150,50 @@ internal fun CalendarMonthCard(
 
             Spacer(Modifier.height(4.dp))
 
-            CalendarGrid(
-                state = state,
-                onDateSelected = onDateSelected,
-            )
+            // ── Animated calendar grid ───────────────────────────────────────
+            AnimatedContent(
+                targetState = state.currentMonth,
+                transitionSpec = {
+                    if (targetState > initialState) {
+                        // Navigating forward → slide in from the right
+                        slideInHorizontally { it } + fadeIn() togetherWith
+                            slideOutHorizontally { -it } + fadeOut()
+                    } else {
+                        // Navigating backward → slide in from the left
+                        slideInHorizontally { -it } + fadeIn() togetherWith
+                            slideOutHorizontally { it } + fadeOut()
+                    }
+                },
+                label = "CalendarMonthGrid",
+            ) { targetMonth ->
+                CalendarGrid(
+                    month = targetMonth,
+                    selectedDate = state.selectedDate,
+                    events = state.events,
+                    onDateSelected = onDateSelected,
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun CalendarGrid(
-    state: CalendarUiState,
+    month: YearMonth,
+    selectedDate: LocalDate,
+    events: List<CalendarEvent>,
     onDateSelected: (LocalDate) -> Unit,
 ) {
-    val month = state.currentMonth
     val firstDay = month.atDay(1)
     val startOffset = (firstDay.dayOfWeek.value - DayOfWeek.MONDAY.value + 7) % 7
     val daysInMonth = month.lengthOfMonth()
     val totalCells = startOffset + daysInMonth
     val rows = (totalCells + 6) / 7
     val today = LocalDate.now()
-    val eventDays = state.events.toDaySet(ZoneId.systemDefault())
+    val zone = ZoneId.systemDefault()
+
+    // Map each day-of-month to the distinct event-type colours present on that day
+    val dayColorMap: Map<Int, List<Color>> = events.toDayColorMap(zone)
 
     Column {
         repeat(rows) { row ->
@@ -120,9 +204,9 @@ private fun CalendarGrid(
 
                     if (dayNumber in 1..daysInMonth) {
                         val date = month.atDay(dayNumber)
-                        val isSelected = date == state.selectedDate
+                        val isSelected = date == selectedDate
                         val isToday = date == today
-                        val hasEvent = dayNumber in eventDays
+                        val dotColors = dayColorMap[dayNumber].orEmpty()
 
                         Box(
                             modifier =
@@ -152,14 +236,24 @@ private fun CalendarGrid(
                                         },
                                     fontWeight = if (isToday || isSelected) FontWeight.Bold else FontWeight.Normal,
                                 )
-                                if (hasEvent) {
-                                    Box(
-                                        modifier =
-                                            Modifier
-                                                .size(4.dp)
-                                                .clip(CircleShape)
-                                                .background(if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.secondary),
-                                    )
+                                // Event type colour dots — up to 3, one per distinct type
+                                if (dotColors.isNotEmpty()) {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        dotColors.take(3).forEach { color ->
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(4.dp)
+                                                    .clip(CircleShape)
+                                                    .background(
+                                                        if (isSelected) MaterialTheme.colorScheme.onPrimary
+                                                        else color,
+                                                    ),
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -172,8 +266,15 @@ private fun CalendarGrid(
     }
 }
 
-private fun List<CalendarEvent>.toDaySet(zoneId: ZoneId): Set<Int> {
-    return map { event ->
-        Instant.ofEpochMilli(event.date).atZone(zoneId).toLocalDate().dayOfMonth
-    }.toSet()
+/**
+ * Returns a map of day-of-month → distinct event-type colours on that day.
+ * At most one colour per EventType so the dot row stays compact.
+ */
+private fun List<CalendarEvent>.toDayColorMap(zoneId: ZoneId): Map<Int, List<Color>> {
+    val result = mutableMapOf<Int, MutableSet<Color>>()
+    forEach { event ->
+        val day = Instant.ofEpochMilli(event.date).atZone(zoneId).toLocalDate().dayOfMonth
+        result.getOrPut(day) { mutableSetOf() }.add(event.type.dotColor)
+    }
+    return result.mapValues { (_, set) -> set.toList() }
 }

@@ -31,6 +31,8 @@ import com.personal.lifeOS.core.ui.designsystem.AppCard
 import com.personal.lifeOS.core.ui.designsystem.InlineBanner
 import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
+import com.personal.lifeOS.core.ui.designsystem.TopBanner
+import com.personal.lifeOS.core.ui.designsystem.TopBannerTone
 import com.personal.lifeOS.ui.theme.AppThemeMode
 import kotlinx.coroutines.flow.collectLatest
 import java.time.Instant
@@ -76,10 +78,24 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     PageScaffold(
         title = "Settings",
         subtitle = "Tailor your digital sanctuary to your specific needs.",
+        topBanner = {
+            state.infoMessage?.let {
+                TopBanner(
+                    message = it,
+                    tone = TopBannerTone.SUCCESS,
+                    onDismiss = {
+                        viewModel.onEvent(SettingsUiEvent.ClearInfoMessage)
+                    },
+                )
+            }
+        },
     ) {
-        state.infoMessage?.let {
-            InlineBanner(message = it, tone = InlineBannerTone.INFO)
-            LaunchedEffect(it) { viewModel.onEvent(SettingsUiEvent.ClearInfoMessage) }
+        LaunchedEffect(state.infoMessage) {
+            if (state.infoMessage != null) {
+                // Auto-dismiss after 3 seconds
+                kotlinx.coroutines.delay(3000)
+                viewModel.onEvent(SettingsUiEvent.ClearInfoMessage)
+            }
         }
 
         AppCard(elevated = true) {

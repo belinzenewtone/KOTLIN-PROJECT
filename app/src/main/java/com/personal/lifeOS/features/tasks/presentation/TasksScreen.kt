@@ -1,6 +1,7 @@
 package com.personal.lifeOS.features.tasks.presentation
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -8,10 +9,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -21,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.personal.lifeOS.core.ui.designsystem.EmptyState
@@ -29,15 +35,16 @@ import com.personal.lifeOS.core.ui.designsystem.SearchField
 import com.personal.lifeOS.core.ui.designsystem.TaskRow
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.tasks.domain.model.Task
+import com.personal.lifeOS.features.tasks.domain.model.TaskPriority
 import com.personal.lifeOS.ui.components.StyledSnackbarHost
 import com.personal.lifeOS.ui.theme.AppSpacing
-import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun TasksScreen(viewModel: TasksViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var query by rememberSaveable { mutableStateOf("") }
+    var deleteTarget by remember { mutableStateOf<Task?>(null) }
 
     val pendingTasks = remember(state.pendingTasks, query) { state.pendingTasks.filterForQuery(query) }
     val completedTasks = remember(state.completedTasks, query) { state.completedTasks.filterForQuery(query) }
@@ -80,8 +87,28 @@ fun TasksScreen(viewModel: TasksViewModel = hiltViewModel()) {
             onQueryChange = { query = it },
             onEditTask = { task -> viewModel.showEditDialog(task) },
             onCompleteTask = { task -> viewModel.completeTask(task) },
-            onDeleteTask = { task -> viewModel.deleteTask(task) },
+            onDeleteTask = { task -> deleteTarget = task },
             onUndoTask = { task -> viewModel.undoComplete(task) },
+        )
+    }
+
+    // ── Delete confirmation dialog ─────────────────────────────────────────
+    deleteTarget?.let { task ->
+        AlertDialog(
+            onDismissRequest = { deleteTarget = null },
+            title = { Text("Delete task?") },
+            text = { Text("Remove \"${task.title}\"? This cannot be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteTask(task)
+                    deleteTarget = null
+                }) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deleteTarget = null }) { Text("Cancel") }
+            },
         )
     }
 
@@ -125,34 +152,31 @@ private fun TasksBody(
                 description = "Create a task to start your daily focus list.",
             )
         } else {
-            androidx.compose.foundation.layout.Column(
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                pendingTasks.forEach { task ->
-                    TaskRow(
-                        title = task.title,
-                        subtitle = task.subtitle(),
-                        isCompleted = false,
-                        priority = task.priority.name,
-                        onToggleComplete = { onCompleteTask(task) },
-                        onClick = { onEditTask(task) },
+            // Group by priority — URGENT first, then IMPORTANT, then NEUTRAL
+            val priorityOrder = listOf(TaskPriority.URGENT, TaskPriority.IMPORTANT, TaskPriority.NEUTRAL)
+            val grouped = pendingTasks.groupBy { it.priority }
+
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                priorityOrder.forEach { priority ->
+                    val group = grouped[priority] ?: return@forEach
+                    PrioritySection(
+                        priority = priority,
+                        tasks = group,
+                        onEditTask = onEditTask,
+                        onCompleteTask = onCompleteTask,
+                        onDeleteTask = onDeleteTask,
                     )
-                    androidx.compose.material3.TextButton(onClick = { onDeleteTask(task) }) {
-                        androidx.compose.material3.Text("Delete")
-                    }
                 }
             }
         }
 
         if (completedTasks.isNotEmpty()) {
-            androidx.compose.material3.Text(
+            Text(
                 text = "Completed",
-                style = androidx.compose.material3.MaterialTheme.typography.titleMedium,
-                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            androidx.compose.foundation.layout.Column(
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 completedTasks.take(20).forEach { task ->
                     TaskRow(
                         title = task.title,
@@ -162,6 +186,48 @@ private fun TasksBody(
                         onClick = { onUndoTask(task) },
                     )
                 }
+            }
+        }
+    }
+}
+
+/**
+ * Renders a labelled priority group: a small colour-coded header followed by the task rows.
+ * Only renders if [tasks] is non-empty.
+ */
+@Composable
+private fun PrioritySection(
+    priority: TaskPriority,
+    tasks: List<Task>,
+    onEditTask: (Task) -> Unit,
+    onCompleteTask: (Task) -> Unit,
+    onDeleteTask: (Task) -> Unit,
+) {
+    if (tasks.isEmpty()) return
+
+    val (label, labelColor) = when (priority) {
+        TaskPriority.URGENT -> "Urgent" to MaterialTheme.colorScheme.error
+        TaskPriority.IMPORTANT -> "Important" to Color(0xFFF59E0B) // amber
+        TaskPriority.NEUTRAL -> "Neutral" to MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            color = labelColor,
+        )
+        tasks.forEach { task ->
+            TaskRow(
+                title = task.title,
+                subtitle = task.subtitle(),
+                isCompleted = false,
+                priority = task.priority.name,
+                onToggleComplete = { onCompleteTask(task) },
+                onClick = { onEditTask(task) },
+            )
+            TextButton(onClick = { onDeleteTask(task) }) {
+                Text("Delete")
             }
         }
     }

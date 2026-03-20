@@ -36,6 +36,8 @@ interface ExpenseRepository {
 
     suspend fun existsByMpesaCode(code: String): Boolean
 
+    suspend fun existsBySourceHash(sourceHash: String): Boolean
+
     suspend fun existsPotentialDuplicate(
         amount: Double,
         merchant: String,

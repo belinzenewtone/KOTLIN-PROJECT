@@ -30,6 +30,8 @@ data class CalendarUiState(
     val error: String? = null,
     val showAddDialog: Boolean = false,
     val editingEvent: CalendarEvent? = null,
+    /** True when the user is viewing the current real-world month. */
+    val isViewingCurrentMonth: Boolean = true,
 )
 
 @HiltViewModel
@@ -46,7 +48,22 @@ class CalendarViewModel
         }
 
         fun navigateMonth(offset: Int) {
-            _uiState.update { it.copy(currentMonth = it.currentMonth.plusMonths(offset.toLong())) }
+            val newMonth = _uiState.value.currentMonth.plusMonths(offset.toLong())
+            _uiState.update { it.copy(
+                currentMonth = newMonth,
+                isViewingCurrentMonth = newMonth == YearMonth.now(),
+            ) }
+            loadMonthEvents()
+        }
+
+        /** Jump selected date and displayed month back to today. */
+        fun goToToday() {
+            val todayMonth = YearMonth.now()
+            _uiState.update { it.copy(
+                currentMonth = todayMonth,
+                selectedDate = LocalDate.now(),
+                isViewingCurrentMonth = true,
+            ) }
             loadMonthEvents()
         }
 

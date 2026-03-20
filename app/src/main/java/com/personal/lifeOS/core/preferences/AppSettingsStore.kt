@@ -77,6 +77,10 @@ class AppSettingsStore
             }
         }
 
+        suspend fun getProfileName(): String {
+            return dataStore.data.first()[profileNameKey].orEmpty()
+        }
+
         suspend fun isOnboardingCompleted(): Boolean {
             val prefs = dataStore.data.first()
             return prefs[AppSettingsKeys.ONBOARDING_COMPLETED] ?: !prefs[profileNameKey].isNullOrBlank()

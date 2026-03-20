@@ -12,6 +12,8 @@ import androidx.room.Index
         Index(value = ["date"]),
         Index(value = ["category"]),
         Index(value = ["merchant"]),
+        Index(value = ["mpesa_code"]),
+        Index(value = ["source_hash"]),
     ],
 )
 data class TransactionEntity(
@@ -25,6 +27,8 @@ data class TransactionEntity(
     val transactionType: String = "SENT", // SENT, RECEIVED, PAID, WITHDRAWN
     @ColumnInfo(name = "mpesa_code")
     val mpesaCode: String? = null,
+    @ColumnInfo(name = "source_hash")
+    val sourceHash: String? = null,
     @ColumnInfo(name = "raw_sms")
     val rawSms: String? = null,
     @ColumnInfo(name = "created_at")

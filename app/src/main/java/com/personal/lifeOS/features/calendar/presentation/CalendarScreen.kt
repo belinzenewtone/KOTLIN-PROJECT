@@ -8,10 +8,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -37,6 +40,7 @@ import androidx.compose.material3.MaterialTheme
 fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
     var query by rememberSaveable { mutableStateOf("") }
+    var deleteTarget by remember { mutableStateOf<com.personal.lifeOS.features.calendar.domain.model.CalendarEvent?>(null) }
     val events = remember(state.selectedDayEvents, query) { state.selectedDayEvents.filterByQuery(query) }
 
     Scaffold(
@@ -63,10 +67,31 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
             padding = padding,
             onQueryChange = { query = it },
             onNavigateMonth = { offset -> viewModel.navigateMonth(offset) },
+            onGoToToday = { viewModel.goToToday() },
             onSelectDate = { selected -> viewModel.selectDate(selected) },
             onComplete = { event -> viewModel.markEventCompleted(event) },
             onEdit = { event -> viewModel.showEditDialog(event) },
-            onDelete = { event -> viewModel.deleteEvent(event) },
+            onDelete = { event -> deleteTarget = event },
+        )
+    }
+
+    // ── Delete confirmation dialog ─────────────────────────────────────────
+    deleteTarget?.let { event ->
+        AlertDialog(
+            onDismissRequest = { deleteTarget = null },
+            title = { Text("Delete event?") },
+            text = { Text("Remove \"${event.title}\"? This cannot be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteEvent(event)
+                    deleteTarget = null
+                }) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deleteTarget = null }) { Text("Cancel") }
+            },
         )
     }
 
@@ -91,6 +116,7 @@ private fun CalendarBody(
     padding: PaddingValues,
     onQueryChange: (String) -> Unit,
     onNavigateMonth: (Int) -> Unit,
+    onGoToToday: () -> Unit,
     onSelectDate: (java.time.LocalDate) -> Unit,
     onComplete: (CalendarEvent) -> Unit,
     onEdit: (CalendarEvent) -> Unit,
@@ -116,6 +142,7 @@ private fun CalendarBody(
             state = state,
             onPreviousMonth = { onNavigateMonth(-1) },
             onNextMonth = { onNavigateMonth(1) },
+            onGoToToday = onGoToToday,
             onDateSelected = onSelectDate,
         )
 

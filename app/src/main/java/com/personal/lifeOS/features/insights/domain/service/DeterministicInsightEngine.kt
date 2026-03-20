@@ -18,6 +18,7 @@ class DeterministicInsightEngine
             val insights = mutableListOf<DeterministicInsightDraft>()
 
             buildOverdueTasksInsight(input)?.let(insights::add)
+            buildSpendingSummaryInsight(input)?.let(insights::add)
             buildSpendingAccelerationInsight(input)?.let(insights::add)
             buildCategoryPressureInsight(input)?.let(insights::add)
 
@@ -49,6 +50,39 @@ class DeterministicInsightEngine
             )
         }
 
+        /**
+         * Always fires when the user has ANY spending data for the current month.
+         * Gives them something to see immediately rather than the "warming up" state.
+         */
+        private fun buildSpendingSummaryInsight(input: DeterministicInsightInput): DeterministicInsightDraft? {
+            val zoneId = ZoneId.systemDefault()
+            val monthStart =
+                Instant.ofEpochMilli(input.nowMillis)
+                    .atZone(zoneId).toLocalDate().withDayOfMonth(1)
+                    .atStartOfDay(zoneId).toInstant().toEpochMilli()
+
+            val monthlyTx = input.recentTransactions.filter { it.date >= monthStart }
+            if (monthlyTx.isEmpty()) return null
+
+            val monthlyTotal = monthlyTx.sumOf { it.amount }
+            val categoryTotals = monthlyTx.groupingBy { it.category }.fold(0.0) { acc, tx -> acc + tx.amount }
+            val topCategory = categoryTotals.maxByOrNull { it.value }
+
+            val topLine = if (topCategory != null) {
+                val share = (topCategory.value / monthlyTotal * 100).roundToLong()
+                "${topCategory.key} leads at $share% of spend."
+            } else {
+                "Keep tracking to unlock category breakdowns."
+            }
+
+            return DeterministicInsightDraft(
+                kind = "DETERMINISTIC_SPENDING_SUMMARY",
+                title = "Month so far: ${formatCurrency(monthlyTotal)}",
+                body = "You've recorded ${monthlyTx.size} transaction${if (monthlyTx.size == 1) "" else "s"} this month. $topLine",
+                confidence = 1.0,
+            )
+        }
+
         private fun buildSpendingAccelerationInsight(input: DeterministicInsightInput): DeterministicInsightDraft? {
             val now = Instant.ofEpochMilli(input.nowMillis)
             val lastSevenDaysStart = now.minus(7, ChronoUnit.DAYS).toEpochMilli()
@@ -70,7 +104,8 @@ class DeterministicInsightEngine
 
             val growthRatio = currentWindowSpend / previousWindowSpend
             val delta = currentWindowSpend - previousWindowSpend
-            if (growthRatio < 1.2 || delta < 500.0) {
+            // Lowered delta threshold so small-data users see acceleration insights sooner
+            if (growthRatio < 1.2 || delta < 100.0) {
                 return null
             }
 
@@ -102,7 +137,8 @@ class DeterministicInsightEngine
             }
 
             val monthlyTotal = monthlyTransactions.sumOf { it.amount }
-            if (monthlyTotal < 3000.0) {
+            // Lowered from 3000 so users with even a few hundred KES see category pressure
+            if (monthlyTotal < 500.0) {
                 return null
             }
 

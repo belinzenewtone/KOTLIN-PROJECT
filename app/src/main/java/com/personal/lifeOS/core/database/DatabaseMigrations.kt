@@ -6,6 +6,22 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 object DatabaseMigrations {
+    private fun hasColumn(
+        database: SupportSQLiteDatabase,
+        tableName: String,
+        columnName: String,
+    ): Boolean {
+        database.query("PRAGMA table_info(`$tableName`)").use { cursor ->
+            val nameColumnIndex = cursor.getColumnIndex("name")
+            while (cursor.moveToNext()) {
+                if (nameColumnIndex >= 0 && cursor.getString(nameColumnIndex) == columnName) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
     @Suppress("MaxLineLength")
     val MIGRATION_1_2: Migration =
         object : Migration(1, 2) {
@@ -545,6 +561,18 @@ object DatabaseMigrations {
                 )
                 database.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_export_history_domain_scope ON export_history(domain_scope)",
+                )
+            }
+        }
+
+    val MIGRATION_8_9: Migration =
+        object : Migration(8, 9) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                if (!hasColumn(database, "transactions", "source_hash")) {
+                    database.execSQL("ALTER TABLE transactions ADD COLUMN source_hash TEXT")
+                }
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_transactions_source_hash ON transactions(source_hash)",
                 )
             }
         }

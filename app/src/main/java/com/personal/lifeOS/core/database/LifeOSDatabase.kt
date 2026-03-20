@@ -55,7 +55,7 @@ import com.personal.lifeOS.core.database.entity.UserEntity
         AppUpdateInfoEntity::class,
         ExportHistoryEntity::class,
     ],
-    version = 8,
+    version = 9,
     exportSchema = true,
 )
 @TypeConverters(DateConverters::class)

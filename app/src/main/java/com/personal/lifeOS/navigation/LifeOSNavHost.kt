@@ -62,6 +62,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -172,6 +174,10 @@ fun LifeOSNavHost(
                 lockState.appContentUnlocked &&
                 !isImeVisible
         AnimatedVisibility(
+            modifier =
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth(),
             visible = showBottomBar,
             enter = fadeIn(tween(220, easing = EaseInOut)),
             exit = fadeOut(tween(160, easing = EaseInOut)),
@@ -256,7 +262,7 @@ private fun rememberBiometricLockState(requiresBiometricLock: Boolean): Biometri
     LaunchedEffect(shouldPromptBiometric, requiresBiometricLock, isBiometricUnlocked) {
         if (!requiresBiometricLock || isBiometricUnlocked || !shouldPromptBiometric) return@LaunchedEffect
 
-        val activity = context as? FragmentActivity
+        val activity = context.findFragmentActivity()
         if (activity == null) {
             biometricError = "Biometric prompt unavailable in this context."
             shouldPromptBiometric = false
@@ -435,14 +441,14 @@ private fun LifeOSNavigationGraph(
 }
 
 @Composable
-private fun BoxScope.LifeOSBottomBar(
+private fun LifeOSBottomBar(
     navController: NavHostController,
     currentDestination: NavDestination?,
 ) {
     Box(
         modifier =
             Modifier
-                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
                 .padding(horizontal = 24.dp)
                 .navigationBarsPadding()
                 .padding(bottom = 10.dp),
@@ -507,6 +513,14 @@ private fun BoxScope.LifeOSBottomBar(
                 )
             }
         }
+    }
+}
+
+private tailrec fun Context.findFragmentActivity(): FragmentActivity? {
+    return when (this) {
+        is FragmentActivity -> this
+        is ContextWrapper -> baseContext.findFragmentActivity()
+        else -> null
     }
 }
 

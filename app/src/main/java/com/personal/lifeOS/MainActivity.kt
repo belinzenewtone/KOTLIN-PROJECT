@@ -3,7 +3,6 @@
 package com.personal.lifeOS
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.Crossfade
@@ -15,6 +14,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
+import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.personal.lifeOS.bootstrap.AppBootstrapViewModel
 import com.personal.lifeOS.core.preferences.AppSettingsStore
@@ -28,7 +28,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.delay
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     @Inject
     lateinit var themePreferences: ThemePreferences
 

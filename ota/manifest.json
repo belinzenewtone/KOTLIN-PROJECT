@@ -1,8 +1,8 @@
 {
-  "version_code": 5,
-  "version_name": "1.0.4",
-  "download_url": "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.0.4/app-release-v1.0.4.apk",
-  "checksum_sha256": "156b02be5f3c81fcf4e9a6903444e9091babc66580321222727d3c809cbbebd6",
+  "version_code": 6,
+  "version_name": "1.0.5",
+  "download_url": "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.0.5/app-release-v1.0.5.apk",
+  "checksum_sha256": "2890416c0186febb0e6502b8ead8fde8695c726f9d51059ae8537b60683f5590",
   "required": false,
-  "release_notes": "Hotfix: fix bottom navigation placement and route-gating behavior."
+  "release_notes": "Hotfix: fix biometric relock prompt context, retry flow, and bottom navigation placement."
 }

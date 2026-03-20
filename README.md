@@ -132,6 +132,11 @@ $env:SUPABASE_PRIMARY_PASSWORD="<confirmed-user-password>"
 - Automation script:
   - `.\scripts\release_hardening_check.ps1`
 
+## AI Audit Handoff
+
+- Full technical handoff: [`docs/AI_AUDIT_HANDOFF.md`](docs/AI_AUDIT_HANDOFF.md)
+- Copy-paste auditor prompt: [`docs/AI_AUDIT_PROMPT.md`](docs/AI_AUDIT_PROMPT.md)
+
 ## MPESA SMS Permissions
 
 The app requires `READ_SMS` and `RECEIVE_SMS` permissions to auto-detect MPESA transactions. Grant these permissions when prompted.

@@ -58,7 +58,6 @@
     <ID>TooGenericExceptionCaught:DataContextBuilder.kt$DataContextBuilder$e: Exception</ID>
     <ID>TooGenericExceptionCaught:ExpensesViewModel.kt$ExpensesViewModel$e: Exception</ID>
     <ID>TooGenericExceptionCaught:MpesaSmsParser.kt$MpesaSmsParser$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:OpenAIClient.kt$OpenAIClient$e: Exception</ID>
     <ID>TooGenericExceptionCaught:ProfileViewModel.kt$ProfileViewModel$e: Exception</ID>
     <ID>TooGenericExceptionCaught:Resource.kt$e: Exception</ID>
     <ID>TooGenericExceptionCaught:SmsImportService.kt$SmsImportService$e: Exception</ID>

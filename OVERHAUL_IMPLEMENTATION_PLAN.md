@@ -11,7 +11,7 @@ Upgrade the Kotlin BELTECH app to match or exceed the Dart 2.0 engineering stand
 - Establish measurable acceptance criteria for parity and security.
 
 2. Security Refactor
-- Remove direct OpenAI key usage from client.
+- Remove direct provider key usage from client.
 - Route assistant calls through proxy endpoint.
 - Migrate sensitive local auth/password handling to encrypted storage.
 

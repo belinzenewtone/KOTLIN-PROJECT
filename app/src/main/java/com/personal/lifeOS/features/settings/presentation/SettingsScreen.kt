@@ -3,6 +3,7 @@ package com.personal.lifeOS.features.settings.presentation
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import androidx.core.content.pm.PackageInfoCompat
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -55,11 +56,21 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.tween
+import com.personal.lifeOS.BuildConfig
 
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val installedVersionLabel =
+        runCatching {
+            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            val versionName = packageInfo.versionName ?: BuildConfig.VERSION_NAME
+            val versionCode = PackageInfoCompat.getLongVersionCode(packageInfo)
+            "Installed version: $versionName (build $versionCode)"
+        }.getOrElse {
+            "Installed version: ${BuildConfig.VERSION_NAME} (build ${BuildConfig.VERSION_CODE})"
+        }
 
     LaunchedEffect(viewModel, context) {
         viewModel.uiEffects.collectLatest { effect ->
@@ -137,6 +148,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         }
 
         OtaUpdateCard(
+            installedVersionLabel = installedVersionLabel,
             state = state.otaUpdate,
             onCheck = { viewModel.onEvent(SettingsUiEvent.CheckForOtaUpdate) },
             onDownloadAndInstall = { viewModel.onEvent(SettingsUiEvent.DownloadAndInstallOtaUpdate) },
@@ -221,6 +233,7 @@ private fun DiagnosticsHealthCard(
 
 @Composable
 private fun OtaUpdateCard(
+    installedVersionLabel: String,
     state: SettingsOtaUiState,
     onCheck: () -> Unit,
     onDownloadAndInstall: () -> Unit,
@@ -229,6 +242,10 @@ private fun OtaUpdateCard(
     AppCard(elevated = true) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("App Updates", style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = installedVersionLabel,
+                style = MaterialTheme.typography.bodySmall,
+            )
             Text(
                 text = state.statusMessage,
                 style = MaterialTheme.typography.bodySmall,

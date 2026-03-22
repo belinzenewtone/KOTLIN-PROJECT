@@ -1,14 +1,11 @@
 package com.personal.lifeOS.platform.sms.background
 
 import android.content.Context
-import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import com.personal.lifeOS.platform.sms.ingestion.MpesaIngestionPipeline
-import com.personal.lifeOS.platform.sms.ingestion.MpesaIngestionSource
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -33,7 +30,7 @@ class MpesaPeriodicSyncWorker(
 
     override suspend fun doWork(): Result {
         return try {
-            val historicalImporter = historicalImporter()
+            val historicalScanner = historicalScanner()
             // Determine how far back to scan
             val lastSyncMs = loadLastSyncTimestamp()
             val daysBack = if (lastSyncMs == null) {
@@ -45,7 +42,7 @@ class MpesaPeriodicSyncWorker(
                 elapsedDays
             }
 
-            historicalImporter.importFromDevice(daysBack)
+            historicalScanner.scan(daysBack)
             saveLastSyncTimestamp(System.currentTimeMillis())
             Result.success()
         } catch (_: Exception) {
@@ -67,12 +64,12 @@ class MpesaPeriodicSyncWorker(
             .apply()
     }
 
-    private fun historicalImporter(): MpesaHistoricalImporter {
+    private fun historicalScanner(): MpesaHistoricalImportScanner {
         val entryPoint = EntryPointAccessors.fromApplication(
             applicationContext,
             MpesaPeriodicSyncEntryPoint::class.java,
         )
-        return entryPoint.historicalImporter()
+        return entryPoint.historicalScanner()
     }
 
     companion object {
@@ -100,5 +97,5 @@ class MpesaPeriodicSyncWorker(
 @EntryPoint
 @InstallIn(SingletonComponent::class)
 interface MpesaPeriodicSyncEntryPoint {
-    fun historicalImporter(): MpesaHistoricalImporter
+    fun historicalScanner(): MpesaHistoricalImportScanner
 }

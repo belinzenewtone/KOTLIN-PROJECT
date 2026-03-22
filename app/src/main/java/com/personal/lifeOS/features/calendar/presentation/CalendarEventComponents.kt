@@ -68,17 +68,21 @@ internal fun CalendarEventCard(
             positionalThreshold = { totalDistance -> totalDistance * 0.4f },
             confirmValueChange = { target ->
                 when (target) {
+                    // Return false so the swipe snaps back immediately; the item will
+                    // recompose with COMPLETED status (strikethrough) once the DB write
+                    // completes — no freeze while waiting for the coroutine to finish.
                     SwipeToDismissBoxValue.StartToEnd -> {
                         if (event.status == EventStatus.PENDING) {
                             onComplete()
-                            true
-                        } else {
-                            false
                         }
+                        false
                     }
+                    // Return false for delete too — a confirmation dialog is shown before
+                    // the item is actually removed. Returning true would leave the card
+                    // visually stuck in the dismissed state if the user cancels the dialog.
                     SwipeToDismissBoxValue.EndToStart -> {
                         onDelete()
-                        true
+                        false
                     }
                     else -> false
                 }

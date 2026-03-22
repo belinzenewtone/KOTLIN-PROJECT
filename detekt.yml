@@ -15,14 +15,53 @@ style:
     active: false
   ThrowsCount:
     active: false
+  MaxLineLength:
+    active: true
+    maxLineLength: 140
+    excludeImportStatements: true
+    excludeCommentStatements: true
 
 complexity:
   LongMethod:
+    active: true
     threshold: 80
   LongParameterList:
+    active: true
     functionThreshold: 8
+    constructorThreshold: 10
+  TooManyFunctions:
+    active: true
+    thresholdInFiles: 20
+    thresholdInClasses: 20
+  ComplexMethod:
+    active: true
+    threshold: 20
+  CyclomaticComplexMethod:
+    active: true
+    threshold: 20
 
 naming:
   FunctionNaming:
     ignoreAnnotated:
       - Composable
+  TopLevelPropertyNaming:
+    active: true
+    constantPattern: '[A-Z][_A-Z0-9]*'
+    propertyPattern: '[a-z][A-Za-z0-9]*'
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: false
+  SwallowedException:
+    active: false
+
+performance:
+  SpreadOperator:
+    active: false
+
+# Suppress for generated Room / Hilt / Compose files
+processors:
+  active: true
+
+output-reports:
+  active: true

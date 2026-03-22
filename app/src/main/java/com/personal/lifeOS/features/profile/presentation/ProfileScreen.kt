@@ -22,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
-import com.personal.lifeOS.features.auth.presentation.AuthUiEvent
 import com.personal.lifeOS.features.auth.presentation.AuthViewModel
 import com.personal.lifeOS.ui.components.StyledSnackbarHost
 import com.personal.lifeOS.ui.theme.AppSpacing
@@ -60,11 +59,8 @@ fun ProfileScreen(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 ProfileIdentityCard(
                     profile = state.profile,
-                    onChangePhoto = { imagePickerLauncher.launch("image/*") },
-                )
-                EmailVerificationCard(
                     authState = authState,
-                    onResendVerification = { authViewModel?.onEvent(AuthUiEvent.ResendVerification) },
+                    onChangePhoto = { imagePickerLauncher.launch("image/*") },
                 )
 
                 if (state.isEditing) {
@@ -81,7 +77,9 @@ fun ProfileScreen(
 
                 ProfilePreferencesCard(
                     notificationsEnabled = state.profile.notificationsEnabled,
+                    themeMode = state.themeMode,
                     onToggleNotifications = viewModel::toggleNotifications,
+                    onSetThemeMode = viewModel::setThemeMode,
                 )
 
                 ProfileCloudSyncCard(

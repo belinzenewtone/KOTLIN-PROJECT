@@ -10,6 +10,7 @@ import com.personal.lifeOS.core.database.dao.AssistantMessageDao
 import com.personal.lifeOS.core.database.dao.BudgetDao
 import com.personal.lifeOS.core.database.dao.EventDao
 import com.personal.lifeOS.core.database.dao.ExportHistoryDao
+import com.personal.lifeOS.core.database.dao.FulizaLoanDao
 import com.personal.lifeOS.core.database.dao.ImportAuditDao
 import com.personal.lifeOS.core.database.dao.IncomeDao
 import com.personal.lifeOS.core.database.dao.InsightCardDao
@@ -25,6 +26,7 @@ import com.personal.lifeOS.core.database.entity.AssistantMessageEntity
 import com.personal.lifeOS.core.database.entity.BudgetEntity
 import com.personal.lifeOS.core.database.entity.EventEntity
 import com.personal.lifeOS.core.database.entity.ExportHistoryEntity
+import com.personal.lifeOS.core.database.entity.FulizaLoanEntity
 import com.personal.lifeOS.core.database.entity.ImportAuditEntity
 import com.personal.lifeOS.core.database.entity.IncomeEntity
 import com.personal.lifeOS.core.database.entity.InsightCardEntity
@@ -54,8 +56,9 @@ import com.personal.lifeOS.core.database.entity.UserEntity
         ReviewSnapshotEntity::class,
         AppUpdateInfoEntity::class,
         ExportHistoryEntity::class,
+        FulizaLoanEntity::class,
     ],
-    version = 9,
+    version = 10,
     exportSchema = true,
 )
 @TypeConverters(DateConverters::class)
@@ -90,4 +93,6 @@ abstract class LifeOSDatabase : RoomDatabase() {
     abstract fun appUpdateInfoDao(): AppUpdateInfoDao
 
     abstract fun exportHistoryDao(): ExportHistoryDao
+
+    abstract fun fulizaLoanDao(): FulizaLoanDao
 }

@@ -35,4 +35,7 @@ interface AssistantConversationDao {
         userId: String,
         id: Long,
     ): AssistantConversationEntity?
+
+    @Query("DELETE FROM assistant_conversations WHERE user_id = :userId")
+    suspend fun deleteAllForUser(userId: String)
 }

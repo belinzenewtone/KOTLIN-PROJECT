@@ -18,8 +18,8 @@ import javax.inject.Inject
 
 data class InsightsUiState(
     val cards: List<InsightCard> = emptyList(),
-    val isLoading: Boolean = true,
-    val isRefreshing: Boolean = false,
+    val isLoading: Boolean = false,
+    val isRefreshing: Boolean = true,
     val error: String? = null,
 )
 
@@ -41,10 +41,10 @@ class InsightsViewModel
         private fun observeCards() {
             observeInsightCards()
                 .onEach { cards ->
-                    _uiState.update { it.copy(cards = cards, isLoading = false) }
+                    _uiState.update { it.copy(cards = cards, isLoading = false, isRefreshing = false) }
                 }
                 .catch { e ->
-                    _uiState.update { it.copy(error = e.message, isLoading = false) }
+                    _uiState.update { it.copy(error = e.message, isLoading = false, isRefreshing = false) }
                 }
                 .launchIn(viewModelScope)
         }

@@ -204,6 +204,23 @@ class AssistantViewModel
             _uiState.update { it.copy(proposalResultMessage = null) }
         }
 
+        fun clearChat() {
+            viewModelScope.launch {
+                runCatching { repository.clearConversationHistory() }
+                val welcome = welcomeMessage()
+                _uiState.update {
+                    it.copy(
+                        messages = listOf(welcome),
+                        inputText = "",
+                        isProcessing = false,
+                        pendingProposal = null,
+                        proposalResultMessage = null,
+                    )
+                }
+                persistMessageSafely(welcome)
+            }
+        }
+
         fun sendSuggestedPrompt(prompt: String) {
             _uiState.update { it.copy(inputText = prompt) }
             sendMessage()

@@ -114,7 +114,6 @@ internal fun CalendarMonthCard(
                     if (!state.isViewingCurrentMonth) {
                         TextButton(
                             onClick = onGoToToday,
-                            modifier = Modifier.height(28.dp),
                         ) {
                             Text(
                                 text = "Today",

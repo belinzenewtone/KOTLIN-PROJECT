@@ -51,16 +51,16 @@ fun InsightsScreen(viewModel: InsightsViewModel = hiltViewModel()) {
             }
         },
     ) {
-        if (state.isLoading) {
-            LoadingState(label = "Analysing your data…")
-            return@PageScaffold
-        }
-
         state.error?.let {
             InlineBanner(message = it, tone = InlineBannerTone.ERROR)
         }
 
-        if (state.cards.isEmpty()) {
+        if (state.isRefreshing && state.cards.isEmpty()) {
+            LoadingState(label = "Analysing your data…")
+            return@PageScaffold
+        }
+
+        if (!state.isRefreshing && state.cards.isEmpty()) {
             EmptyState(
                 title = "Insights are warming up",
                 description = "Add tasks, events, or transactions to unlock trend insights.",

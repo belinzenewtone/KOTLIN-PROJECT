@@ -10,6 +10,7 @@ import com.personal.lifeOS.core.database.dao.AssistantMessageDao
 import com.personal.lifeOS.core.database.dao.BudgetDao
 import com.personal.lifeOS.core.database.dao.EventDao
 import com.personal.lifeOS.core.database.dao.ExportHistoryDao
+import com.personal.lifeOS.core.database.dao.FulizaLoanDao
 import com.personal.lifeOS.core.database.dao.ImportAuditDao
 import com.personal.lifeOS.core.database.dao.IncomeDao
 import com.personal.lifeOS.core.database.dao.InsightCardDao
@@ -55,6 +56,7 @@ object DatabaseModule {
                 DatabaseMigrations.MIGRATION_6_7,
                 DatabaseMigrations.MIGRATION_7_8,
                 DatabaseMigrations.MIGRATION_8_9,
+                DatabaseMigrations.MIGRATION_9_10,
             )
             .build()
     }
@@ -103,4 +105,7 @@ object DatabaseModule {
 
     @Provides
     fun provideExportHistoryDao(db: LifeOSDatabase): ExportHistoryDao = db.exportHistoryDao()
+
+    @Provides
+    fun provideFulizaLoanDao(db: LifeOSDatabase): FulizaLoanDao = db.fulizaLoanDao()
 }

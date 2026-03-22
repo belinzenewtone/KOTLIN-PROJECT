@@ -22,6 +22,9 @@ data class FinanceUiState(
     val showAddDialog: Boolean = false,
     val showImportDialog: Boolean = false,
     val showCategoryPicker: FinanceTransaction? = null,
+    /** Net outstanding Fuliza balance in KES. Null = unknown/loading. 0.0 = fully repaid. */
+    val fulizaNetOutstandingKes: Double? = null,
+    val showFulizaBanner: Boolean = false,
 )
 
 sealed interface FinanceUiEvent {

@@ -16,8 +16,10 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,7 +37,7 @@ import com.personal.lifeOS.ui.theme.AppSpacing
 import com.personal.lifeOS.ui.theme.Warning
 
 @Composable
-internal fun AssistantHeader(isProcessing: Boolean) {
+internal fun AssistantHeader(isProcessing: Boolean, onClearChat: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -56,12 +58,20 @@ internal fun AssistantHeader(isProcessing: Boolean) {
             )
         }
         Spacer(Modifier.width(12.dp))
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text("BELTECH Assistant", style = MaterialTheme.typography.titleLarge)
             Text(
                 text = if (isProcessing) "Thinking..." else "Online",
                 style = MaterialTheme.typography.labelSmall,
                 color = if (isProcessing) Warning else Accent,
+            )
+        }
+        IconButton(onClick = onClearChat, enabled = !isProcessing) {
+            Icon(
+                imageVector = Icons.Filled.DeleteSweep,
+                contentDescription = "Clear chat",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(22.dp),
             )
         }
     }

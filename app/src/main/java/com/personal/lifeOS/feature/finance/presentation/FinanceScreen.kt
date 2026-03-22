@@ -151,6 +151,16 @@ fun FinanceScreen(
 
         FinanceSummaryStrip(uiState = uiState)
         FinanceBudgetPressure(uiState = uiState)
+
+        // Fuliza net debt banner — only shown when there is an outstanding balance
+        if (uiState.showFulizaBanner) {
+            val amount = uiState.fulizaNetOutstandingKes ?: 0.0
+            InlineBanner(
+                message = "Fuliza outstanding: Ksh ${"%,.0f".format(amount)} — pay to avoid daily charges",
+                tone = InlineBannerTone.WARNING,
+            )
+        }
+
         ImportHealthPanel(
             model = uiState.importHealth,
             onReview = { viewModel.onEvent(FinanceUiEvent.ShowImportDialog) },
@@ -183,28 +193,28 @@ fun FinanceScreen(
                 description = "Try another filter or import MPESA messages.",
             )
         } else {
+            // ── Transactions section header (outside the card) ───────────────
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Transactions",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                if (dayLabel.isNotBlank()) {
+                    Text(
+                        text = dayLabel,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+
             // ── Scrollable transactions box: shows 4 rows at a time ──────────
             AppCard(elevated = false) {
-                // Header: label + day indicator
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = "Transactions",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    if (dayLabel.isNotBlank()) {
-                        Text(
-                            text = dayLabel,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                }
-
                 LazyColumn(
                     state = txListState,
                     modifier = Modifier.height(300.dp),

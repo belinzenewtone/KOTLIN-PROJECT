@@ -11,18 +11,22 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.personal.lifeOS.core.notifications.ReminderSettingsCoordinator
 import com.personal.lifeOS.core.preferences.AppSettingsKeys
+import com.personal.lifeOS.core.preferences.ThemePreferences
 import com.personal.lifeOS.core.security.AuthSessionStore
 import com.personal.lifeOS.core.security.BiometricAuthManager
 import com.personal.lifeOS.core.security.PasswordHasher
 import com.personal.lifeOS.features.profile.domain.model.UserProfile
 import com.personal.lifeOS.features.profile.domain.usecase.PullCloudSyncUseCase
 import com.personal.lifeOS.features.profile.domain.usecase.PushCloudSyncUseCase
+import com.personal.lifeOS.ui.theme.AppThemeMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
@@ -41,6 +45,7 @@ data class ProfileUiState(
     val confirmPassword: String = "",
     val passwordError: String? = null,
     val successMessage: String? = null,
+    val themeMode: AppThemeMode = AppThemeMode.SYSTEM,
 )
 
 @HiltViewModel
@@ -52,6 +57,7 @@ class ProfileViewModel
         private val pullCloudSyncUseCase: PullCloudSyncUseCase,
         private val authSessionStore: AuthSessionStore,
         private val reminderSettingsCoordinator: ReminderSettingsCoordinator,
+        private val themePreferences: ThemePreferences,
         @ApplicationContext private val context: Context,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(ProfileUiState())
@@ -69,6 +75,13 @@ class ProfileViewModel
 
         init {
             loadProfile()
+            themePreferences.themeModeFlow()
+                .onEach { mode -> _uiState.update { it.copy(themeMode = mode) } }
+                .launchIn(viewModelScope)
+        }
+
+        fun setThemeMode(mode: AppThemeMode) {
+            viewModelScope.launch { themePreferences.setThemeMode(mode) }
         }
 
         fun startEditing() {

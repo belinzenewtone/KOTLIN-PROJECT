@@ -10,6 +10,7 @@ import com.personal.lifeOS.feature.finance.domain.model.toExpenseTransaction
 import com.personal.lifeOS.feature.finance.domain.usecase.BuildFinanceSummaryUseCase
 import com.personal.lifeOS.feature.finance.domain.usecase.FilterFinanceTransactionsUseCase
 import com.personal.lifeOS.feature.finance.domain.usecase.ObserveFinanceSnapshotUseCase
+import com.personal.lifeOS.features.expenses.domain.repository.FulizaLoanRepository
 import com.personal.lifeOS.features.expenses.domain.usecase.AddTransactionUseCase
 import com.personal.lifeOS.features.expenses.domain.usecase.DeleteTransactionUseCase
 import com.personal.lifeOS.features.expenses.domain.usecase.ImportMpesaMessagesUseCase
@@ -39,6 +40,7 @@ class FinanceViewModel
         private val updateMerchantCategoryUseCase: UpdateMerchantCategoryUseCase,
         private val importMpesaMessagesUseCase: ImportMpesaMessagesUseCase,
         private val observeImportHealthUseCase: ObserveImportHealthUseCase,
+        private val fulizaLoanRepository: FulizaLoanRepository,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(FinanceUiState())
         val uiState: StateFlow<FinanceUiState> = _uiState.asStateFlow()
@@ -49,6 +51,7 @@ class FinanceViewModel
         init {
             observeFinanceSnapshot()
             observeImportHealth()
+            observeFulizaDebt()
         }
 
         fun onEvent(event: FinanceUiEvent) {
@@ -192,6 +195,20 @@ class FinanceViewModel
                     }
                 }
             }
+        }
+
+        private fun observeFulizaDebt() {
+            fulizaLoanRepository.observeNetOutstanding()
+                .onEach { outstanding ->
+                    _uiState.update {
+                        it.copy(
+                            fulizaNetOutstandingKes = outstanding,
+                            showFulizaBanner = outstanding > 0.0,
+                        )
+                    }
+                }
+                .catch { /* non-fatal: Fuliza tracking is additive */ }
+                .launchIn(viewModelScope)
         }
 
         private fun importSmsMessages(daysBack: Int) {

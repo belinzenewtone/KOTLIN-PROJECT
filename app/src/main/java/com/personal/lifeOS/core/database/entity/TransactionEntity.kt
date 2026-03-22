@@ -44,4 +44,10 @@ data class TransactionEntity(
     val revision: Long = 0L,
     @ColumnInfo(name = "user_id")
     val userId: String = "",
+    /** Category inferred by CategoryInferenceEngine (may differ from user-assigned category). */
+    @ColumnInfo(name = "inferred_category")
+    val inferredCategory: String? = null,
+    /** Source that produced the inferred category: MPESA_KIND | KEYWORD | AMOUNT_HEURISTIC */
+    @ColumnInfo(name = "inference_source")
+    val inferenceSource: String? = null,
 )

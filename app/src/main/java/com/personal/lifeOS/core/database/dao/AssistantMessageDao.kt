@@ -36,4 +36,7 @@ interface AssistantMessageDao {
         userId: String,
         conversationId: Long,
     ): List<AssistantMessageEntity>
+
+    @Query("DELETE FROM assistant_messages WHERE user_id = :userId")
+    suspend fun deleteAllForUser(userId: String)
 }

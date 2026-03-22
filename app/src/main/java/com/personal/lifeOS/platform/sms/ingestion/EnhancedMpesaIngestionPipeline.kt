@@ -1,10 +1,13 @@
 package com.personal.lifeOS.platform.sms.ingestion
 
 import com.personal.lifeOS.features.expenses.domain.repository.ExpenseRepository
+import com.personal.lifeOS.features.expenses.domain.repository.FulizaLoanRepository
 import com.personal.lifeOS.platform.sms.audit.ImportAuditLogger
+import com.personal.lifeOS.platform.sms.category.CategoryInferenceEngine
 import com.personal.lifeOS.platform.sms.dedupe.MpesaDedupeEngineEnhanced
 import com.personal.lifeOS.platform.sms.filter.ConfidenceBasedImportFilter
 import com.personal.lifeOS.platform.sms.parser.MpesaParserEnhanced
+import com.personal.lifeOS.platform.sms.parser.MpesaParsingConfig.TransactionCategory
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,6 +25,7 @@ class EnhancedMpesaIngestionPipeline
         private val parserEnhanced: MpesaParserEnhanced,
         private val dedupeEngine: MpesaDedupeEngineEnhanced,
         private val expenseRepository: ExpenseRepository,
+        private val fulizaLoanRepository: FulizaLoanRepository,
         private val importAuditLogger: ImportAuditLogger,
     ) {
 
@@ -97,6 +101,19 @@ class EnhancedMpesaIngestionPipeline
                 amount = parsed.amount,
                 merchant = parsed.counterparty,
             )
+
+            // Track Fuliza loan lifecycle
+            when (parsed.category) {
+                TransactionCategory.LOAN -> {
+                    // LOAN = Fuliza repayment deducted from wallet → record as repayment
+                    fulizaLoanRepository.recordRepayment(
+                        drawCode = parsed.mpesaCode,
+                        repaidAmountKes = parsed.amount,
+                        repaymentDate = parsed.date,
+                    )
+                }
+                else -> { /* not a Fuliza event */ }
+            }
 
             // Return outcome that indicates confidence level
             return when (importDecision) {

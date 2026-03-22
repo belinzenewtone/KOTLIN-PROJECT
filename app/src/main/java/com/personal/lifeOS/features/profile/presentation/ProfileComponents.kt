@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,13 +22,16 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MarkEmailUnread
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.SettingsBrightness
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material3.AlertDialog
@@ -43,6 +47,10 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,17 +61,22 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import coil.compose.rememberAsyncImagePainter
 import com.personal.lifeOS.core.ui.designsystem.AppCard
 import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.auth.presentation.AuthUiState
 import com.personal.lifeOS.features.profile.domain.model.UserProfile
+import com.personal.lifeOS.ui.theme.AppThemeMode
 import java.io.File
 
 @Composable
 internal fun ProfileIdentityCard(
     profile: UserProfile,
+    authState: AuthUiState?,
     onChangePhoto: () -> Unit,
 ) {
     AppCard(elevated = true) {
@@ -72,6 +85,8 @@ internal fun ProfileIdentityCard(
                 profilePicPath = profile.profilePicUri,
                 avatarInitials = profile.avatarInitials,
                 onChangePhoto = onChangePhoto,
+                memberSince = profile.memberSince,
+                emailVerified = authState?.emailVerified,
             )
             Text(
                 text = profile.name.ifBlank { "Set up your profile" },
@@ -85,16 +100,6 @@ internal fun ProfileIdentityCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Text(
-                text =
-                    if (profile.memberSince > 0L) {
-                        "Member since ${DateUtils.formatDate(profile.memberSince, "MMM dd, yyyy")}"
-                    } else {
-                        "Save your profile to set your member date."
-                    },
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
     }
 }
@@ -103,115 +108,152 @@ internal fun ProfileIdentityCard(
 private fun ProfileAvatar(
     profilePicPath: String,
     avatarInitials: String,
+    memberSince: Long,
+    emailVerified: Boolean?,
     onChangePhoto: () -> Unit,
 ) {
     val hasPhoto = profilePicPath.isNotEmpty() && File(profilePicPath).exists()
-    Box(contentAlignment = Alignment.BottomEnd) {
-        Box(
-            modifier =
-                Modifier
-                    .size(94.dp)
-                    .clip(CircleShape)
-                    .background(
-                        brush =
-                            if (hasPhoto) {
-                                Brush.linearGradient(
-                                    colors =
-                                        listOf(
-                                            MaterialTheme.colorScheme.surface,
-                                            MaterialTheme.colorScheme.surface,
-                                        ),
-                                )
-                            } else {
-                                Brush.linearGradient(
-                                    colors =
-                                        listOf(
-                                            MaterialTheme.colorScheme.primary,
-                                            AppDesignTokens.colors.primaryContainer,
-                                        ),
-                                )
-                            },
-                    )
-                    .clickable(onClick = onChangePhoto),
-            contentAlignment = Alignment.Center,
+    var showPhotoDialog by remember { mutableStateOf(false) }
+
+    // Full-screen photo preview dialog
+    if (showPhotoDialog && hasPhoto) {
+        Dialog(
+            onDismissRequest = { showPhotoDialog = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false),
         ) {
-            if (hasPhoto) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.85f))
+                    .clickable { showPhotoDialog = false },
+                contentAlignment = Alignment.Center,
+            ) {
                 Image(
                     painter = rememberAsyncImagePainter(model = File(profilePicPath)),
                     contentDescription = "Profile photo",
-                    modifier = Modifier.size(94.dp),
+                    modifier = Modifier
+                        .size(280.dp)
+                        .clip(CircleShape),
                     contentScale = ContentScale.Crop,
                 )
-            } else {
-                Text(
-                    text = avatarInitials,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    fontWeight = FontWeight.Bold,
+            }
+        }
+    }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Box(contentAlignment = Alignment.BottomEnd) {
+            Box(
+                modifier =
+                    Modifier
+                        .size(94.dp)
+                        .clip(CircleShape)
+                        .background(
+                            brush =
+                                if (hasPhoto) {
+                                    Brush.linearGradient(
+                                        colors = listOf(
+                                            MaterialTheme.colorScheme.surface,
+                                            MaterialTheme.colorScheme.surface,
+                                        ),
+                                    )
+                                } else {
+                                    Brush.linearGradient(
+                                        colors = listOf(
+                                            MaterialTheme.colorScheme.primary,
+                                            AppDesignTokens.colors.primaryContainer,
+                                        ),
+                                    )
+                                },
+                        )
+                        // Clicking avatar opens view-only dialog (only when there's a photo)
+                        .clickable(enabled = hasPhoto) { showPhotoDialog = true },
+                contentAlignment = Alignment.Center,
+            ) {
+                if (hasPhoto) {
+                    Image(
+                        painter = rememberAsyncImagePainter(model = File(profilePicPath)),
+                        contentDescription = "Profile photo",
+                        modifier = Modifier.size(94.dp),
+                        contentScale = ContentScale.Crop,
+                    )
+                } else {
+                    Text(
+                        text = avatarInitials,
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+
+            // Camera icon — this is the only way to change the photo
+            Box(
+                modifier =
+                    Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary)
+                        .clickable(onClick = onChangePhoto),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.CameraAlt,
+                    contentDescription = "Change photo",
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(16.dp),
                 )
             }
         }
 
-        Box(
-            modifier =
-                Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary)
-                    .clickable(onClick = onChangePhoto),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Filled.CameraAlt,
-                contentDescription = "Change photo",
-                tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.size(16.dp),
+        // Member since label
+        if (memberSince > 0L) {
+            Text(
+                text = "Member since ${DateUtils.formatDate(memberSince, "MMM dd, yyyy")}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-    }
-}
 
-@Composable
-internal fun EmailVerificationCard(
-    authState: AuthUiState?,
-    onResendVerification: () -> Unit,
-) {
-    if (authState == null) return
-    val verified = authState.emailVerified
-    AppCard(elevated = true) {
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .clickable(enabled = !verified, onClick = onResendVerification),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.sm),
-        ) {
-            Icon(
-                imageVector = if (verified) Icons.Filled.Verified else Icons.Filled.MarkEmailUnread,
-                contentDescription = null,
-                tint = if (verified) AppDesignTokens.colors.success else AppDesignTokens.colors.warning,
-            )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = if (verified) "Account Verified" else "Email Verification Needed",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text(
-                    text =
-                        if (verified) {
-                            "Your email has been confirmed."
-                        } else {
-                            "Tap here to resend your verification link."
-                        },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+        // Email verification pill — lives inside the avatar section
+        if (emailVerified != null) {
+            val verified = emailVerified
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50.dp))
+                    .background(
+                        if (verified) AppDesignTokens.colors.success.copy(alpha = 0.15f)
+                        else AppDesignTokens.colors.warning.copy(alpha = 0.15f),
+                    )
+                    .padding(horizontal = 12.dp, vertical = 4.dp),
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Icon(
+                        imageVector = if (verified) Icons.Filled.Verified else Icons.Filled.MarkEmailUnread,
+                        contentDescription = null,
+                        tint = if (verified) AppDesignTokens.colors.success else AppDesignTokens.colors.warning,
+                        modifier = Modifier.size(12.dp),
+                    )
+                    Text(
+                        text = if (verified) "Verified" else "Pending Verification",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 11.sp,
+                        color = if (verified) AppDesignTokens.colors.success else AppDesignTokens.colors.warning,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
             }
         }
     }
 }
+
+// EmailVerificationCard removed — the verification pill is now shown
+// inside the avatar section of ProfileIdentityCard.
 
 @Composable
 internal fun ProfileDetailsCard(
@@ -301,12 +343,65 @@ internal fun ProfileSecurityCard(
 @Composable
 internal fun ProfilePreferencesCard(
     notificationsEnabled: Boolean,
+    themeMode: AppThemeMode,
     onToggleNotifications: (Boolean) -> Unit,
+    onSetThemeMode: (AppThemeMode) -> Unit,
 ) {
     AppCard(elevated = true) {
         Column(verticalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.sm)) {
             Text("Preferences", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             ToggleRow(icon = Icons.Filled.Notifications, title = "Notifications", subtitle = "Task and event reminders", checked = notificationsEnabled, onToggle = onToggleNotifications)
+            ThemeModeRow(selected = themeMode, onSelect = onSetThemeMode)
+        }
+    }
+}
+
+@Composable
+private fun ThemeModeRow(
+    selected: AppThemeMode,
+    onSelect: (AppThemeMode) -> Unit,
+) {
+    val options = listOf(
+        Triple(AppThemeMode.LIGHT, Icons.Filled.WbSunny, "Light"),
+        Triple(AppThemeMode.SYSTEM, Icons.Filled.SettingsBrightness, "Auto"),
+        Triple(AppThemeMode.DARK, Icons.Filled.DarkMode, "Dark"),
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.sm),
+    ) {
+        Icon(Icons.Filled.DarkMode, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        Column(modifier = Modifier.weight(1f)) {
+            Text("Theme", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+            Text("Light, Dark, or follow system", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            options.forEach { (mode, icon, label) ->
+                val isSelected = selected == mode
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(
+                            if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+                            else MaterialTheme.colorScheme.surfaceVariant,
+                        )
+                        .clickable { onSelect(mode) }
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = label,
+                        tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
         }
     }
 }

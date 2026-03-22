@@ -579,4 +579,46 @@ object DatabaseMigrations {
                 )
             }
         }
+
+    val MIGRATION_9_10: Migration =
+        object : Migration(9, 10) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // ── Add CategoryInferenceEngine columns to transactions ────────
+                if (!hasColumn(database, "transactions", "inferred_category")) {
+                    database.execSQL("ALTER TABLE transactions ADD COLUMN inferred_category TEXT")
+                }
+                if (!hasColumn(database, "transactions", "inference_source")) {
+                    database.execSQL("ALTER TABLE transactions ADD COLUMN inference_source TEXT")
+                }
+
+                // ── Create fuliza_loans table ─────────────────────────────────
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS fuliza_loans (
+                        id INTEGER NOT NULL,
+                        draw_code TEXT NOT NULL,
+                        draw_amount_kes REAL NOT NULL,
+                        total_repaid_kes REAL NOT NULL DEFAULT 0.0,
+                        status TEXT NOT NULL DEFAULT 'OPEN',
+                        draw_date INTEGER NOT NULL,
+                        last_repayment_date INTEGER,
+                        created_at INTEGER NOT NULL,
+                        updated_at INTEGER NOT NULL,
+                        user_id TEXT NOT NULL,
+                        PRIMARY KEY(user_id, id)
+                    )
+                    """.trimIndent(),
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_fuliza_loans_user_id ON fuliza_loans(user_id)",
+                )
+                database.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS index_fuliza_loans_user_id_draw_code " +
+                        "ON fuliza_loans(user_id, draw_code)",
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_fuliza_loans_status ON fuliza_loans(status)",
+                )
+            }
+        }
 }

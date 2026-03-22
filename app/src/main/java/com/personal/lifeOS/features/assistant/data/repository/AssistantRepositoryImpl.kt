@@ -153,6 +153,12 @@ class AssistantRepositoryImpl
             )
         }
 
+        override suspend fun clearConversationHistory() {
+            val userId = activeUserId()
+            messageDao.deleteAllForUser(userId)
+            conversationDao.deleteAllForUser(userId)
+        }
+
         private fun activeUserId(): String = authSessionStore.getUserId().ifBlank { "local" }
 
         private fun MessageSender.toRole(): String {

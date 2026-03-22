@@ -12,4 +12,6 @@ interface AssistantRepository {
         actionPayload: String? = null,
         isPreview: Boolean = false,
     )
+
+    suspend fun clearConversationHistory()
 }

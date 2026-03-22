@@ -1,8 +1,8 @@
 {
-    "version_code":  14,
-    "version_name":  "1.2.3",
-    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.3/app-release-v1.2.3.apk",
-    "checksum_sha256":  "3df9c78b31484957189516b5930e3fee97853258ac5482de7f3f3ae3eacb985e",
+    "version_code":  15,
+    "version_name":  "1.2.4",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.4/app-release-v1.2.4.apk",
+    "checksum_sha256":  "46aa9c0273e0a06541d753faf97c472426fb81f7cbc4f3c14172b22c880cdc84",
     "required":  false,
-    "release_notes":  "Hotfix: ships the final database recovery for spending views. Adds the 13-\u003e14 migration that recreates daily_spend and monthly_spend with SQL exactly matching the @DatabaseView annotations, fixing finance and startup crashes on devices that already advanced past the earlier broken schema."
+    "release_notes":  "Hotfix: fixes the Finance screen crash while the first paged transaction list is still loading by guarding the day-label lookup until the requested item exists."
 }

@@ -81,12 +81,14 @@ fun FinanceScreen(
             FinanceTransactionFilter.THIS_MONTH -> 3
         }
 
-    // Day label tracks the topmost visible transaction as the user scrolls
+    // Day label tracks the topmost visible transaction as the user scrolls.
+    // Guard: lazyItems[index] throws IndexOutOfBoundsException when itemCount == 0
+    // (enablePlaceholders = false means no null-sentinel for out-of-range access).
     val dayLabel by remember(lazyItems.itemCount) {
         derivedStateOf {
-            lazyItems[txListState.firstVisibleItemIndex]
-                ?.date
-                ?.let { epochMillis ->
+            val idx = txListState.firstVisibleItemIndex
+            if (lazyItems.itemCount > 0 && idx < lazyItems.itemCount) {
+                lazyItems[idx]?.date?.let { epochMillis ->
                     val date =
                         Instant.ofEpochMilli(epochMillis)
                             .atZone(ZoneId.systemDefault()).toLocalDate()
@@ -97,6 +99,7 @@ fun FinanceScreen(
                         else -> date.format(DateTimeFormatter.ofPattern("MMM d"))
                     }
                 } ?: ""
+            } else ""
         }
     }
 

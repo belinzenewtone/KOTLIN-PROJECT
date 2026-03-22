@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.personal.lifeOS.features.budget.domain.model.Budget
 import com.personal.lifeOS.features.budget.domain.model.BudgetPeriod
 import com.personal.lifeOS.features.budget.domain.model.BudgetProgress
+import com.personal.lifeOS.features.budget.domain.repository.BudgetRepository
 import com.personal.lifeOS.features.budget.domain.usecase.AddBudgetUseCase
 import com.personal.lifeOS.features.budget.domain.usecase.DeleteBudgetUseCase
 import com.personal.lifeOS.features.budget.domain.usecase.ObserveBudgetProgressUseCase
@@ -27,6 +28,7 @@ data class BudgetUiState(
     val limitInput: String = "",
     val periodInput: BudgetPeriod = BudgetPeriod.MONTHLY,
     val error: String? = null,
+    val editingBudgetId: Long? = null,
 )
 
 @HiltViewModel
@@ -36,6 +38,7 @@ class BudgetViewModel
         private val observeBudgetProgressUseCase: ObserveBudgetProgressUseCase,
         private val addBudgetUseCase: AddBudgetUseCase,
         private val deleteBudgetUseCase: DeleteBudgetUseCase,
+        private val budgetRepository: BudgetRepository,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(BudgetUiState())
         val uiState: StateFlow<BudgetUiState> = _uiState.asStateFlow()
@@ -52,12 +55,26 @@ class BudgetViewModel
                     limitInput = "",
                     periodInput = BudgetPeriod.MONTHLY,
                     error = null,
+                    editingBudgetId = null,
+                )
+            }
+        }
+
+        fun editBudget(progress: BudgetProgress) {
+            _uiState.update {
+                it.copy(
+                    showDialog = true,
+                    editingBudgetId = progress.budget.id,
+                    categoryInput = progress.budget.category,
+                    limitInput = progress.budget.limitAmount.toString(),
+                    periodInput = progress.budget.period,
+                    error = null,
                 )
             }
         }
 
         fun hideDialog() {
-            _uiState.update { it.copy(showDialog = false, error = null) }
+            _uiState.update { it.copy(showDialog = false, error = null, editingBudgetId = null) }
         }
 
         fun setCategory(value: String) {
@@ -78,7 +95,7 @@ class BudgetViewModel
             val limit = state.limitInput.toDoubleOrNull()
 
             if (category.isBlank()) {
-                _uiState.update { it.copy(error = "Category is required") }
+                _uiState.update { it.copy(error = "Please select a category") }
                 return
             }
             if (limit == null || limit <= 0.0) {
@@ -88,13 +105,27 @@ class BudgetViewModel
 
             viewModelScope.launch {
                 runCatching {
-                    addBudgetUseCase(
-                        Budget(
-                            category = category,
-                            limitAmount = limit,
-                            period = state.periodInput,
-                        ),
-                    )
+                    val editId = state.editingBudgetId
+                    if (editId != null) {
+                        // Update existing budget
+                        budgetRepository.updateBudget(
+                            Budget(
+                                id = editId,
+                                category = category,
+                                limitAmount = limit,
+                                period = state.periodInput,
+                            )
+                        )
+                    } else {
+                        // Add new budget
+                        addBudgetUseCase(
+                            Budget(
+                                category = category,
+                                limitAmount = limit,
+                                period = state.periodInput,
+                            ),
+                        )
+                    }
                 }.onSuccess {
                     hideDialog()
                 }.onFailure { throwable ->

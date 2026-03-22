@@ -27,8 +27,8 @@ class MpesaDedupeEngineEnhanced
     ) {
 
         /**
-         * Check if a message is a duplicate using dual-key strategy.
-         * Returns true if EITHER the mpesa_code OR the source_hash already exists.
+         * Check if a message is a duplicate using multi-tier strategy.
+         * Returns true if EITHER the mpesa_code OR the source_hash OR the semantic_hash already exists.
          */
         suspend fun isDuplicate(
             mpesaCode: String,
@@ -45,6 +45,17 @@ class MpesaDedupeEngineEnhanced
             // Secondary check: source hash (prevents SMS variant duplicates like Fuliza notices)
             val sourceHash = computeSourceHash(rawMessage)
             if (expenseRepository.existsBySourceHash(sourceHash)) {
+                return true
+            }
+
+            // Tier 3: semantic hash (cross-device dedup — survives re-delivery and device switches)
+            val semanticHash = computeSemanticHash(
+                transactionType = "TRANSACTION",
+                amount = amount,
+                timestampMs = timestamp,
+                counterparty = merchant,
+            )
+            if (expenseRepository.existsBySemanticHash(semanticHash)) {
                 return true
             }
 
@@ -73,6 +84,28 @@ class MpesaDedupeEngineEnhanced
                 // Fallback: if hashing fails, use string hash code
                 // This is less ideal but prevents crashes
                 rawMessage.hashCode().toString()
+            }
+        }
+
+        /**
+         * Compute semantic hash for cross-device deduplication.
+         * Survives SMS re-delivery and device switches by hashing normalized transaction properties.
+         */
+        fun computeSemanticHash(
+            transactionType: String,
+            amount: Double,
+            timestampMs: Long,
+            counterparty: String,
+        ): String {
+            val date = java.time.Instant.ofEpochMilli(timestampMs)
+                .atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+            val yyyyMMdd = date.format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE)
+            val input = "${transactionType}|${"%.2f".format(amount)}|$yyyyMMdd|${counterparty.lowercase().trim()}"
+            return try {
+                val digest = MessageDigest.getInstance("SHA-256")
+                digest.digest(input.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
+            } catch (e: Exception) {
+                input.hashCode().toString()
             }
         }
 

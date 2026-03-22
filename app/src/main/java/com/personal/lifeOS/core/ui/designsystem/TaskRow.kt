@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -46,33 +48,42 @@ fun TaskRow(
     onClick: () -> Unit = {},
 ) {
     AppCard(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .clickable(onClick = onClick),
+        modifier = modifier.fillMaxWidth().clickable(onClick = onClick),
         elevated = true,
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            // Priority stripe — left border, only shown when priority is non-empty and not completed
+            if (priority.isNotBlank() && !isCompleted) {
+                Box(
+                    modifier = Modifier
+                        .width(4.dp)
+                        .height(56.dp)
+                        .background(
+                            color = priorityDotColor(priority),
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(
+                                topStart = 2.dp, bottomStart = 2.dp
+                            ),
+                        ),
+                )
+                Spacer(modifier = Modifier.width(AppDesignTokens.spacing.sm))
+            }
+
             // Completion toggle circle
             Box(
-                modifier =
-                    Modifier
-                        .size(22.dp)
-                        .background(
-                            color =
-                                if (isCompleted) {
-                                    AppDesignTokens.colors.primary
-                                } else {
-                                    MaterialTheme.colorScheme.surfaceVariant
-                                },
-                            shape = CircleShape,
-                        )
-                        .clickable(onClick = onToggleComplete),
+                modifier = Modifier
+                    .size(22.dp)
+                    .background(
+                        color = if (isCompleted) AppDesignTokens.colors.primary
+                                else MaterialTheme.colorScheme.surfaceVariant,
+                        shape = CircleShape,
+                    )
+                    .clickable(onClick = onToggleComplete),
             )
+
+            Spacer(modifier = Modifier.width(AppDesignTokens.spacing.md))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -85,18 +96,6 @@ fun TaskRow(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-
-            // Priority dot — only shown when priority string is non-empty and task is pending
-            if (priority.isNotBlank() && !isCompleted) {
-                Box(
-                    modifier = Modifier
-                        .size(10.dp)
-                        .background(
-                            color = priorityDotColor(priority),
-                            shape = CircleShape,
-                        ),
                 )
             }
         }

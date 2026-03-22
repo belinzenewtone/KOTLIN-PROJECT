@@ -1,5 +1,6 @@
 package com.personal.lifeOS.features.expenses.domain.repository
 
+import androidx.paging.PagingData
 import com.personal.lifeOS.features.expenses.domain.model.CategoryBreakdown
 import com.personal.lifeOS.features.expenses.domain.model.Transaction
 import kotlinx.coroutines.flow.Flow
@@ -38,6 +39,8 @@ interface ExpenseRepository {
 
     suspend fun existsBySourceHash(sourceHash: String): Boolean
 
+    suspend fun existsBySemanticHash(semanticHash: String): Boolean
+
     suspend fun existsPotentialDuplicate(
         amount: Double,
         merchant: String,
@@ -51,4 +54,10 @@ interface ExpenseRepository {
         merchant: String,
         category: String,
     )
+
+    fun pagedTransactions(
+        startMs: Long? = null,
+        endMs: Long? = null,
+        searchQuery: String = "",
+    ): Flow<PagingData<Transaction>>
 }

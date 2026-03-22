@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import androidx.paging.PagingSource
 import com.personal.lifeOS.core.database.entity.TransactionEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -97,6 +98,9 @@ interface TransactionDao {
         userId: String,
     ): TransactionEntity?
 
+    @Query("SELECT * FROM transactions WHERE semantic_hash = :semanticHash AND user_id = :userId LIMIT 1")
+    suspend fun getBySemanticHash(semanticHash: String, userId: String): TransactionEntity?
+
     @Query(
         """
         SELECT * FROM transactions
@@ -135,6 +139,45 @@ interface TransactionDao {
 
     @Query("SELECT COUNT(*) FROM transactions WHERE user_id = :userId")
     fun getTransactionCount(userId: String): Flow<Int>
+
+    @Query("SELECT * FROM transactions WHERE user_id = :userId AND deleted_at IS NULL ORDER BY date DESC")
+    fun pagingSourceAll(userId: String): PagingSource<Int, TransactionEntity>
+
+    @Query(
+        """
+        SELECT * FROM transactions
+        WHERE user_id = :userId AND deleted_at IS NULL
+          AND date BETWEEN :start AND :end
+        ORDER BY date DESC
+        """,
+    )
+    fun pagingSourceBetween(userId: String, start: Long, end: Long): PagingSource<Int, TransactionEntity>
+
+    @Query(
+        """
+        SELECT * FROM transactions
+        WHERE user_id = :userId AND deleted_at IS NULL
+          AND (merchant LIKE :query OR category LIKE :query)
+        ORDER BY date DESC
+        """,
+    )
+    fun pagingSourceSearch(userId: String, query: String): PagingSource<Int, TransactionEntity>
+
+    @Query(
+        """
+        SELECT * FROM transactions
+        WHERE user_id = :userId AND deleted_at IS NULL
+          AND date BETWEEN :start AND :end
+          AND (merchant LIKE :query OR category LIKE :query)
+        ORDER BY date DESC
+        """,
+    )
+    fun pagingSourceSearchBetween(
+        userId: String,
+        start: Long,
+        end: Long,
+        query: String,
+    ): PagingSource<Int, TransactionEntity>
 
     @Query("UPDATE transactions SET user_id = :userId WHERE user_id = ''")
     suspend fun claimUnownedRecords(userId: String)

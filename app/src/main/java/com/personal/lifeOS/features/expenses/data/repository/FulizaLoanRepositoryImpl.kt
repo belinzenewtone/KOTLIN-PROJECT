@@ -23,6 +23,9 @@ class FulizaLoanRepositoryImpl
         override fun observeNetOutstanding(): Flow<Double> =
             fulizaLoanDao.observeNetOutstanding(userId())
 
+        override fun observeOpenLoans(): Flow<List<FulizaLoanEntity>> =
+            fulizaLoanDao.observeOpenLoans(userId())
+
         override suspend fun recordDraw(
             drawCode: String,
             amountKes: Double,

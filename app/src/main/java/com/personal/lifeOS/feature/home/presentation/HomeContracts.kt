@@ -11,6 +11,8 @@ data class HomeUiState(
     val todaySpending: Double,
     val weekSpending: Double,
     val monthSpending: Double,
+    val monthNet: Double = 0.0,
+    val monthIncome: Double = 0.0,
     val pendingTaskCount: Int,
     val completedTodayCount: Int,
     val nextEventTitle: String?,
@@ -37,12 +39,15 @@ sealed interface HomeUiEvent {
 fun DashboardUiState.toHomeUiState(): HomeUiState {
     val nextEvent = data.upcomingEvents.firstOrNull()
     val lastTx = data.recentTransactions.firstOrNull()
+    val monthNet = data.monthIncome - data.monthSpending
     return HomeUiState(
         greeting = data.greeting,
         dateLabel = DateUtils.formatDate(System.currentTimeMillis(), "EEEE, MMM dd"),
         todaySpending = data.todaySpending,
         weekSpending = data.weekSpending,
         monthSpending = data.monthSpending,
+        monthNet = monthNet,
+        monthIncome = data.monthIncome,
         pendingTaskCount = data.pendingTaskCount,
         completedTodayCount = data.completedTodayCount,
         nextEventTitle = nextEvent?.title,

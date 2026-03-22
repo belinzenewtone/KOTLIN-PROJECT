@@ -48,4 +48,7 @@ interface SyncJobDao {
 
     @Query("DELETE FROM sync_jobs WHERE status = 'SYNCED' AND updated_at < :olderThan")
     suspend fun pruneSynced(olderThan: Long): Int
+
+    @Query("SELECT COUNT(*) FROM sync_jobs WHERE status IN ('QUEUED', 'FAILED')")
+    suspend fun getPendingCount(): Int
 }

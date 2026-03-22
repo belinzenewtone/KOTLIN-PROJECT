@@ -55,4 +55,18 @@ interface IncomeDao {
 
     @Query("UPDATE incomes SET user_id = :userId WHERE user_id = ''")
     suspend fun claimUnownedRecords(userId: String)
+
+    @Query(
+        """
+        SELECT COALESCE(SUM(amount), 0.0) FROM incomes
+        WHERE user_id = :userId
+          AND deleted_at IS NULL
+          AND date BETWEEN :start AND :end
+        """,
+    )
+    fun getTotalIncomeBetween(
+        userId: String,
+        start: Long,
+        end: Long,
+    ): Flow<Double>
 }

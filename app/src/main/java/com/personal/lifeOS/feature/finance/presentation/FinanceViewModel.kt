@@ -2,13 +2,15 @@ package com.personal.lifeOS.feature.finance.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import com.personal.lifeOS.core.telemetry.ImportHealthSummary
 import com.personal.lifeOS.core.ui.model.SyncStatusUiModel
 import com.personal.lifeOS.feature.finance.domain.model.FinanceTransaction
 import com.personal.lifeOS.feature.finance.domain.model.FinanceSnapshot
 import com.personal.lifeOS.feature.finance.domain.model.toExpenseTransaction
+import com.personal.lifeOS.feature.finance.domain.repository.FinanceRepository
 import com.personal.lifeOS.feature.finance.domain.usecase.BuildFinanceSummaryUseCase
-import com.personal.lifeOS.feature.finance.domain.usecase.FilterFinanceTransactionsUseCase
 import com.personal.lifeOS.feature.finance.domain.usecase.ObserveFinanceSnapshotUseCase
 import com.personal.lifeOS.features.expenses.domain.repository.FulizaLoanRepository
 import com.personal.lifeOS.features.expenses.domain.usecase.AddTransactionUseCase
@@ -17,11 +19,17 @@ import com.personal.lifeOS.features.expenses.domain.usecase.ImportMpesaMessagesU
 import com.personal.lifeOS.features.expenses.domain.usecase.ObserveImportHealthUseCase
 import com.personal.lifeOS.features.expenses.domain.usecase.UpdateMerchantCategoryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -34,7 +42,7 @@ class FinanceViewModel
     constructor(
         private val observeFinanceSnapshotUseCase: ObserveFinanceSnapshotUseCase,
         private val buildFinanceSummaryUseCase: BuildFinanceSummaryUseCase,
-        private val filterFinanceTransactionsUseCase: FilterFinanceTransactionsUseCase,
+        private val financeRepository: FinanceRepository,
         private val addTransactionUseCase: AddTransactionUseCase,
         private val deleteTransactionUseCase: DeleteTransactionUseCase,
         private val updateMerchantCategoryUseCase: UpdateMerchantCategoryUseCase,
@@ -44,6 +52,17 @@ class FinanceViewModel
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(FinanceUiState())
         val uiState: StateFlow<FinanceUiState> = _uiState.asStateFlow()
+
+        @OptIn(FlowPreview::class)
+        val pagedTransactions: Flow<PagingData<FinanceTransaction>> =
+            _uiState
+                .map { Pair(it.selectedFilter, it.searchQuery) }
+                .distinctUntilChanged()
+                .debounce(300L)
+                .flatMapLatest { (filter, query) ->
+                    financeRepository.pagedTransactions(filter, query)
+                }
+                .cachedIn(viewModelScope)
 
         private var latestSnapshot = FinanceSnapshot()
         private var latestImportHealth = ImportHealthSummary()
@@ -73,6 +92,8 @@ class FinanceViewModel
                     _uiState.update { it.copy(showImportDialog = false, importResultMessage = null) }
                 is FinanceUiEvent.ImportSmsMessages -> importSmsMessages(event.daysBack)
                 FinanceUiEvent.ClearError -> _uiState.update { it.copy(errorMessage = null) }
+                is FinanceUiEvent.UpdateSearchQuery ->
+                    _uiState.update { it.copy(searchQuery = event.query) }
             }
         }
 
@@ -115,7 +136,6 @@ class FinanceViewModel
             _uiState.update { current ->
                 current.copy(
                     summary = buildFinanceSummaryUseCase(latestSnapshot),
-                    recentTransactions = buildVisibleTransactions(current),
                     importHealth = latestImportHealth.toUiModel(current.importResultMessage),
                     syncStatus =
                         if (current.errorMessage.isNullOrBlank()) {
@@ -126,13 +146,6 @@ class FinanceViewModel
                     isLoading = false,
                 )
             }
-        }
-
-        private fun buildVisibleTransactions(current: FinanceUiState): List<FinanceTransaction> {
-            return filterFinanceTransactionsUseCase(
-                snapshot = latestSnapshot,
-                filter = current.selectedFilter,
-            ).take(MAX_VISIBLE_TRANSACTIONS)
         }
 
         private fun addManualTransaction(event: FinanceUiEvent.AddManualTransaction) {
@@ -209,6 +222,14 @@ class FinanceViewModel
                 }
                 .catch { /* non-fatal: Fuliza tracking is additive */ }
                 .launchIn(viewModelScope)
+
+            fulizaLoanRepository.observeOpenLoans()
+                .onEach { loans ->
+                    val openCount = loans.count { it.status == "OPEN" || it.status == "PARTIALLY_REPAID" }
+                    _uiState.update { it.copy(fulizaOpenCount = openCount) }
+                }
+                .catch { /* non-fatal: Fuliza tracking is additive */ }
+                .launchIn(viewModelScope)
         }
 
         private fun importSmsMessages(daysBack: Int) {
@@ -237,9 +258,6 @@ class FinanceViewModel
             }
         }
 
-        private companion object {
-            const val MAX_VISIBLE_TRANSACTIONS = 20
-        }
     }
 
 private fun com.personal.lifeOS.platform.sms.background.MpesaHistoricalImportSummary.toResultMessage(): String {

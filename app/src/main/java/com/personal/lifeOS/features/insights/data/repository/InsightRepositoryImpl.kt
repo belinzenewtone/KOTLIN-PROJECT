@@ -1,9 +1,11 @@
 package com.personal.lifeOS.features.insights.data.repository
 
 import com.personal.lifeOS.core.database.dao.InsightCardDao
+import com.personal.lifeOS.core.database.dao.PaybillRegistryDao
 import com.personal.lifeOS.core.database.dao.TaskDao
 import com.personal.lifeOS.core.database.dao.TransactionDao
 import com.personal.lifeOS.core.database.entity.InsightCardEntity
+import com.personal.lifeOS.core.database.entity.PaybillRegistryEntity
 import com.personal.lifeOS.core.security.AuthSessionStore
 import com.personal.lifeOS.features.insights.domain.model.DeterministicInsightInput
 import com.personal.lifeOS.features.insights.domain.model.InsightCard
@@ -25,6 +27,7 @@ class InsightRepositoryImpl
         private val insightCardDao: InsightCardDao,
         private val taskDao: TaskDao,
         private val transactionDao: TransactionDao,
+        private val paybillRegistryDao: PaybillRegistryDao,
         private val authSessionStore: AuthSessionStore,
         private val deterministicInsightEngine: DeterministicInsightEngine,
     ) : InsightRepository {
@@ -89,13 +92,9 @@ class InsightRepositoryImpl
                         ),
                 )
 
-            insightCardDao.deleteDeterministic(userId)
-            if (deterministicCards.isEmpty()) {
-                return
-            }
-
+            // Build engine-generated cards (6-hour freshness)
             val freshUntil = now + Duration.ofHours(6).toMillis()
-            val entities =
+            val engineEntities =
                 deterministicCards.map { card ->
                     InsightCardEntity(
                         id = deterministicId(card.kind),
@@ -112,7 +111,33 @@ class InsightRepositoryImpl
                         recordSource = "SYSTEM",
                     )
                 }
-            insightCardDao.insertAll(entities)
+
+            // Build recurring paybill suggestion cards (24-hour freshness)
+            val recurringFreshUntil = now + Duration.ofHours(24).toMillis()
+            val frequentPaybills = paybillRegistryDao.getFrequent(userId = userId, minCount = 3)
+            val recurringEntities =
+                frequentPaybills.map { entry ->
+                    InsightCardEntity(
+                        id = deterministicId("RECURRING_SUGGESTION_${entry.paybillNumber}"),
+                        userId = userId,
+                        kind = "RECURRING_SUGGESTION",
+                        title = "Pay ${entry.displayName}",
+                        body = "Paid ${entry.usageCount} times · Last KES ${"%.0f".format(entry.lastAmountKes)}",
+                        confidence = null,
+                        isAiGenerated = false,
+                        freshUntil = recurringFreshUntil,
+                        createdAt = now,
+                        updatedAt = now,
+                        syncState = "LOCAL_ONLY",
+                        recordSource = "SYSTEM",
+                    )
+                }
+
+            val allEntities = engineEntities + recurringEntities
+            insightCardDao.deleteDeterministic(userId)
+            if (allEntities.isNotEmpty()) {
+                insightCardDao.insertAll(allEntities)
+            }
         }
 
         private fun deterministicId(kind: String): Long {

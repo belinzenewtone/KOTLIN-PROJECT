@@ -30,4 +30,7 @@ interface ImportAuditDao {
         outcome: String,
         limit: Int = 100,
     ): List<ImportAuditEntity>
+
+    @Query("DELETE FROM import_audit WHERE user_id = :userId AND imported_at < :cutoffMs")
+    suspend fun deleteOlderThan(userId: String, cutoffMs: Long)
 }

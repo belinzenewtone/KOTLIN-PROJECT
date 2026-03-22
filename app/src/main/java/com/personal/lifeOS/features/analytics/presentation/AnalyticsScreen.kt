@@ -41,10 +41,14 @@ fun AnalyticsScreen(viewModel: AnalyticsViewModel = hiltViewModel()) {
             return@PageScaffold
         }
 
-        if (!state.hasAnalyticsData()) {
+        if (!state.isLoading &&
+            state.data.totalTasksCompleted == 0 &&
+            state.data.totalTasksPending == 0 &&
+            state.data.totalEvents == 0 &&
+            state.data.totalSpentThisMonth == 0.0) {
             EmptyState(
-                title = "Analytics are warming up",
-                description = "Add tasks, events, or transactions to unlock trend insights.",
+                title = "No data yet",
+                description = "Add tasks, events, or import M-Pesa messages to see insights.",
             )
             return@PageScaffold
         }
@@ -105,15 +109,6 @@ private fun AnalyticsUiState.selectedSpendingData(): List<DailySpending> {
     } else {
         data.monthlySpending
     }
-}
-
-private fun AnalyticsUiState.hasAnalyticsData(): Boolean {
-    return data.monthlySpending.any { it.amount > 0 } ||
-        data.weeklySpending.any { it.amount > 0 } ||
-        data.categoryBreakdown.isNotEmpty() ||
-        data.totalTasksCompleted > 0 ||
-        data.totalTasksPending > 0 ||
-        data.totalEvents > 0
 }
 
 private fun AnalyticsPeriod.toSegmentIndex(): Int {

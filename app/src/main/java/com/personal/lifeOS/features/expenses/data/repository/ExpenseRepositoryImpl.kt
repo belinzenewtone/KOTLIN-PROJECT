@@ -11,6 +11,10 @@ import com.personal.lifeOS.features.expenses.data.datasource.toEntity
 import com.personal.lifeOS.features.expenses.data.parser.MerchantCategorizer
 import com.personal.lifeOS.features.expenses.data.parser.MpesaSmsParser
 import com.personal.lifeOS.platform.sms.parser.MpesaParsingConfig.TransactionCategory
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import com.personal.lifeOS.features.expenses.domain.model.CategoryBreakdown
 import com.personal.lifeOS.features.expenses.domain.model.Transaction
 import com.personal.lifeOS.features.expenses.domain.repository.ExpenseRepository
@@ -59,7 +63,7 @@ class ExpenseRepositoryImpl
             end: Long,
         ): Flow<Double> {
             val userId = activeUserId()
-            return transactionDao.getTotalSpendingBetween(start, end, userId).map { it ?: 0.0 }
+            return transactionDao.getTotalSpendingBetween(start, end, userId).map { total -> total ?: 0.0 }
         }
 
         override fun getCategoryBreakdown(
@@ -128,6 +132,10 @@ class ExpenseRepositoryImpl
 
         override suspend fun existsBySourceHash(sourceHash: String): Boolean {
             return transactionDao.getBySourceHash(sourceHash, activeUserId()) != null
+        }
+
+        override suspend fun existsBySemanticHash(semanticHash: String): Boolean {
+            return transactionDao.getBySemanticHash(semanticHash, activeUserId()) != null
         }
 
         override suspend fun existsPotentialDuplicate(
@@ -274,5 +282,38 @@ class ExpenseRepositoryImpl
 
             // Fall back to auto-categorization
             return MerchantCategorizer.categorize(merchant).label
+        }
+
+        override fun pagedTransactions(
+            startMs: Long?,
+            endMs: Long?,
+            searchQuery: String,
+        ): Flow<PagingData<Transaction>> {
+            val userId = activeUserId()
+            val hasFilter = startMs != null && endMs != null
+            val hasSearch = searchQuery.isNotBlank()
+            val likeQuery = "%${searchQuery.trim()}%"
+            val pager =
+                when {
+                    hasFilter && hasSearch ->
+                        Pager(PagingConfig(pageSize = 30, enablePlaceholders = false)) {
+                            transactionDao.pagingSourceSearchBetween(userId, startMs!!, endMs!!, likeQuery)
+                        }
+                    hasFilter ->
+                        Pager(PagingConfig(pageSize = 30, enablePlaceholders = false)) {
+                            transactionDao.pagingSourceBetween(userId, startMs!!, endMs!!)
+                        }
+                    hasSearch ->
+                        Pager(PagingConfig(pageSize = 30, enablePlaceholders = false)) {
+                            transactionDao.pagingSourceSearch(userId, likeQuery)
+                        }
+                    else ->
+                        Pager(PagingConfig(pageSize = 30, enablePlaceholders = false)) {
+                            transactionDao.pagingSourceAll(userId)
+                        }
+                }
+            return pager.flow.map { pagingData ->
+                pagingData.map { entity -> entity.toDomain() }
+            }
         }
     }

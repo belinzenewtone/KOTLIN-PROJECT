@@ -15,7 +15,10 @@ import com.personal.lifeOS.core.database.dao.ImportAuditDao
 import com.personal.lifeOS.core.database.dao.IncomeDao
 import com.personal.lifeOS.core.database.dao.InsightCardDao
 import com.personal.lifeOS.core.database.dao.MerchantCategoryDao
+import com.personal.lifeOS.core.database.dao.PaybillRegistryDao
 import com.personal.lifeOS.core.database.dao.RecurringRuleDao
+import com.personal.lifeOS.core.database.dao.DailySpendDao
+import com.personal.lifeOS.core.database.dao.MonthlySpendDao
 import com.personal.lifeOS.core.database.dao.ReviewSnapshotDao
 import com.personal.lifeOS.core.database.dao.SyncJobDao
 import com.personal.lifeOS.core.database.dao.TaskDao
@@ -57,6 +60,8 @@ object DatabaseModule {
                 DatabaseMigrations.MIGRATION_7_8,
                 DatabaseMigrations.MIGRATION_8_9,
                 DatabaseMigrations.MIGRATION_9_10,
+                DatabaseMigrations.MIGRATION_10_11,
+                DatabaseMigrations.MIGRATION_11_12,
             )
             .build()
     }
@@ -108,4 +113,13 @@ object DatabaseModule {
 
     @Provides
     fun provideFulizaLoanDao(db: LifeOSDatabase): FulizaLoanDao = db.fulizaLoanDao()
+
+    @Provides
+    fun providePaybillRegistryDao(db: LifeOSDatabase): PaybillRegistryDao = db.paybillRegistryDao()
+
+    @Provides
+    fun provideDailySpendDao(db: LifeOSDatabase): DailySpendDao = db.dailySpendDao()
+
+    @Provides
+    fun provideMonthlySpendDao(db: LifeOSDatabase): MonthlySpendDao = db.monthlySpendDao()
 }

@@ -15,7 +15,10 @@ import com.personal.lifeOS.core.database.dao.ImportAuditDao
 import com.personal.lifeOS.core.database.dao.IncomeDao
 import com.personal.lifeOS.core.database.dao.InsightCardDao
 import com.personal.lifeOS.core.database.dao.MerchantCategoryDao
+import com.personal.lifeOS.core.database.dao.PaybillRegistryDao
 import com.personal.lifeOS.core.database.dao.RecurringRuleDao
+import com.personal.lifeOS.core.database.dao.DailySpendDao
+import com.personal.lifeOS.core.database.dao.MonthlySpendDao
 import com.personal.lifeOS.core.database.dao.ReviewSnapshotDao
 import com.personal.lifeOS.core.database.dao.SyncJobDao
 import com.personal.lifeOS.core.database.dao.TaskDao
@@ -31,12 +34,15 @@ import com.personal.lifeOS.core.database.entity.ImportAuditEntity
 import com.personal.lifeOS.core.database.entity.IncomeEntity
 import com.personal.lifeOS.core.database.entity.InsightCardEntity
 import com.personal.lifeOS.core.database.entity.MerchantCategoryEntity
+import com.personal.lifeOS.core.database.entity.PaybillRegistryEntity
 import com.personal.lifeOS.core.database.entity.RecurringRuleEntity
 import com.personal.lifeOS.core.database.entity.ReviewSnapshotEntity
 import com.personal.lifeOS.core.database.entity.SyncJobEntity
 import com.personal.lifeOS.core.database.entity.TaskEntity
 import com.personal.lifeOS.core.database.entity.TransactionEntity
 import com.personal.lifeOS.core.database.entity.UserEntity
+import com.personal.lifeOS.core.database.entity.DailySpendView
+import com.personal.lifeOS.core.database.entity.MonthlySpendView
 
 @Database(
     entities = [
@@ -57,8 +63,13 @@ import com.personal.lifeOS.core.database.entity.UserEntity
         AppUpdateInfoEntity::class,
         ExportHistoryEntity::class,
         FulizaLoanEntity::class,
+        PaybillRegistryEntity::class,
     ],
-    version = 10,
+    views = [
+        DailySpendView::class,
+        MonthlySpendView::class,
+    ],
+    version = 12,
     exportSchema = true,
 )
 @TypeConverters(DateConverters::class)
@@ -95,4 +106,10 @@ abstract class LifeOSDatabase : RoomDatabase() {
     abstract fun exportHistoryDao(): ExportHistoryDao
 
     abstract fun fulizaLoanDao(): FulizaLoanDao
+
+    abstract fun paybillRegistryDao(): PaybillRegistryDao
+
+    abstract fun dailySpendDao(): DailySpendDao
+
+    abstract fun monthlySpendDao(): MonthlySpendDao
 }

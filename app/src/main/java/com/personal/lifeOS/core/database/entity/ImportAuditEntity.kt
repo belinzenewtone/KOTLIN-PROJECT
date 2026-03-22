@@ -33,4 +33,7 @@ data class ImportAuditEntity(
     val createdAt: Long = System.currentTimeMillis(),
     @ColumnInfo(name = "updated_at")
     val updatedAt: Long = System.currentTimeMillis(),
+    /** Numeric confidence score from the parser: 1.0=HIGH, 0.5=MEDIUM, 0.0=LOW/UNKNOWN */
+    @ColumnInfo(name = "confidence_score")
+    val confidenceScore: Double = 0.0,
 )

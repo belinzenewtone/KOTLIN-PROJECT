@@ -18,11 +18,26 @@ class MpesaSmsIngestionWorker(
         if (smsBody.isBlank()) return Result.failure()
 
         return try {
+            // Queue size cap: prevent runaway queue growth during extended outages
+            val syncJobDao = entryPointAccessor().syncJobDao()
+            val pendingCount = syncJobDao.getPendingCount()
+            if (pendingCount >= 400) {
+                // Queue is full — skip import this cycle, only flush cloud sync
+                return Result.success()
+            }
+
             ingestionPipeline().ingestRealtime(smsBody)
             Result.success()
         } catch (_: Exception) {
             Result.retry()
         }
+    }
+
+    private fun entryPointAccessor(): MpesaSmsIngestionEntryPoint {
+        return EntryPointAccessors.fromApplication(
+            applicationContext,
+            MpesaSmsIngestionEntryPoint::class.java,
+        )
     }
 
     private fun ingestionPipeline(): MpesaIngestionPipeline {
@@ -43,4 +58,5 @@ class MpesaSmsIngestionWorker(
 @InstallIn(SingletonComponent::class)
 interface MpesaSmsIngestionEntryPoint {
     fun pipeline(): MpesaIngestionPipeline
+    fun syncJobDao(): com.personal.lifeOS.core.database.dao.SyncJobDao
 }

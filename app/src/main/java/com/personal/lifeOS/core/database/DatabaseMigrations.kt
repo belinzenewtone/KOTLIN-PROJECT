@@ -621,4 +621,69 @@ object DatabaseMigrations {
                 )
             }
         }
+
+    val MIGRATION_10_11: Migration =
+        object : Migration(10, 11) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // semantic_hash on transactions
+                if (!hasColumn(database, "transactions", "semantic_hash")) {
+                    database.execSQL("ALTER TABLE transactions ADD COLUMN semantic_hash TEXT")
+                }
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_transactions_semantic_hash ON transactions(semantic_hash)"
+                )
+                // confidence_score on import_audit
+                if (!hasColumn(database, "import_audit", "confidence_score")) {
+                    database.execSQL(
+                        "ALTER TABLE import_audit ADD COLUMN confidence_score REAL NOT NULL DEFAULT 0.0"
+                    )
+                }
+                // paybill_registry table
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS paybill_registry (
+                        user_id TEXT NOT NULL,
+                        paybill_number TEXT NOT NULL,
+                        display_name TEXT NOT NULL,
+                        last_seen_at INTEGER NOT NULL,
+                        usage_count INTEGER NOT NULL DEFAULT 1,
+                        last_amount_kes REAL NOT NULL DEFAULT 0.0,
+                        PRIMARY KEY(user_id, paybill_number)
+                    )
+                """.trimIndent())
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_paybill_registry_user_id ON paybill_registry(user_id)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_paybill_registry_usage_count ON paybill_registry(usage_count)")
+            }
+        }
+
+    val MIGRATION_11_12: Migration =
+        object : Migration(11, 12) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("DROP VIEW IF EXISTS daily_spend")
+                database.execSQL("DROP VIEW IF EXISTS monthly_spend")
+                database.execSQL(
+                    """
+                    CREATE VIEW IF NOT EXISTS daily_spend AS
+                    SELECT user_id,
+                           strftime('%Y-%m-%d', date / 1000, 'unixepoch', 'localtime') AS spend_date,
+                           SUM(amount) AS total_amount,
+                           COUNT(*) AS tx_count
+                    FROM transactions
+                    WHERE deleted_at IS NULL
+                    GROUP BY user_id, strftime('%Y-%m-%d', date / 1000, 'unixepoch', 'localtime')
+                    """.trimIndent(),
+                )
+                database.execSQL(
+                    """
+                    CREATE VIEW IF NOT EXISTS monthly_spend AS
+                    SELECT user_id,
+                           strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime') AS spend_month,
+                           SUM(amount) AS total_amount,
+                           COUNT(*) AS tx_count
+                    FROM transactions
+                    WHERE deleted_at IS NULL
+                    GROUP BY user_id, strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime')
+                    """.trimIndent(),
+                )
+            }
+        }
 }

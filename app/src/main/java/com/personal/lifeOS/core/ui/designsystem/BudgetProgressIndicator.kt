@@ -26,11 +26,33 @@ fun BudgetProgressIndicator(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        val barColor = when {
+            ratio >= 1.0f -> MaterialTheme.colorScheme.error      // over budget — red
+            ratio >= 0.8f -> AppDesignTokens.colors.warning       // near limit — orange
+            else          -> AppDesignTokens.colors.success        // healthy — green
+        }
+
+        val statusLabel = when {
+            ratio >= 1.0f -> {
+                val over = spentAmount - budgetAmount
+                "Over by ${DateUtils.formatCurrency(over)}"
+            }
+            ratio >= 0.8f -> "Near limit · ${(ratio * 100).toInt()}%"
+            else -> null
+        }
+
         LinearProgressIndicator(
             progress = { ratio },
             modifier = Modifier.fillMaxWidth(),
-            color = AppDesignTokens.colors.primary,
+            color = barColor,
             trackColor = MaterialTheme.colorScheme.surfaceVariant,
         )
+        statusLabel?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.labelSmall,
+                color = barColor,
+            )
+        }
     }
 }

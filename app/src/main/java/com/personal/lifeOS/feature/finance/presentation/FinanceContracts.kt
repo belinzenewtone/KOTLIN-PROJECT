@@ -12,8 +12,8 @@ import java.time.format.DateTimeFormatter
 
 data class FinanceUiState(
     val summary: FinanceSpendingSummary = FinanceSpendingSummary(),
-    val recentTransactions: List<FinanceTransaction> = emptyList(),
     val selectedFilter: FinanceTransactionFilter = FinanceTransactionFilter.THIS_MONTH,
+    val searchQuery: String = "",
     val importHealth: ImportHealthUiModel = ImportHealthUiModel(),
     val syncStatus: SyncStatusUiModel = SyncStatusUiModel.UNKNOWN,
     val isLoading: Boolean = true,
@@ -25,6 +25,10 @@ data class FinanceUiState(
     /** Net outstanding Fuliza balance in KES. Null = unknown/loading. 0.0 = fully repaid. */
     val fulizaNetOutstandingKes: Double? = null,
     val showFulizaBanner: Boolean = false,
+    /** Count of open or partially repaid Fuliza loans. */
+    val fulizaOpenCount: Int = 0,
+    /** Total monthly budget across all budget categories. */
+    val totalMonthBudget: Double = 0.0,
 )
 
 sealed interface FinanceUiEvent {
@@ -59,6 +63,8 @@ sealed interface FinanceUiEvent {
     data class ImportSmsMessages(val daysBack: Int) : FinanceUiEvent
 
     data object ClearError : FinanceUiEvent
+
+    data class UpdateSearchQuery(val query: String) : FinanceUiEvent
 }
 
 internal fun ImportHealthSummary.toUiModel(importResultMessage: String?): ImportHealthUiModel {

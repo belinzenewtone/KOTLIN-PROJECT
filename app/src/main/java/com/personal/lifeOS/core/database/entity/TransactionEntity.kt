@@ -14,6 +14,7 @@ import androidx.room.Index
         Index(value = ["merchant"]),
         Index(value = ["mpesa_code"]),
         Index(value = ["source_hash"]),
+        Index(value = ["semantic_hash"]),
     ],
 )
 data class TransactionEntity(
@@ -50,4 +51,7 @@ data class TransactionEntity(
     /** Source that produced the inferred category: MPESA_KIND | KEYWORD | AMOUNT_HEURISTIC */
     @ColumnInfo(name = "inference_source")
     val inferenceSource: String? = null,
+    /** Semantic hash for cross-device dedup: SHA-256("$transactionType|${"%.2f".format(amount)}|$yyyyMMdd|${merchant.lowercase()}") */
+    @ColumnInfo(name = "semantic_hash")
+    val semanticHash: String? = null,
 )

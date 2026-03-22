@@ -1,7 +1,9 @@
 package com.personal.lifeOS.platform.sms.parser
 
-import java.text.SimpleDateFormat
 import java.util.Locale
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 /**
  * M-Pesa SMS Parser — Reliability-First Edition
@@ -74,7 +76,10 @@ object MpesaParserEnhanced {
         RegexOption.IGNORE_CASE,
     )
 
-    private val SUPPORTED_DATE_PATTERNS = listOf("d/M/yy h:mm a", "d/M/yyyy h:mm a")
+    private val SUPPORTED_DATE_FORMATTERS = listOf(
+        DateTimeFormatter.ofPattern("d/M/yy h:mm a", Locale.ENGLISH),
+        DateTimeFormatter.ofPattern("d/M/yyyy h:mm a", Locale.ENGLISH),
+    )
 
     // ── Stage 0: Fast filter ──────────────────────────────────────────────────
 
@@ -223,10 +228,11 @@ object MpesaParserEnhanced {
             val timePart = dateMatch.groupValues.getOrNull(2)
                 ?.takeIf { it.isNotBlank() } ?: "12:00 PM"
             val combined = "$datePart $timePart"
-            SUPPORTED_DATE_PATTERNS.firstNotNullOfOrNull { pattern ->
+            SUPPORTED_DATE_FORMATTERS.firstNotNullOfOrNull { formatter ->
                 runCatching {
-                    SimpleDateFormat(pattern, Locale.ENGLISH).apply { isLenient = false }
-                        .parse(combined)?.time
+                    LocalDateTime.parse(combined, formatter)
+                        .atZone(ZoneId.systemDefault())
+                        .toInstant().toEpochMilli()
                 }.getOrNull()
             } ?: System.currentTimeMillis()
         } catch (e: Exception) {

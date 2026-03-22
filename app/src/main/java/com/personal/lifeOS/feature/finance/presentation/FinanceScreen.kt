@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -17,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +36,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -62,6 +67,7 @@ fun FinanceScreen(
     onOpenTools: () -> Unit = {}, // kept for nav compatibility, no longer shown as button
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val lazyItems = viewModel.pagedTransactions.collectAsLazyPagingItems()
     var query by rememberSaveable { mutableStateOf("") }
     var deleteTarget by remember { mutableStateOf<FinanceTransaction?>(null) }
     val txListState = rememberLazyListState()
@@ -75,27 +81,15 @@ fun FinanceScreen(
             FinanceTransactionFilter.THIS_MONTH -> 3
         }
 
-    val filteredTransactions =
-        remember(uiState.recentTransactions, query) {
-            if (query.isBlank()) {
-                uiState.recentTransactions
-            } else {
-                val search = query.trim()
-                uiState.recentTransactions.filter { tx ->
-                    tx.merchant.contains(search, ignoreCase = true) ||
-                        tx.category.contains(search, ignoreCase = true)
-                }
-            }
-        }
-
     // Day label tracks the topmost visible transaction as the user scrolls
-    val dayLabel by remember(filteredTransactions) {
+    val dayLabel by remember(lazyItems.itemCount) {
         derivedStateOf {
-            filteredTransactions.getOrNull(txListState.firstVisibleItemIndex)
+            lazyItems[txListState.firstVisibleItemIndex]
                 ?.date
                 ?.let { epochMillis ->
-                    val date = Instant.ofEpochMilli(epochMillis)
-                        .atZone(ZoneId.systemDefault()).toLocalDate()
+                    val date =
+                        Instant.ofEpochMilli(epochMillis)
+                            .atZone(ZoneId.systemDefault()).toLocalDate()
                     val today = LocalDate.now()
                     when {
                         date == today -> "Today"
@@ -152,14 +146,18 @@ fun FinanceScreen(
         FinanceSummaryStrip(uiState = uiState)
         FinanceBudgetPressure(uiState = uiState)
 
-        // Fuliza net debt banner — only shown when there is an outstanding balance
+        // Fuliza summary card — only shown when there is an outstanding balance
         if (uiState.showFulizaBanner) {
-            val amount = uiState.fulizaNetOutstandingKes ?: 0.0
-            InlineBanner(
-                message = "Fuliza outstanding: Ksh ${"%,.0f".format(amount)} — pay to avoid daily charges",
-                tone = InlineBannerTone.WARNING,
+            FulizaSummaryCard(
+                outstanding = uiState.fulizaNetOutstandingKes ?: 0.0,
+                openCount = uiState.fulizaOpenCount,
             )
         }
+
+        SpendingVelocityBanner(
+            monthSpend = uiState.summary.monthTotal,
+            monthBudget = uiState.totalMonthBudget,
+        )
 
         ImportHealthPanel(
             model = uiState.importHealth,
@@ -183,52 +181,77 @@ fun FinanceScreen(
 
         SearchField(
             value = query,
-            onValueChange = { query = it },
+            onValueChange = { newQuery ->
+                query = newQuery
+                viewModel.onEvent(FinanceUiEvent.UpdateSearchQuery(newQuery))
+            },
             placeholder = "Search merchant or category",
         )
 
-        if (filteredTransactions.isEmpty()) {
+        if (lazyItems.itemCount == 0 && lazyItems.loadState.refresh !is LoadState.Loading) {
             EmptyState(
                 title = "No matching transactions",
                 description = "Try another filter or import MPESA messages.",
             )
         } else {
-            // ── Transactions section header (outside the card) ───────────────
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "Transactions",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                if (dayLabel.isNotBlank()) {
-                    Text(
-                        text = dayLabel,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
-            }
-
-            // ── Scrollable transactions box: shows 4 rows at a time ──────────
-            AppCard(elevated = false) {
-                LazyColumn(
-                    state = txListState,
-                    modifier = Modifier.height(300.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                    contentPadding = PaddingValues(top = 6.dp, bottom = 4.dp),
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                // ── Transactions section header (sits tight above the card) ──
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    items(filteredTransactions, key = { it.id }) { transaction ->
-                        FinanceTransactionRow(
-                            transaction = transaction,
-                            onRecategorize = {
-                                viewModel.onEvent(FinanceUiEvent.ShowCategoryPicker(transaction))
-                            },
-                            onDelete = { deleteTarget = transaction },
+                    Text(
+                        text = "Transactions",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    if (dayLabel.isNotBlank()) {
+                        Text(
+                            text = dayLabel,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
                         )
+                    }
+                }
+
+                // ── Scrollable transactions box: loads pages as user scrolls ──
+                AppCard(elevated = false) {
+                    LazyColumn(
+                        state = txListState,
+                        modifier = Modifier.height(300.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                        contentPadding = PaddingValues(top = 6.dp, bottom = 4.dp),
+                    ) {
+                        items(
+                            count = lazyItems.itemCount,
+                            key = lazyItems.itemKey { it.id },
+                        ) { index ->
+                            val transaction = lazyItems[index]
+                            if (transaction != null) {
+                                FinanceTransactionRow(
+                                    transaction = transaction,
+                                    onRecategorize = {
+                                        viewModel.onEvent(FinanceUiEvent.ShowCategoryPicker(transaction))
+                                    },
+                                    onDelete = { deleteTarget = transaction },
+                                )
+                            }
+                        }
+                        // Loading indicator at the bottom while fetching the next page
+                        if (lazyItems.loadState.append is LoadState.Loading) {
+                            item {
+                                androidx.compose.foundation.layout.Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        strokeWidth = 2.dp,
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -403,4 +426,63 @@ private fun FinanceTransactionRow(
             )
         }
     }
+}
+
+@Composable
+private fun FulizaSummaryCard(
+    outstanding: Double,
+    openCount: Int,
+) {
+    AppCard(elevated = true) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column {
+                    Text(
+                        text = "Fuliza Outstanding",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = "$openCount open loan${if (openCount != 1) "s" else ""}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Text(
+                    text = DateUtils.formatCurrency(outstanding),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = com.personal.lifeOS.ui.theme.Warning,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                )
+            }
+            Text(
+                text = "Pay to avoid daily interest charges",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SpendingVelocityBanner(monthSpend: Double, monthBudget: Double) {
+    if (monthBudget <= 0.0) return
+    val dayOfMonth = java.time.LocalDate.now().dayOfMonth
+    if (dayOfMonth < 3) return // too early in month to predict reliably
+    val dailyRate = monthSpend / dayOfMonth
+    val daysInMonth = java.time.LocalDate.now().lengthOfMonth()
+    val projected = dailyRate * daysInMonth
+    val overshoot = projected - monthBudget
+    if (overshoot <= 0.0) return // on track, no noise
+    InlineBanner(
+        message = "At this pace: ${DateUtils.formatCurrency(projected)} projected — " +
+            "${DateUtils.formatCurrency(overshoot)} over budget",
+        tone = InlineBannerTone.WARNING,
+    )
 }

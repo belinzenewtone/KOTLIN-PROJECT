@@ -5,6 +5,7 @@ data class DashboardData(
     val todaySpending: Double = 0.0,
     val weekSpending: Double = 0.0,
     val monthSpending: Double = 0.0,
+    val monthIncome: Double = 0.0,
     val upcomingEvents: List<UpcomingEvent> = emptyList(),
     val pendingTaskCount: Int = 0,
     val completedTodayCount: Int = 0,

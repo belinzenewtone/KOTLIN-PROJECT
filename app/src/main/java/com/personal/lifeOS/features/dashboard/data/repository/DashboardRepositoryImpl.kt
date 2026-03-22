@@ -1,6 +1,7 @@
 package com.personal.lifeOS.features.dashboard.data.repository
 
 import com.personal.lifeOS.core.database.dao.EventDao
+import com.personal.lifeOS.core.database.dao.IncomeDao
 import com.personal.lifeOS.core.database.dao.TaskDao
 import com.personal.lifeOS.core.database.dao.TransactionDao
 import com.personal.lifeOS.core.database.entity.EventEntity
@@ -34,6 +35,7 @@ class DashboardRepositoryImpl
         private val transactionDao: TransactionDao,
         private val eventDao: EventDao,
         private val taskDao: TaskDao,
+        private val incomeDao: IncomeDao,
         private val authSessionStore: AuthSessionStore,
         private val appSettingsStore: AppSettingsStore,
         private val insightRepository: InsightRepository,
@@ -53,6 +55,7 @@ class DashboardRepositoryImpl
             val completedTodayFlow = taskDao.getCompletedCountBetween(windows.todayStart, windows.todayEnd, userId)
             val recentTxFlow = transactionDao.getTransactionsBetween(windows.weekStart, windows.todayEnd, userId)
             val insightsFlow = insightRepository.observeCards()
+            val monthIncomeFlow = incomeDao.getTotalIncomeBetween(userId, windows.monthStart, windows.monthEnd)
 
             return combine(
                 todaySpendingFlow,
@@ -101,6 +104,8 @@ class DashboardRepositoryImpl
                     weeklySpendingData = withTransactions.weeklySpending,
                     insights = mapDashboardInsights(insights),
                 )
+            }.combine(monthIncomeFlow) { data, monthIncome ->
+                data.copy(monthIncome = monthIncome)
             }
         }
 

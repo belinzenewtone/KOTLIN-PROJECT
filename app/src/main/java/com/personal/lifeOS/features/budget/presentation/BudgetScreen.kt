@@ -8,8 +8,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.personal.lifeOS.core.ui.designsystem.InlineBanner
-import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
 import com.personal.lifeOS.core.ui.designsystem.LoadingState
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
 import com.personal.lifeOS.core.ui.designsystem.TopBanner
@@ -21,23 +19,19 @@ fun BudgetScreen(viewModel: BudgetViewModel = hiltViewModel()) {
 
     PageScaffold(
         title = "Budgets",
-        subtitle = "${state.budgets.size} categories tracked",
+        subtitle = "${state.budgets.size} ${if (state.budgets.size == 1) "category" else "categories"} tracked",
         topBanner = {
             state.error?.let {
-                TopBanner(
-                    message = it,
-                    tone = TopBannerTone.ERROR,
-                )
+                TopBanner(message = it, tone = TopBannerTone.ERROR)
             }
         },
         actions = {
             androidx.compose.material3.TextButton(onClick = viewModel::showAddDialog) {
-                androidx.compose.material3.Text("Add")
+                androidx.compose.material3.Text("+ Add")
             }
         },
         contentPadding = PaddingValues(bottom = 140.dp),
     ) {
-
         if (state.isLoading) {
             LoadingState(label = "Loading budgets...")
             return@PageScaffold
@@ -46,13 +40,16 @@ fun BudgetScreen(viewModel: BudgetViewModel = hiltViewModel()) {
         if (state.budgets.isEmpty()) {
             BudgetEmptyStateCard()
         } else {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                // Overall monthly summary card at top
+                BudgetMonthSummaryCard(budgets = state.budgets)
+
+                // Per-category budget cards
                 state.budgets.forEach { progress ->
                     BudgetCard(
                         progress = progress,
                         onDelete = { viewModel.deleteBudget(progress.budget.id) },
+                        onEdit = { viewModel.editBudget(progress) },
                     )
                 }
             }

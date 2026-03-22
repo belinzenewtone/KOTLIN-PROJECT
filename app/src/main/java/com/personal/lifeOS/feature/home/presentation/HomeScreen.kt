@@ -122,6 +122,11 @@ private fun HomeSummaryStrip(uiState: HomeUiState) {
             amount = uiState.monthSpending,
             modifier = Modifier.width(180.dp),
         )
+        FinanceSummaryCard(
+            title = "Net · Month",
+            amount = uiState.monthNet,
+            modifier = Modifier.width(180.dp),
+        )
     }
 }
 

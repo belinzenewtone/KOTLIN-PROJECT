@@ -1,8 +1,8 @@
 {
-    "version_code":  10,
-    "version_name":  "1.1.0",
-    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.1.0/app-release-v1.1.0.apk",
-    "checksum_sha256":  "cf3a5efcdc25bf47ceab27a4f35117b2aba94ade36a2e58b5795b2561fe0aaa5",
+    "version_code":  11,
+    "version_name":  "1.2.0",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.0/app-release-v1.2.0.apk",
+    "checksum_sha256":  "7afd3ec9ddf301fa2e521a4f1f22f185f9cd6e48e59f5d58612e4112cd52a721",
     "required":  false,
-    "release_notes":  "Major update: smarter category inference for M-Pesa transactions, Fuliza lifecycle tracking, periodic SMS recovery sync, finance and profile improvements, assistant persistence updates, and release pipeline hardening."
+    "release_notes":  "Major app update: new finance analytics and paging, paybill registry learning, import audit cleanup, semantic M-Pesa deduping, Room database upgrades through v12, background work hardening, and UI improvements across budget, tasks, home, insights, and analytics."
 }

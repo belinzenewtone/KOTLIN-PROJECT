@@ -686,4 +686,36 @@ object DatabaseMigrations {
                 )
             }
         }
+
+    val MIGRATION_12_13: Migration =
+        object : Migration(12, 13) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("DROP VIEW IF EXISTS daily_spend")
+                database.execSQL("DROP VIEW IF EXISTS monthly_spend")
+                database.execSQL(
+                    """
+                    CREATE VIEW `daily_spend` AS
+                    SELECT user_id,
+                           strftime('%Y-%m-%d', date / 1000, 'unixepoch', 'localtime') AS spend_date,
+                           SUM(amount) AS total_amount,
+                           COUNT(*) AS tx_count
+                    FROM transactions
+                    WHERE deleted_at IS NULL
+                    GROUP BY user_id, strftime('%Y-%m-%d', date / 1000, 'unixepoch', 'localtime')
+                    """.trimIndent(),
+                )
+                database.execSQL(
+                    """
+                    CREATE VIEW `monthly_spend` AS
+                    SELECT user_id,
+                           strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime') AS spend_month,
+                           SUM(amount) AS total_amount,
+                           COUNT(*) AS tx_count
+                    FROM transactions
+                    WHERE deleted_at IS NULL
+                    GROUP BY user_id, strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime')
+                    """.trimIndent(),
+                )
+            }
+        }
 }

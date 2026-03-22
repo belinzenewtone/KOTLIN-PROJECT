@@ -718,4 +718,22 @@ object DatabaseMigrations {
                 )
             }
         }
+
+    // Fixes Room @DatabaseView whitespace mismatch (v13 views were created with trimIndent() SQL
+    // that did not match the literal string Room derives from the @DatabaseView annotation).
+    // Views are recreated here with single-line SQL that matches the annotation value exactly.
+    val MIGRATION_13_14: Migration =
+        object : Migration(13, 14) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("DROP VIEW IF EXISTS `daily_spend`")
+                database.execSQL("DROP VIEW IF EXISTS `monthly_spend`")
+                // SQL must be IDENTICAL (character-for-character) to the value in @DatabaseView.
+                database.execSQL(
+                    "CREATE VIEW `daily_spend` AS SELECT user_id, strftime('%Y-%m-%d', date / 1000, 'unixepoch', 'localtime') AS spend_date, SUM(amount) AS total_amount, COUNT(*) AS tx_count FROM transactions WHERE deleted_at IS NULL GROUP BY user_id, strftime('%Y-%m-%d', date / 1000, 'unixepoch', 'localtime')",
+                )
+                database.execSQL(
+                    "CREATE VIEW `monthly_spend` AS SELECT user_id, strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime') AS spend_month, SUM(amount) AS total_amount, COUNT(*) AS tx_count FROM transactions WHERE deleted_at IS NULL GROUP BY user_id, strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime')",
+                )
+            }
+        }
 }

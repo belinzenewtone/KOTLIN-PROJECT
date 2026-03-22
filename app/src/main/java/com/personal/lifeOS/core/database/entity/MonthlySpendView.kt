@@ -11,15 +11,9 @@ import androidx.room.DatabaseView
  */
 @DatabaseView(
     viewName = "monthly_spend",
-    value = """
-        SELECT user_id,
-               strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime') AS spend_month,
-               SUM(amount) AS total_amount,
-               COUNT(*) AS tx_count
-        FROM transactions
-        WHERE deleted_at IS NULL
-        GROUP BY user_id, strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime')
-    """,
+    // Single-line SQL avoids Room's literal-string whitespace comparison failures.
+    // Any change here MUST be reflected in MIGRATION_13_14 with a matching single-line execSQL.
+    value = "SELECT user_id, strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime') AS spend_month, SUM(amount) AS total_amount, COUNT(*) AS tx_count FROM transactions WHERE deleted_at IS NULL GROUP BY user_id, strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime')",
 )
 data class MonthlySpendView(
     @ColumnInfo(name = "user_id") val userId: String,

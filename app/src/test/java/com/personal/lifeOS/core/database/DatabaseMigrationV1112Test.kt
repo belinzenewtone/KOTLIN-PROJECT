@@ -1,0 +1,123 @@
+package com.personal.lifeOS.core.database
+
+import android.app.Application
+import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.sqlite.db.SupportSQLiteOpenHelper
+import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
+import androidx.test.core.app.ApplicationProvider
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34], application = Application::class)
+class DatabaseMigrationV1112Test {
+    @Test
+    fun `migration 11 to 12 creates Room-compatible spending views`() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val dbName = "migration-v1112-${System.currentTimeMillis()}.db"
+        val dbFile = context.getDatabasePath(dbName)
+        if (dbFile.exists()) {
+            dbFile.delete()
+        }
+
+        val callback =
+            object : SupportSQLiteOpenHelper.Callback(11) {
+                override fun onCreate(db: SupportSQLiteDatabase) = Unit
+
+                override fun onUpgrade(
+                    db: SupportSQLiteDatabase,
+                    oldVersion: Int,
+                    newVersion: Int,
+                ) = Unit
+            }
+
+        val config =
+            SupportSQLiteOpenHelper.Configuration
+                .builder(context)
+                .name(dbName)
+                .callback(callback)
+                .build()
+        val helper = FrameworkSQLiteOpenHelperFactory().create(config)
+        val db = helper.writableDatabase
+
+        createVersion11TransactionsSchema(db)
+
+        DatabaseMigrations.MIGRATION_11_12.migrate(db)
+
+        val dailyViewSql = viewSql(db, "daily_spend")
+        val monthlyViewSql = viewSql(db, "monthly_spend")
+
+        assertNotNull(dailyViewSql)
+        assertNotNull(monthlyViewSql)
+        assertEquals(
+            "CREATE VIEW `daily_spend` AS SELECT user_id,\n" +
+                "       strftime('%Y-%m-%d', date / 1000, 'unixepoch', 'localtime') AS spend_date,\n" +
+                "       SUM(amount) AS total_amount,\n" +
+                "       COUNT(*) AS tx_count\n" +
+                "FROM transactions\n" +
+                "WHERE deleted_at IS NULL\n" +
+                "GROUP BY user_id, strftime('%Y-%m-%d', date / 1000, 'unixepoch', 'localtime')",
+            dailyViewSql,
+        )
+        assertEquals(
+            "CREATE VIEW `monthly_spend` AS SELECT user_id,\n" +
+                "       strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime') AS spend_month,\n" +
+                "       SUM(amount) AS total_amount,\n" +
+                "       COUNT(*) AS tx_count\n" +
+                "FROM transactions\n" +
+                "WHERE deleted_at IS NULL\n" +
+                "GROUP BY user_id, strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime')",
+            monthlyViewSql,
+        )
+
+        db.close()
+        helper.close()
+        dbFile.delete()
+    }
+
+    private fun createVersion11TransactionsSchema(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS transactions (
+                id INTEGER NOT NULL,
+                amount REAL NOT NULL,
+                merchant TEXT NOT NULL,
+                category TEXT NOT NULL,
+                date INTEGER NOT NULL,
+                source TEXT NOT NULL,
+                transaction_type TEXT NOT NULL,
+                mpesa_code TEXT,
+                source_hash TEXT,
+                raw_sms TEXT,
+                created_at INTEGER NOT NULL,
+                updated_at INTEGER NOT NULL,
+                sync_state TEXT NOT NULL,
+                record_source TEXT NOT NULL,
+                deleted_at INTEGER,
+                revision INTEGER NOT NULL,
+                user_id TEXT NOT NULL,
+                inferred_category TEXT,
+                inference_source TEXT,
+                semantic_hash TEXT,
+                PRIMARY KEY(user_id, id)
+            )
+            """.trimIndent(),
+        )
+    }
+
+    private fun viewSql(
+        db: SupportSQLiteDatabase,
+        viewName: String,
+    ): String? {
+        db.query(
+            "SELECT sql FROM sqlite_master WHERE type='view' AND name=?",
+            arrayOf(viewName),
+        ).use { cursor ->
+            return if (cursor.moveToFirst()) cursor.getString(0) else null
+        }
+    }
+}

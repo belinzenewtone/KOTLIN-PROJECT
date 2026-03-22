@@ -662,7 +662,7 @@ object DatabaseMigrations {
                 database.execSQL("DROP VIEW IF EXISTS monthly_spend")
                 database.execSQL(
                     """
-                    CREATE VIEW IF NOT EXISTS daily_spend AS
+                    CREATE VIEW IF NOT EXISTS `daily_spend` AS
                     SELECT user_id,
                            strftime('%Y-%m-%d', date / 1000, 'unixepoch', 'localtime') AS spend_date,
                            SUM(amount) AS total_amount,
@@ -674,7 +674,7 @@ object DatabaseMigrations {
                 )
                 database.execSQL(
                     """
-                    CREATE VIEW IF NOT EXISTS monthly_spend AS
+                    CREATE VIEW IF NOT EXISTS `monthly_spend` AS
                     SELECT user_id,
                            strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime') AS spend_month,
                            SUM(amount) AS total_amount,

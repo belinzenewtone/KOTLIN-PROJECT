@@ -1,8 +1,8 @@
 {
-    "version_code":  11,
-    "version_name":  "1.2.0",
-    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.0/app-release-v1.2.0.apk",
-    "checksum_sha256":  "7afd3ec9ddf301fa2e521a4f1f22f185f9cd6e48e59f5d58612e4112cd52a721",
+    "version_code":  12,
+    "version_name":  "1.2.1",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.1/app-release-v1.2.1.apk",
+    "checksum_sha256":  "5c86ee2482d50ad68d3de1079a2025ff6c361e70dfb3411230ad4ef1da047f71",
     "required":  false,
-    "release_notes":  "Major app update: new finance analytics and paging, paybill registry learning, import audit cleanup, semantic M-Pesa deduping, Room database upgrades through v12, background work hardening, and UI improvements across budget, tasks, home, insights, and analytics."
+    "release_notes":  "Hotfix: fixes Room migration validation for daily_spend and monthly_spend views so upgrades into database v12 no longer crash on startup."
 }

@@ -8,5 +8,6 @@ object AppSpacing {
     val Section = 20.dp
     val BottomSafe = 108.dp
     val BottomSafeWithFab = 144.dp
+    val BottomSafeWithFloatingNav = 220.dp
     val FabBottomOffset = 104.dp
 }

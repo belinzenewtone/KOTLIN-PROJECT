@@ -2,6 +2,7 @@ package com.personal.lifeOS.features.search.presentation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
@@ -26,6 +27,7 @@ import com.personal.lifeOS.core.ui.designsystem.LoadingState
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
 import com.personal.lifeOS.core.ui.designsystem.SearchField
 import com.personal.lifeOS.core.ui.designsystem.SegmentedControl
+import com.personal.lifeOS.ui.theme.AppSpacing
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.search.domain.model.SearchResult
 import com.personal.lifeOS.features.search.domain.model.SearchSource
@@ -49,6 +51,7 @@ fun SearchScreen(
     PageScaffold(
         title = "Search",
         subtitle = "Cross-domain lookup for tasks, finance, calendar, and recurring rules.",
+        contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),

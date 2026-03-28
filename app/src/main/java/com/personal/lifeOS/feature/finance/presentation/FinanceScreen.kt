@@ -1,9 +1,10 @@
 package com.personal.lifeOS.feature.finance.presentation
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,7 +14,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FileDownload
@@ -57,6 +57,7 @@ import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.feature.finance.domain.model.FinanceTransaction
 import com.personal.lifeOS.feature.finance.domain.model.FinanceTransactionFilter
 import com.personal.lifeOS.ui.theme.Warning
+import com.personal.lifeOS.ui.theme.AppSpacing
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -140,7 +141,7 @@ fun FinanceScreen(
                 )
             }
         },
-        contentPadding = PaddingValues(bottom = 140.dp),
+        contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
     ) {
         if (uiState.isLoading) {
             LoadingState(label = "Loading finance data...")
@@ -406,28 +407,27 @@ private fun FinanceImportBanner(
 }
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 private fun FinanceSummaryStrip(uiState: FinanceUiState) {
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         FinanceSummaryCard(
             title = "Today",
             amount = uiState.summary.todayTotal,
-            modifier = Modifier.width(180.dp),
+            modifier = Modifier.width(168.dp),
         )
         FinanceSummaryCard(
             title = "This Week",
             amount = uiState.summary.weekTotal,
-            modifier = Modifier.width(180.dp),
+            modifier = Modifier.width(168.dp),
         )
         FinanceSummaryCard(
             title = "This Month",
             amount = uiState.summary.monthTotal,
-            modifier = Modifier.width(180.dp),
+            modifier = Modifier.width(168.dp),
         )
     }
 }

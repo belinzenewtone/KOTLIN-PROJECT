@@ -1,13 +1,14 @@
 package com.personal.lifeOS.features.export.presentation
 
 import android.content.Intent
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -36,6 +37,7 @@ import com.personal.lifeOS.features.export.domain.model.ExportHistoryItem
 import com.personal.lifeOS.features.export.domain.model.ExportPreview
 import com.personal.lifeOS.features.export.domain.model.ExportResult
 import com.personal.lifeOS.platform.files.ExportShareHelper
+import com.personal.lifeOS.ui.theme.AppSpacing
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -48,6 +50,7 @@ fun ExportScreen(viewModel: ExportViewModel = hiltViewModel()) {
     PageScaffold(
         title = "Export Center",
         subtitle = "Create JSON, CSV, and shareable backups from the latest ledger state.",
+        contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
     ) {
         state.error?.let { message ->
             InlineBanner(
@@ -260,17 +263,16 @@ private fun ExportHistoryCard(history: List<ExportHistoryItem>) {
 }
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 private fun OptionRow(
     options: List<String>,
     selected: String,
     onSelect: (String) -> Unit,
 ) {
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         options.forEach { option ->
             OutlinedButton(onClick = { onSelect(option) }) {

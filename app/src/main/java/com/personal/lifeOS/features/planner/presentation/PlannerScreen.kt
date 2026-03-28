@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -25,6 +26,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
+import com.personal.lifeOS.ui.theme.AppSpacing
 
 /**
  * Finance Tools hub — replaces the old ScrollableTabRow god-screen.
@@ -41,6 +43,7 @@ fun PlannerScreen(
     PageScaffold(
         title = "Finance Tools",
         subtitle = "Manage budgets, income, and recurring payments",
+        contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
     ) {
         ToolCard(
             icon = Icons.Filled.AccountBalance,

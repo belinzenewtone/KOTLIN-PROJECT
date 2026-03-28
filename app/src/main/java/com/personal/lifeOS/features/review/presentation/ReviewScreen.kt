@@ -1,17 +1,21 @@
 package com.personal.lifeOS.features.review.presentation
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.personal.lifeOS.core.ui.designsystem.AppCard
@@ -19,6 +23,7 @@ import com.personal.lifeOS.core.ui.designsystem.InlineBanner
 import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
 import com.personal.lifeOS.core.ui.designsystem.LoadingState
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
+import com.personal.lifeOS.ui.theme.AppSpacing
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -29,6 +34,7 @@ fun ReviewScreen(viewModel: ReviewViewModel = hiltViewModel()) {
     PageScaffold(
         title = "Weekly Review",
         subtitle = state.weekLabel,
+        contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
     ) {
         if (state.isLoading) {
             LoadingState(label = "Building your review…")
@@ -188,18 +194,25 @@ private fun ReviewStatRow(label: String, value: String) {
             Modifier
                 .fillMaxWidth()
                 .padding(vertical = 2.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.Top,
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
             fontFamily = FontFamily.Monospace,
+            textAlign = TextAlign.End,
+            modifier =
+                Modifier
+                    .widthIn(min = 72.dp)
+                    .weight(0.7f, fill = false),
         )
     }
 }

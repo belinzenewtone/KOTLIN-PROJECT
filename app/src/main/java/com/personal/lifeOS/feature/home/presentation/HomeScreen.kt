@@ -1,12 +1,13 @@
 package com.personal.lifeOS.feature.home.presentation
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Person
@@ -33,6 +34,7 @@ import com.personal.lifeOS.core.ui.designsystem.TopBanner
 import com.personal.lifeOS.core.ui.designsystem.TopBannerTone
 import com.personal.lifeOS.features.dashboard.presentation.DashboardViewModel
 import com.personal.lifeOS.navigation.AppRoute
+import com.personal.lifeOS.ui.theme.AppSpacing
 
 @Composable
 fun HomeScreen(
@@ -46,6 +48,7 @@ fun HomeScreen(
     PageScaffold(
         title = "Today",
         subtitle = uiState.dateLabel,
+        contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
         topBanner = {
             uiState.errorMessage?.let {
                 TopBanner(
@@ -143,76 +146,89 @@ private fun HomeSyncCard(uiState: HomeUiState) {
 }
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 private fun HomeSummaryStrip(uiState: HomeUiState) {
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         FinanceSummaryCard(
             title = "Today",
             amount = uiState.todaySpending,
-            modifier = Modifier.width(180.dp),
+            modifier = Modifier.width(168.dp),
         )
         FinanceSummaryCard(
             title = "This Week",
             amount = uiState.weekSpending,
-            modifier = Modifier.width(180.dp),
+            modifier = Modifier.width(168.dp),
         )
         FinanceSummaryCard(
             title = "This Month",
             amount = uiState.monthSpending,
-            modifier = Modifier.width(180.dp),
+            modifier = Modifier.width(168.dp),
         )
         FinanceSummaryCard(
             title = "Net · Month",
             amount = uiState.monthNet,
-            modifier = Modifier.width(180.dp),
+            modifier = Modifier.width(168.dp),
         )
     }
 }
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 private fun HomeQuickActionsRow(
     uiState: HomeUiState,
     onOpenRoute: (String) -> Unit,
 ) {
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
+    val visibleActions =
+        if (uiState.weeklyRitual != null) {
+            uiState.quickActions.filterNot { it.label == "Review" }
+        } else {
+            uiState.quickActions
+        }
+
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        uiState.quickActions.forEach { action ->
+        visibleActions.forEach { action ->
             AppCard(
-                modifier = Modifier.width(172.dp),
+                modifier = Modifier.width(162.dp),
                 elevated = false,
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        text = action.label,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = action.label,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f),
+                        )
+                        TextButton(
+                            onClick = when (action.label) {
+                                "Tasks" -> ({ onOpenRoute(AppRoute.Tasks) })
+                                "Finance" -> ({ onOpenRoute(AppRoute.Finance) })
+                                "Calendar" -> ({ onOpenRoute(AppRoute.Calendar) })
+                                "Assistant" -> ({ onOpenRoute(AppRoute.Assistant) })
+                                else -> ({ onOpenRoute(AppRoute.Review) })
+                            },
+                        ) {
+                            Text("Open")
+                        }
+                    }
                     Text(
                         text = action.supportingText,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
                     )
-                    TextButton(
-                        onClick = when (action.label) {
-                            "Tasks" -> ({ onOpenRoute(AppRoute.Tasks) })
-                            "Finance" -> ({ onOpenRoute(AppRoute.Finance) })
-                            "Calendar" -> ({ onOpenRoute(AppRoute.Calendar) })
-                            "Assistant" -> ({ onOpenRoute(AppRoute.Assistant) })
-                            else -> ({ onOpenRoute(AppRoute.Review) })
-                        },
-                    ) {
-                        Text("Open")
-                    }
                 }
             }
         }
@@ -226,19 +242,27 @@ private fun HomeWeeklyRitualCard(
 ) {
     AppCard(elevated = true) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = ritual.title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = ritual.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f),
+                )
+                TextButton(onClick = onOpenReview) {
+                    Text(ritual.ctaLabel)
+                }
+            }
             Text(
                 text = ritual.summary,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
             )
-            Button(onClick = onOpenReview) {
-                Text(ritual.ctaLabel)
-            }
         }
     }
 }

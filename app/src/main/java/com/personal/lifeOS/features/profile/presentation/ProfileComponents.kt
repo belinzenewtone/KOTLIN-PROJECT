@@ -1,4 +1,4 @@
-@file:Suppress("MaxLineLength")
+@file:Suppress("MaxLineLength", "TooManyFunctions")
 
 package com.personal.lifeOS.features.profile.presentation
 
@@ -8,6 +8,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -85,8 +87,6 @@ internal fun ProfileIdentityCard(
                 profilePicPath = profile.profilePicUri,
                 avatarInitials = profile.avatarInitials,
                 onChangePhoto = onChangePhoto,
-                memberSince = profile.memberSince,
-                emailVerified = authState?.emailVerified,
             )
             Text(
                 text = profile.name.ifBlank { "Set up your profile" },
@@ -100,6 +100,10 @@ internal fun ProfileIdentityCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+            ProfileIdentityMeta(
+                memberSince = profile.memberSince,
+                emailVerified = authState?.emailVerified,
+            )
         }
     }
 }
@@ -108,146 +112,215 @@ internal fun ProfileIdentityCard(
 private fun ProfileAvatar(
     profilePicPath: String,
     avatarInitials: String,
-    memberSince: Long,
-    emailVerified: Boolean?,
     onChangePhoto: () -> Unit,
 ) {
     val hasPhoto = profilePicPath.isNotEmpty() && File(profilePicPath).exists()
     var showPhotoDialog by remember { mutableStateOf(false) }
 
-    // Full-screen photo preview dialog
     if (showPhotoDialog && hasPhoto) {
-        Dialog(
-            onDismissRequest = { showPhotoDialog = false },
-            properties = DialogProperties(usePlatformDefaultWidth = false),
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.85f))
-                    .clickable { showPhotoDialog = false },
-                contentAlignment = Alignment.Center,
-            ) {
-                Image(
-                    painter = rememberAsyncImagePainter(model = File(profilePicPath)),
-                    contentDescription = "Profile photo",
-                    modifier = Modifier
-                        .size(280.dp)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop,
-                )
-            }
-        }
+        ProfilePhotoPreviewDialog(
+            profilePicPath = profilePicPath,
+            onDismiss = { showPhotoDialog = false },
+        )
     }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Box(contentAlignment = Alignment.BottomEnd) {
-            Box(
-                modifier =
-                    Modifier
-                        .size(94.dp)
-                        .clip(CircleShape)
-                        .background(
-                            brush =
-                                if (hasPhoto) {
-                                    Brush.linearGradient(
-                                        colors = listOf(
-                                            MaterialTheme.colorScheme.surface,
-                                            MaterialTheme.colorScheme.surface,
-                                        ),
-                                    )
-                                } else {
-                                    Brush.linearGradient(
-                                        colors = listOf(
-                                            MaterialTheme.colorScheme.primary,
-                                            AppDesignTokens.colors.primaryContainer,
-                                        ),
-                                    )
-                                },
-                        )
-                        // Clicking avatar opens view-only dialog (only when there's a photo)
-                        .clickable(enabled = hasPhoto) { showPhotoDialog = true },
-                contentAlignment = Alignment.Center,
-            ) {
-                if (hasPhoto) {
-                    Image(
-                        painter = rememberAsyncImagePainter(model = File(profilePicPath)),
-                        contentDescription = "Profile photo",
-                        modifier = Modifier.size(94.dp),
-                        contentScale = ContentScale.Crop,
-                    )
-                } else {
-                    Text(
-                        text = avatarInitials,
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-            }
+        ProfileAvatarStack(
+            hasPhoto = hasPhoto,
+            profilePicPath = profilePicPath,
+            avatarInitials = avatarInitials,
+            onOpenPreview = { showPhotoDialog = true },
+            onChangePhoto = onChangePhoto,
+        )
+    }
+}
 
-            // Camera icon — this is the only way to change the photo
-            Box(
+@Composable
+private fun ProfilePhotoPreviewDialog(
+    profilePicPath: String,
+    onDismiss: () -> Unit,
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.85f))
+                    .clickable(onClick = onDismiss),
+            contentAlignment = Alignment.Center,
+        ) {
+            Image(
+                painter = rememberAsyncImagePainter(model = File(profilePicPath)),
+                contentDescription = "Profile photo",
                 modifier =
                     Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
-                        .clickable(onClick = onChangePhoto),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.CameraAlt,
-                    contentDescription = "Change photo",
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(16.dp),
-                )
-            }
+                        .size(280.dp)
+                        .clip(CircleShape),
+                contentScale = ContentScale.Crop,
+            )
         }
+    }
+}
 
-        // Member since label
-        if (memberSince > 0L) {
+@Composable
+private fun ProfileAvatarStack(
+    hasPhoto: Boolean,
+    profilePicPath: String,
+    avatarInitials: String,
+    onOpenPreview: () -> Unit,
+    onChangePhoto: () -> Unit,
+) {
+    Box(contentAlignment = Alignment.BottomEnd) {
+        ProfileAvatarImage(
+            hasPhoto = hasPhoto,
+            profilePicPath = profilePicPath,
+            avatarInitials = avatarInitials,
+            onOpenPreview = onOpenPreview,
+        )
+        ChangePhotoButton(onChangePhoto = onChangePhoto)
+    }
+}
+
+@Composable
+private fun ProfileAvatarImage(
+    hasPhoto: Boolean,
+    profilePicPath: String,
+    avatarInitials: String,
+    onOpenPreview: () -> Unit,
+) {
+    Box(
+        modifier =
+            Modifier
+                .size(94.dp)
+                .clip(CircleShape)
+                .background(
+                    brush =
+                        if (hasPhoto) {
+                            Brush.linearGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.surface,
+                                    MaterialTheme.colorScheme.surface,
+                                ),
+                            )
+                        } else {
+                            Brush.linearGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    AppDesignTokens.colors.primaryContainer,
+                                ),
+                            )
+                        },
+                )
+                .clickable(enabled = hasPhoto, onClick = onOpenPreview),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (hasPhoto) {
+            Image(
+                painter = rememberAsyncImagePainter(model = File(profilePicPath)),
+                contentDescription = "Profile photo",
+                modifier = Modifier.size(94.dp),
+                contentScale = ContentScale.Crop,
+            )
+        } else {
             Text(
-                text = "Member since ${DateUtils.formatDate(memberSince, "MMM dd, yyyy")}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = avatarInitials,
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onPrimary,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ChangePhotoButton(onChangePhoto: () -> Unit) {
+    Box(
+        modifier =
+            Modifier
+                .size(32.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary)
+                .clickable(onClick = onChangePhoto),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Filled.CameraAlt,
+            contentDescription = "Change photo",
+            tint = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.size(16.dp),
+        )
+    }
+}
+
+@Composable
+@OptIn(ExperimentalLayoutApi::class)
+private fun ProfileIdentityMeta(
+    memberSince: Long,
+    emailVerified: Boolean?,
+) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        emailVerified?.let { verified ->
+            ProfileIdentityPill(
+                icon = if (verified) Icons.Filled.Verified else Icons.Filled.MarkEmailUnread,
+                text = if (verified) "Verified" else "Pending verification",
+                tint = if (verified) AppDesignTokens.colors.success else AppDesignTokens.colors.warning,
+                container =
+                    if (verified) AppDesignTokens.colors.success.copy(alpha = 0.15f)
+                    else AppDesignTokens.colors.warning.copy(alpha = 0.15f),
             )
         }
 
-        // Email verification pill — lives inside the avatar section
-        if (emailVerified != null) {
-            val verified = emailVerified
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(50.dp))
-                    .background(
-                        if (verified) AppDesignTokens.colors.success.copy(alpha = 0.15f)
-                        else AppDesignTokens.colors.warning.copy(alpha = 0.15f),
-                    )
-                    .padding(horizontal = 12.dp, vertical = 4.dp),
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Icon(
-                        imageVector = if (verified) Icons.Filled.Verified else Icons.Filled.MarkEmailUnread,
-                        contentDescription = null,
-                        tint = if (verified) AppDesignTokens.colors.success else AppDesignTokens.colors.warning,
-                        modifier = Modifier.size(12.dp),
-                    )
-                    Text(
-                        text = if (verified) "Verified" else "Pending Verification",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontSize = 11.sp,
-                        color = if (verified) AppDesignTokens.colors.success else AppDesignTokens.colors.warning,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-            }
+        if (memberSince > 0L) {
+            ProfileIdentityPill(
+                icon = Icons.Filled.Person,
+                text = "Active since ${DateUtils.formatDate(memberSince, "MMM dd, yyyy")}",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                container = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun ProfileIdentityPill(
+    icon: ImageVector,
+    text: String,
+    tint: Color,
+    container: Color,
+) {
+    Box(
+        modifier =
+            Modifier
+                .clip(RoundedCornerShape(50.dp))
+                .background(container)
+                .padding(horizontal = 12.dp, vertical = 6.dp),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = tint,
+                modifier = Modifier.size(12.dp),
+            )
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelSmall,
+                fontSize = 11.sp,
+                color = tint,
+                fontWeight = FontWeight.SemiBold,
+            )
         }
     }
 }

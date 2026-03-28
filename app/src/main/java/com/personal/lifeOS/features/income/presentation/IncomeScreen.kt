@@ -2,6 +2,7 @@ package com.personal.lifeOS.features.income.presentation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -13,6 +14,7 @@ import com.personal.lifeOS.core.ui.designsystem.InlineBanner
 import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
 import com.personal.lifeOS.core.ui.designsystem.LoadingState
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
+import com.personal.lifeOS.ui.theme.AppSpacing
 
 @Composable
 fun IncomeScreen(viewModel: IncomeViewModel = hiltViewModel()) {
@@ -21,6 +23,7 @@ fun IncomeScreen(viewModel: IncomeViewModel = hiltViewModel()) {
     PageScaffold(
         title = "Income",
         subtitle = "${state.records.size} entries tracked",
+        contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
         actions = {
             TextButton(onClick = viewModel::showAddDialog) {
                 Text("Add")

@@ -2,6 +2,7 @@ package com.personal.lifeOS.features.analytics.presentation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -15,8 +16,9 @@ import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
 import com.personal.lifeOS.core.ui.designsystem.LoadingState
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
 import com.personal.lifeOS.core.ui.designsystem.SegmentedControl
-import com.personal.lifeOS.features.analytics.domain.model.DailySpending
 import com.personal.lifeOS.features.analytics.domain.model.AnalyticsPeriod
+import com.personal.lifeOS.features.analytics.domain.model.DailySpending
+import com.personal.lifeOS.ui.theme.AppSpacing
 
 @Composable
 fun AnalyticsScreen(viewModel: AnalyticsViewModel = hiltViewModel()) {
@@ -28,6 +30,7 @@ fun AnalyticsScreen(viewModel: AnalyticsViewModel = hiltViewModel()) {
     PageScaffold(
         title = "Analytics",
         subtitle = "Productivity and finance trends in one place",
+        contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
     ) {
         state.error?.let {
             InlineBanner(

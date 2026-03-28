@@ -12,6 +12,7 @@ import com.personal.lifeOS.core.ui.designsystem.LoadingState
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
 import com.personal.lifeOS.core.ui.designsystem.TopBanner
 import com.personal.lifeOS.core.ui.designsystem.TopBannerTone
+import com.personal.lifeOS.ui.theme.AppSpacing
 
 @Composable
 fun BudgetScreen(viewModel: BudgetViewModel = hiltViewModel()) {
@@ -30,7 +31,7 @@ fun BudgetScreen(viewModel: BudgetViewModel = hiltViewModel()) {
                 androidx.compose.material3.Text("+ Add")
             }
         },
-        contentPadding = PaddingValues(bottom = 140.dp),
+        contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
     ) {
         if (state.isLoading) {
             LoadingState(label = "Loading budgets...")

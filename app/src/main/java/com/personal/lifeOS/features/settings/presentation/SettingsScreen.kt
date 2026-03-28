@@ -7,6 +7,7 @@ import androidx.core.content.pm.PackageInfoCompat
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
@@ -35,6 +36,7 @@ import com.personal.lifeOS.core.ui.designsystem.PageScaffold
 import com.personal.lifeOS.core.ui.designsystem.TopBanner
 import com.personal.lifeOS.core.ui.designsystem.TopBannerTone
 import com.personal.lifeOS.ui.theme.AppThemeMode
+import com.personal.lifeOS.ui.theme.AppSpacing
 import kotlinx.coroutines.flow.collectLatest
 import java.time.Instant
 import java.time.ZoneId
@@ -89,6 +91,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     PageScaffold(
         title = "Settings",
         subtitle = "Tailor your digital sanctuary to your specific needs.",
+        contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
         topBanner = {
             state.infoMessage?.let {
                 TopBanner(

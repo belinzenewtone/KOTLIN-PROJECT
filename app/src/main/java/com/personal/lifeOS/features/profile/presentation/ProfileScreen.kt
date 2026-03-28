@@ -54,7 +54,7 @@ fun ProfileScreen(
         PageScaffold(
             title = "Profile",
             subtitle = "Personal details, security, and sync controls.",
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = AppSpacing.BottomSafeWithFab),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 ProfileIdentityCard(

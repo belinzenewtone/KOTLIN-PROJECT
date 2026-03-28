@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -31,6 +32,7 @@ import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
 import com.personal.lifeOS.core.ui.designsystem.LoadingState
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
 import com.personal.lifeOS.features.insights.domain.model.InsightCard
+import com.personal.lifeOS.ui.theme.AppSpacing
 
 @Composable
 fun InsightsScreen(viewModel: InsightsViewModel = hiltViewModel()) {
@@ -39,6 +41,7 @@ fun InsightsScreen(viewModel: InsightsViewModel = hiltViewModel()) {
     PageScaffold(
         title = "Insights",
         subtitle = "Patterns across your tasks, spending, and habits",
+        contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
         actions = {
             IconButton(
                 onClick = viewModel::refresh,

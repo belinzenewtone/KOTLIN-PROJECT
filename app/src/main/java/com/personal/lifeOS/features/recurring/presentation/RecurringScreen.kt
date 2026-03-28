@@ -25,7 +25,10 @@ fun RecurringScreen(viewModel: RecurringViewModel = hiltViewModel()) {
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = AppSpacing.ScreenHorizontal)
-                .padding(top = AppSpacing.ScreenTop, bottom = AppSpacing.Section),
+                .padding(
+                    top = AppSpacing.ScreenTop,
+                    bottom = AppSpacing.BottomSafeWithFloatingNav,
+                ),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.Section),
     ) {
         RecurringHeader(onAdd = viewModel::showAddDialog)

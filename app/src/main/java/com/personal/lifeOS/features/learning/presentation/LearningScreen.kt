@@ -33,6 +33,7 @@ import com.personal.lifeOS.core.ui.designsystem.EmptyState
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
 import com.personal.lifeOS.features.learning.domain.model.LearningCategory
 import com.personal.lifeOS.features.learning.domain.model.LearningSession
+import com.personal.lifeOS.ui.theme.AppSpacing
 import com.personal.lifeOS.ui.theme.Success
 
 @Composable
@@ -49,7 +50,7 @@ fun LearningScreen(viewModel: LearningViewModel = hiltViewModel()) {
     PageScaffold(
         title = "Learn",
         subtitle = "$completedCount of ${state.sessions.size} sessions completed",
-        contentPadding = PaddingValues(bottom = 120.dp),
+        contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
     ) {
         // Category filter chips
         LazyRow(

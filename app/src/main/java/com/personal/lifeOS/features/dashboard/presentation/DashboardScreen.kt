@@ -2,6 +2,7 @@ package com.personal.lifeOS.features.dashboard.presentation
 
 import androidx.compose.runtime.Composable
 import com.personal.lifeOS.feature.home.presentation.HomeScreen
+import com.personal.lifeOS.navigation.AppRoute
 
 /**
  * Compatibility bridge retained during phased package migration.
@@ -9,23 +10,11 @@ import com.personal.lifeOS.feature.home.presentation.HomeScreen
  */
 @Composable
 fun DashboardScreen(
-    onOpenTasks: () -> Unit = {},
-    onOpenFinance: () -> Unit = {},
-    onOpenCalendar: () -> Unit = {},
-    onOpenAssistant: () -> Unit = {},
+    onOpenRoute: (String) -> Unit = {},
     onOpenProfile: () -> Unit = {},
-    onOpenInsights: () -> Unit = {},
-    onOpenReview: () -> Unit = {},
-    onOpenLearning: () -> Unit = {},
 ) {
     HomeScreen(
-        onOpenTasks = onOpenTasks,
-        onOpenFinance = onOpenFinance,
-        onOpenCalendar = onOpenCalendar,
-        onOpenAssistant = onOpenAssistant,
+        onOpenRoute = onOpenRoute,
         onOpenProfile = onOpenProfile,
-        onOpenInsights = onOpenInsights,
-        onOpenReview = onOpenReview,
-        onOpenLearning = onOpenLearning,
     )
 }

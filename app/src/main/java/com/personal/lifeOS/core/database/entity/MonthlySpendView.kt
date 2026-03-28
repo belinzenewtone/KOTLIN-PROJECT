@@ -1,3 +1,5 @@
+@file:Suppress("MaxLineLength")
+
 package com.personal.lifeOS.core.database.entity
 
 import androidx.room.ColumnInfo

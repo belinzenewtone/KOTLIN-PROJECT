@@ -360,6 +360,10 @@ private fun FinanceImportBanner(
     uiState: FinanceUiState,
     onReview: () -> Unit,
 ) {
+    val importSummary =
+        "${uiState.importHealth.pendingReviewCount} pending · " +
+            "${uiState.importHealth.duplicateCount} duplicates · " +
+            "${uiState.importHealth.parseFailureCount} issues"
     AppCard(elevated = true) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(
@@ -386,8 +390,7 @@ private fun FinanceImportBanner(
                 }
             }
             Text(
-                text =
-                    "${uiState.importHealth.pendingReviewCount} pending · ${uiState.importHealth.duplicateCount} duplicates · ${uiState.importHealth.parseFailureCount} issues",
+                text = importSummary,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

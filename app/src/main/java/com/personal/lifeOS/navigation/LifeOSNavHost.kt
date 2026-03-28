@@ -363,26 +363,14 @@ private fun LifeOSNavigationGraph(
         // ── Primary tab screens ──────────────────────────────────────────────
         composable(AppRoute.Home) {
             HomeScreen(
-                onOpenTasks = { navController.navigate(AppRoute.Tasks) },
-                onOpenFinance = { navController.navigate(AppRoute.Finance) },
-                onOpenCalendar = { navController.navigate(AppRoute.Calendar) },
-                onOpenAssistant = { navController.navigate(AppRoute.Assistant) },
+                onOpenRoute = navController::navigate,
                 onOpenProfile = { navController.navigate(AppRoute.Profile) },
-                onOpenInsights = { navController.navigate(AppRoute.Insights) },
-                onOpenReview = { navController.navigate(AppRoute.Review) },
-                onOpenLearning = { navController.navigate(AppRoute.Learning) },
             )
         }
         composable(AppRoute.LegacyDashboard) {
             HomeScreen(
-                onOpenTasks = { navController.navigate(AppRoute.Tasks) },
-                onOpenFinance = { navController.navigate(AppRoute.Finance) },
-                onOpenCalendar = { navController.navigate(AppRoute.Calendar) },
-                onOpenAssistant = { navController.navigate(AppRoute.Assistant) },
+                onOpenRoute = navController::navigate,
                 onOpenProfile = { navController.navigate(AppRoute.Profile) },
-                onOpenInsights = { navController.navigate(AppRoute.Insights) },
-                onOpenReview = { navController.navigate(AppRoute.Review) },
-                onOpenLearning = { navController.navigate(AppRoute.Learning) },
             )
         }
         composable(AppRoute.Tasks) { TasksScreen() }

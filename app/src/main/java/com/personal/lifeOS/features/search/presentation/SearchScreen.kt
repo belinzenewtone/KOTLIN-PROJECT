@@ -81,51 +81,69 @@ fun SearchScreen(
             onSelected = { selectedFilter = SearchResultFilter.entries[it] },
         )
 
-        if (state.isLoading) {
-            LoadingState(label = "Searching...")
-            return@PageScaffold
-        }
+        SearchResultsContent(
+            state = state,
+            filteredResults = filteredResults,
+            groupedResults = groupedResults,
+            onOpenResult = onOpenResult,
+        )
+    }
+}
 
-        if (state.results.isEmpty()) {
-            EmptyState(
-                title = "No search results yet",
-                description =
-                    "Run a search to scan transactions, tasks, events, budgets, " +
-                        "incomes, and recurring rules.",
-            )
-            return@PageScaffold
-        }
-
-        if (filteredResults.isEmpty()) {
+@Composable
+private fun SearchResultsContent(
+    state: SearchUiState,
+    filteredResults: List<SearchResult>,
+    groupedResults: Map<String, List<SearchResult>>,
+    onOpenResult: (SearchResult) -> Unit,
+) {
+    when {
+        state.isLoading -> LoadingState(label = "Searching...")
+        state.results.isEmpty() -> SearchEmptyState()
+        filteredResults.isEmpty() -> {
             EmptyState(
                 title = "No results for this filter",
                 description = "Try another filter or refine your query.",
             )
-            return@PageScaffold
         }
-
-        Text(
-            text = "${filteredResults.size} result${if (filteredResults.size == 1) "" else "s"}",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            if (state.groupedSearchEnabled) {
-                groupedResults.forEach { (group, results) ->
-                    SearchResultGroup(
-                        title = group,
-                        results = results,
-                        onOpenResult = onOpenResult,
-                    )
-                }
-            } else {
-                filteredResults.forEach { result ->
-                    SearchResultCard(result = result, onOpenResult = onOpenResult)
+        else -> {
+            SearchResultCount(count = filteredResults.size)
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (state.groupedSearchEnabled) {
+                    groupedResults.forEach { (group, results) ->
+                        SearchResultGroup(
+                            title = group,
+                            results = results,
+                            onOpenResult = onOpenResult,
+                        )
+                    }
+                } else {
+                    filteredResults.forEach { result ->
+                        SearchResultCard(result = result, onOpenResult = onOpenResult)
+                    }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun SearchEmptyState() {
+    EmptyState(
+        title = "No search results yet",
+        description =
+            "Run a search to scan transactions, tasks, events, budgets, " +
+                "incomes, and recurring rules.",
+    )
+}
+
+@Composable
+private fun SearchResultCount(count: Int) {
+    Text(
+        text = "$count result${if (count == 1) "" else "s"}",
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }
 
 @Composable

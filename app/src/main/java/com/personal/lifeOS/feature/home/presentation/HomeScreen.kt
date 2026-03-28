@@ -32,18 +32,13 @@ import com.personal.lifeOS.core.ui.designsystem.SyncStatusPill
 import com.personal.lifeOS.core.ui.designsystem.TopBanner
 import com.personal.lifeOS.core.ui.designsystem.TopBannerTone
 import com.personal.lifeOS.features.dashboard.presentation.DashboardViewModel
+import com.personal.lifeOS.navigation.AppRoute
 
 @Composable
 fun HomeScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
-    onOpenTasks: () -> Unit,
-    onOpenFinance: () -> Unit,
-    onOpenCalendar: () -> Unit,
-    onOpenAssistant: () -> Unit,
+    onOpenRoute: (String) -> Unit,
     onOpenProfile: () -> Unit,
-    onOpenInsights: () -> Unit,
-    onOpenReview: () -> Unit,
-    onOpenLearning: () -> Unit = {},
 ) {
     val dashboardState by viewModel.uiState.collectAsState()
     val uiState = dashboardState.toHomeUiState()
@@ -60,7 +55,7 @@ fun HomeScreen(
             }
         },
         actions = {
-            IconButton(onClick = onOpenInsights) {
+            IconButton(onClick = { onOpenRoute(AppRoute.Insights) }) {
                 Icon(
                     imageVector = Icons.Filled.BarChart,
                     contentDescription = "Open Insights",
@@ -90,16 +85,12 @@ fun HomeScreen(
         HomeSummaryStrip(uiState = uiState)
         HomeQuickActionsRow(
             uiState = uiState,
-            onOpenTasks = onOpenTasks,
-            onOpenFinance = onOpenFinance,
-            onOpenCalendar = onOpenCalendar,
-            onOpenAssistant = onOpenAssistant,
-            onOpenReview = onOpenReview,
+            onOpenRoute = onOpenRoute,
         )
         uiState.weeklyRitual?.let { ritual ->
             HomeWeeklyRitualCard(
                 ritual = ritual,
-                onOpenReview = onOpenReview,
+                onOpenReview = { onOpenRoute(AppRoute.Review) },
             )
         }
         uiState.updateNudge?.let { update ->
@@ -108,10 +99,10 @@ fun HomeScreen(
                 onOpenProfile = onOpenProfile,
             )
         }
-        HomeFocusCard(uiState = uiState, onOpenTasks = onOpenTasks)
-        HomeInsightsTeaser(uiState = uiState, onOpenInsights = onOpenInsights)
-        HomeCalendarCard(uiState = uiState, onOpenCalendar = onOpenCalendar)
-        HomeAssistantCard(uiState = uiState, onOpenAssistant = onOpenAssistant)
+        HomeFocusCard(uiState = uiState, onOpenTasks = { onOpenRoute(AppRoute.Tasks) })
+        HomeInsightsTeaser(uiState = uiState, onOpenInsights = { onOpenRoute(AppRoute.Insights) })
+        HomeCalendarCard(uiState = uiState, onOpenCalendar = { onOpenRoute(AppRoute.Calendar) })
+        HomeAssistantCard(uiState = uiState, onOpenAssistant = { onOpenRoute(AppRoute.Assistant) })
     }
 }
 
@@ -186,11 +177,7 @@ private fun HomeSummaryStrip(uiState: HomeUiState) {
 @Composable
 private fun HomeQuickActionsRow(
     uiState: HomeUiState,
-    onOpenTasks: () -> Unit,
-    onOpenFinance: () -> Unit,
-    onOpenCalendar: () -> Unit,
-    onOpenAssistant: () -> Unit,
-    onOpenReview: () -> Unit,
+    onOpenRoute: (String) -> Unit,
 ) {
     Row(
         modifier =
@@ -217,11 +204,11 @@ private fun HomeQuickActionsRow(
                     )
                     TextButton(
                         onClick = when (action.label) {
-                            "Tasks" -> onOpenTasks
-                            "Finance" -> onOpenFinance
-                            "Calendar" -> onOpenCalendar
-                            "Assistant" -> onOpenAssistant
-                            else -> onOpenReview
+                            "Tasks" -> ({ onOpenRoute(AppRoute.Tasks) })
+                            "Finance" -> ({ onOpenRoute(AppRoute.Finance) })
+                            "Calendar" -> ({ onOpenRoute(AppRoute.Calendar) })
+                            "Assistant" -> ({ onOpenRoute(AppRoute.Assistant) })
+                            else -> ({ onOpenRoute(AppRoute.Review) })
                         },
                     ) {
                         Text("Open")

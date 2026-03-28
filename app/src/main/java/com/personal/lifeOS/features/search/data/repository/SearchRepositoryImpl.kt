@@ -40,84 +40,12 @@ class SearchRepositoryImpl
 
             val results =
                 buildList {
-                    addAll(
-                        transactionDao.search(userId, likeQuery, limitPerSource).map { tx ->
-                            SearchResult(
-                                id = "tx-${tx.id}",
-                                source = SearchSource.TRANSACTION,
-                                title = tx.merchant,
-                                subtitle = "${tx.category} • ${DateUtils.formatCurrency(tx.amount)}",
-                                timestamp = tx.date,
-                                relevanceScore = scoreResult(trimmedQuery, tx.merchant, tx.category),
-                                navigationTarget = AppRoute.Finance,
-                            )
-                        },
-                    )
-                    addAll(
-                        taskDao.search(userId, likeQuery, limitPerSource).map { task ->
-                            SearchResult(
-                                id = "task-${task.id}",
-                                source = SearchSource.TASK,
-                                title = task.title,
-                                subtitle = task.description.ifBlank { task.status },
-                                timestamp = task.createdAt,
-                                relevanceScore = scoreResult(trimmedQuery, task.title, task.description, task.status),
-                                navigationTarget = AppRoute.Tasks,
-                            )
-                        },
-                    )
-                    addAll(
-                        eventDao.search(userId, likeQuery, limitPerSource).map { event ->
-                            SearchResult(
-                                id = "event-${event.id}",
-                                source = SearchSource.EVENT,
-                                title = event.title,
-                                subtitle = event.description.ifBlank { event.type },
-                                timestamp = event.date,
-                                relevanceScore = scoreResult(trimmedQuery, event.title, event.description, event.type),
-                                navigationTarget = AppRoute.Calendar,
-                            )
-                        },
-                    )
-                    addAll(
-                        budgetDao.search(userId, likeQuery, limitPerSource).map { budget ->
-                            SearchResult(
-                                id = "budget-${budget.id}",
-                                source = SearchSource.BUDGET,
-                                title = budget.category,
-                                subtitle = "Limit ${DateUtils.formatCurrency(budget.limitAmount)}",
-                                timestamp = budget.createdAt,
-                                relevanceScore = scoreResult(trimmedQuery, budget.category),
-                                navigationTarget = AppRoute.Budget,
-                            )
-                        },
-                    )
-                    addAll(
-                        incomeDao.search(userId, likeQuery, limitPerSource).map { income ->
-                            SearchResult(
-                                id = "income-${income.id}",
-                                source = SearchSource.INCOME,
-                                title = income.source,
-                                subtitle = DateUtils.formatCurrency(income.amount),
-                                timestamp = income.date,
-                                relevanceScore = scoreResult(trimmedQuery, income.source),
-                                navigationTarget = AppRoute.Income,
-                            )
-                        },
-                    )
-                    addAll(
-                        recurringRuleDao.search(userId, likeQuery, limitPerSource).map { rule ->
-                            SearchResult(
-                                id = "rule-${rule.id}",
-                                source = SearchSource.RECURRING_RULE,
-                                title = rule.title,
-                                subtitle = "${rule.type} • ${rule.cadence}",
-                                timestamp = rule.nextRunAt,
-                                relevanceScore = scoreResult(trimmedQuery, rule.title, rule.type, rule.cadence),
-                                navigationTarget = AppRoute.Recurring,
-                            )
-                        },
-                    )
+                    addAll(searchTransactions(userId, likeQuery, limitPerSource, trimmedQuery))
+                    addAll(searchTasks(userId, likeQuery, limitPerSource, trimmedQuery))
+                    addAll(searchEvents(userId, likeQuery, limitPerSource, trimmedQuery))
+                    addAll(searchBudgets(userId, likeQuery, limitPerSource, trimmedQuery))
+                    addAll(searchIncomes(userId, likeQuery, limitPerSource, trimmedQuery))
+                    addAll(searchRecurringRules(userId, likeQuery, limitPerSource, trimmedQuery))
                 }
 
             return results.sortedWith(
@@ -152,4 +80,112 @@ class SearchRepositoryImpl
 
             return 0
         }
+
+        private suspend fun searchTransactions(
+            userId: String,
+            likeQuery: String,
+            limitPerSource: Int,
+            trimmedQuery: String,
+        ): List<SearchResult> =
+            transactionDao.search(userId, likeQuery, limitPerSource).map { tx ->
+                SearchResult(
+                    id = "tx-${tx.id}",
+                    source = SearchSource.TRANSACTION,
+                    title = tx.merchant,
+                    subtitle = "${tx.category} • ${DateUtils.formatCurrency(tx.amount)}",
+                    timestamp = tx.date,
+                    relevanceScore = scoreResult(trimmedQuery, tx.merchant, tx.category),
+                    navigationTarget = AppRoute.Finance,
+                )
+            }
+
+        private suspend fun searchTasks(
+            userId: String,
+            likeQuery: String,
+            limitPerSource: Int,
+            trimmedQuery: String,
+        ): List<SearchResult> =
+            taskDao.search(userId, likeQuery, limitPerSource).map { task ->
+                SearchResult(
+                    id = "task-${task.id}",
+                    source = SearchSource.TASK,
+                    title = task.title,
+                    subtitle = task.description.ifBlank { task.status },
+                    timestamp = task.createdAt,
+                    relevanceScore = scoreResult(trimmedQuery, task.title, task.description, task.status),
+                    navigationTarget = AppRoute.Tasks,
+                )
+            }
+
+        private suspend fun searchEvents(
+            userId: String,
+            likeQuery: String,
+            limitPerSource: Int,
+            trimmedQuery: String,
+        ): List<SearchResult> =
+            eventDao.search(userId, likeQuery, limitPerSource).map { event ->
+                SearchResult(
+                    id = "event-${event.id}",
+                    source = SearchSource.EVENT,
+                    title = event.title,
+                    subtitle = event.description.ifBlank { event.type },
+                    timestamp = event.date,
+                    relevanceScore = scoreResult(trimmedQuery, event.title, event.description, event.type),
+                    navigationTarget = AppRoute.Calendar,
+                )
+            }
+
+        private suspend fun searchBudgets(
+            userId: String,
+            likeQuery: String,
+            limitPerSource: Int,
+            trimmedQuery: String,
+        ): List<SearchResult> =
+            budgetDao.search(userId, likeQuery, limitPerSource).map { budget ->
+                SearchResult(
+                    id = "budget-${budget.id}",
+                    source = SearchSource.BUDGET,
+                    title = budget.category,
+                    subtitle = "Limit ${DateUtils.formatCurrency(budget.limitAmount)}",
+                    timestamp = budget.createdAt,
+                    relevanceScore = scoreResult(trimmedQuery, budget.category),
+                    navigationTarget = AppRoute.Budget,
+                )
+            }
+
+        private suspend fun searchIncomes(
+            userId: String,
+            likeQuery: String,
+            limitPerSource: Int,
+            trimmedQuery: String,
+        ): List<SearchResult> =
+            incomeDao.search(userId, likeQuery, limitPerSource).map { income ->
+                SearchResult(
+                    id = "income-${income.id}",
+                    source = SearchSource.INCOME,
+                    title = income.source,
+                    subtitle = DateUtils.formatCurrency(income.amount),
+                    timestamp = income.date,
+                    relevanceScore = scoreResult(trimmedQuery, income.source),
+                    navigationTarget = AppRoute.Income,
+                )
+            }
+
+        private suspend fun searchRecurringRules(
+            userId: String,
+            likeQuery: String,
+            limitPerSource: Int,
+            trimmedQuery: String,
+        ): List<SearchResult> =
+            recurringRuleDao.search(userId, likeQuery, limitPerSource).map { rule ->
+                SearchResult(
+                    id = "rule-${rule.id}",
+                    source = SearchSource.RECURRING_RULE,
+                    title = rule.title,
+                    subtitle = "${rule.type} • ${rule.cadence}",
+                    timestamp = rule.nextRunAt,
+                    relevanceScore = scoreResult(trimmedQuery, rule.title, rule.type, rule.cadence),
+                    navigationTarget = AppRoute.Recurring,
+                )
+            }
     }

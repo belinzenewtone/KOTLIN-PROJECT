@@ -101,7 +101,12 @@ class ReviewViewModel
                     .groupBy { tx -> tx.category }
                     .maxByOrNull { (_, txs) -> txs.sumOf { tx -> tx.amount } }
                     ?.key
-            val averageDailySpend = if (data.weeklySpendingData.isEmpty()) 0.0 else data.weeklySpendingData.sumOf { it.amount } / data.weeklySpendingData.size
+            val averageDailySpend =
+                if (data.weeklySpendingData.isEmpty()) {
+                    0.0
+                } else {
+                    data.weeklySpendingData.sumOf { it.amount } / data.weeklySpendingData.size
+                }
             val delta = data.weekSpending - averageDailySpend * 5
             val posture =
                 when {

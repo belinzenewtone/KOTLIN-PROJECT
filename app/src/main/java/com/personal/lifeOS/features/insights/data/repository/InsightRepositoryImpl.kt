@@ -14,7 +14,6 @@ import com.personal.lifeOS.features.insights.domain.model.InsightTransactionSnap
 import com.personal.lifeOS.features.insights.domain.repository.InsightRepository
 import com.personal.lifeOS.features.insights.domain.service.DeterministicInsightEngine
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.time.Duration
 import javax.inject.Inject
@@ -32,10 +31,7 @@ class InsightRepositoryImpl
         private val deterministicInsightEngine: DeterministicInsightEngine,
     ) : InsightRepository {
         override fun observeCards(): Flow<List<InsightCard>> {
-            val userId = authSessionStore.getUserId()
-            if (userId.isBlank()) {
-                return flowOf(emptyList())
-            }
+            val userId = authSessionStore.getUserId().trim()
 
             return insightCardDao.observeAll(userId).map { cards ->
                 cards.map { entity ->
@@ -55,10 +51,7 @@ class InsightRepositoryImpl
 
         @Suppress("LongMethod")
         override suspend fun refreshDeterministicCards(now: Long) {
-            val userId = authSessionStore.getUserId()
-            if (userId.isBlank()) {
-                return
-            }
+            val userId = authSessionStore.getUserId().trim()
 
             insightCardDao.purgeExpired(userId = userId, now = now)
             val lookbackStart = now - Duration.ofDays(35).toMillis()

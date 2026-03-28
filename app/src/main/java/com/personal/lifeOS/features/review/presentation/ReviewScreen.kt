@@ -178,6 +178,9 @@ private fun ReviewBulletCard(
                         modifier = Modifier.weight(1f),
                     )
                 }
+                if (index < items.lastIndex) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                }
             }
         }
     }

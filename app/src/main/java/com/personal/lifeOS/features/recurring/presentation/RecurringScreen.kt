@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -29,6 +30,7 @@ fun RecurringScreen(viewModel: RecurringViewModel = hiltViewModel()) {
                 Icon(
                     imageVector = Icons.Filled.Add,
                     contentDescription = "Add recurring rule",
+                    tint = MaterialTheme.colorScheme.primary,
                 )
             }
         },

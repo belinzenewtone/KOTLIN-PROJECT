@@ -1,8 +1,8 @@
 {
-    "version_code":  15,
-    "version_name":  "1.2.4",
-    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.4/app-release-v1.2.4.apk",
-    "checksum_sha256":  "46aa9c0273e0a06541d753faf97c472426fb81f7cbc4f3c14172b22c880cdc84",
+    "version_code":  16,
+    "version_name":  "1.2.5",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.5/app-release-v1.2.5.apk",
+    "checksum_sha256":  "373d8812714ba0bdf674eeb4776cd3c9a764d18adcaaa716c31957077fa91933",
     "required":  false,
-    "release_notes":  "Hotfix: fixes the Finance screen crash while the first paged transaction list is still loading by guarding the day-label lookup until the requested item exists."
+    "release_notes":  "UI sweep release: aligns spacing, hierarchy, and safe-area handling across Home, Finance, Profile, Search, Review, Settings, auth/onboarding, and deeper utility screens so the app feels cleaner and more consistent end to end."
 }

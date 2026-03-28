@@ -1,17 +1,24 @@
 package com.personal.lifeOS.feature.home.presentation
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.AutoGraph
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.filled.PsychologyAlt
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.TaskAlt
+import androidx.compose.material.icons.filled.Update
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -22,14 +29,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.personal.lifeOS.core.ui.designsystem.AppCard
-import com.personal.lifeOS.core.ui.designsystem.CalendarEventChip
 import com.personal.lifeOS.core.ui.designsystem.FinanceSummaryCard
 import com.personal.lifeOS.core.ui.designsystem.LoadingState
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
-import com.personal.lifeOS.core.ui.designsystem.SyncStatusPill
 import com.personal.lifeOS.core.ui.designsystem.TopBanner
 import com.personal.lifeOS.core.ui.designsystem.TopBannerTone
 import com.personal.lifeOS.features.dashboard.presentation.DashboardViewModel
@@ -58,13 +64,6 @@ fun HomeScreen(
             }
         },
         actions = {
-            IconButton(onClick = { onOpenRoute(AppRoute.Insights) }) {
-                Icon(
-                    imageVector = Icons.Filled.BarChart,
-                    contentDescription = "Open Insights",
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-            }
             IconButton(onClick = onOpenProfile) {
                 Icon(
                     imageVector = Icons.Filled.Person,
@@ -84,150 +83,158 @@ fun HomeScreen(
             color = MaterialTheme.colorScheme.onSurface,
         )
 
-        HomeSyncCard(uiState = uiState)
         HomeSummaryStrip(uiState = uiState)
-        HomeQuickActionsRow(
-            uiState = uiState,
-            onOpenRoute = onOpenRoute,
-        )
+        HomeAgendaCard(uiState = uiState, onOpenRoute = onOpenRoute)
         uiState.weeklyRitual?.let { ritual ->
             HomeWeeklyRitualCard(
                 ritual = ritual,
                 onOpenReview = { onOpenRoute(AppRoute.Review) },
             )
         }
-        uiState.updateNudge?.let { update ->
-            HomeUpdateCard(
-                update = update,
-                onOpenProfile = onOpenProfile,
+        HomeToolsRow(onOpenRoute = onOpenRoute)
+    }
+}
+
+@Composable
+private fun HomeSummaryStrip(uiState: HomeUiState) {
+    val metrics =
+        listOf(
+            "Today" to uiState.todaySpending,
+            "Week" to uiState.weekSpending,
+            "Month" to uiState.monthSpending,
+        )
+
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        items(metrics) { (title, amount) ->
+            FinanceSummaryCard(
+                title = title,
+                amount = amount,
+                modifier = Modifier.width(176.dp),
             )
         }
-        HomeFocusCard(uiState = uiState, onOpenTasks = { onOpenRoute(AppRoute.Tasks) })
-        HomeInsightsTeaser(uiState = uiState, onOpenInsights = { onOpenRoute(AppRoute.Insights) })
-        HomeCalendarCard(uiState = uiState, onOpenCalendar = { onOpenRoute(AppRoute.Calendar) })
-        HomeAssistantCard(uiState = uiState, onOpenAssistant = { onOpenRoute(AppRoute.Assistant) })
     }
 }
 
 @Composable
-private fun HomeSyncCard(uiState: HomeUiState) {
-    AppCard(elevated = true) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        text = "Sync",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    uiState.syncFreshness?.let { freshness ->
-                        Text(
-                            text = freshness.label,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-                SyncStatusPill(status = uiState.syncStatus)
-            }
-            uiState.syncFreshness?.supportingLabel?.let { supportingLabel ->
-                Text(
-                    text = supportingLabel,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-@OptIn(ExperimentalLayoutApi::class)
-private fun HomeSummaryStrip(uiState: HomeUiState) {
-    FlowRow(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        FinanceSummaryCard(
-            title = "Today",
-            amount = uiState.todaySpending,
-            modifier = Modifier.width(168.dp),
-        )
-        FinanceSummaryCard(
-            title = "This Week",
-            amount = uiState.weekSpending,
-            modifier = Modifier.width(168.dp),
-        )
-        FinanceSummaryCard(
-            title = "This Month",
-            amount = uiState.monthSpending,
-            modifier = Modifier.width(168.dp),
-        )
-        FinanceSummaryCard(
-            title = "Net · Month",
-            amount = uiState.monthNet,
-            modifier = Modifier.width(168.dp),
-        )
-    }
-}
-
-@Composable
-@OptIn(ExperimentalLayoutApi::class)
-private fun HomeQuickActionsRow(
+private fun HomeAgendaCard(
     uiState: HomeUiState,
     onOpenRoute: (String) -> Unit,
 ) {
-    val visibleActions =
-        if (uiState.weeklyRitual != null) {
-            uiState.quickActions.filterNot { it.label == "Review" }
-        } else {
-            uiState.quickActions
+    AppCard(elevated = true) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            HomeAgendaRow(
+                icon = Icons.Filled.TaskAlt,
+                title = "Tasks",
+                value =
+                    if (uiState.pendingTaskCount == 0) {
+                        "All done"
+                    } else {
+                        "${uiState.pendingTaskCount} pending"
+                    },
+                onClick = { onOpenRoute(AppRoute.Tasks) },
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
+            HomeAgendaRow(
+                icon = Icons.Filled.CalendarMonth,
+                title = "Next Event",
+                value = uiState.nextEventTimeLabel ?: "No event",
+                onClick = { onOpenRoute(AppRoute.Calendar) },
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
+            HomeAgendaRow(
+                icon = Icons.Filled.AutoGraph,
+                title = "Insights",
+                value = "View",
+                onClick = { onOpenRoute(AppRoute.Insights) },
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
+            HomeAgendaRow(
+                icon = Icons.Filled.PsychologyAlt,
+                title = "Assistant",
+                value = "Open",
+                onClick = { onOpenRoute(AppRoute.Assistant) },
+            )
         }
+    }
+}
 
-    FlowRow(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+@Composable
+private fun HomeAgendaRow(
+    icon: ImageVector,
+    title: String,
+    value: String,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(vertical = 14.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        visibleActions.forEach { action ->
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+            )
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun HomeToolsRow(onOpenRoute: (String) -> Unit) {
+    Text(
+        text = "Tools",
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+
+    val tools =
+        listOf(
+            Triple("Search", Icons.Filled.Search, AppRoute.Search),
+            Triple("Review", Icons.Filled.Update, AppRoute.Review),
+            Triple("Analytics", Icons.Filled.AutoGraph, AppRoute.Insights),
+        )
+
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        items(tools) { (label, icon, route) ->
             AppCard(
-                modifier = Modifier.width(162.dp),
                 elevated = false,
+                modifier = Modifier.clickable { onOpenRoute(route) },
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = action.label,
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.weight(1f),
-                        )
-                        TextButton(
-                            onClick = when (action.label) {
-                                "Tasks" -> ({ onOpenRoute(AppRoute.Tasks) })
-                                "Finance" -> ({ onOpenRoute(AppRoute.Finance) })
-                                "Calendar" -> ({ onOpenRoute(AppRoute.Calendar) })
-                                "Assistant" -> ({ onOpenRoute(AppRoute.Assistant) })
-                                else -> ({ onOpenRoute(AppRoute.Review) })
-                            },
-                        ) {
-                            Text("Open")
-                        }
-                    }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
                     Text(
-                        text = action.supportingText,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
+                        text = label,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
             }
@@ -263,155 +270,6 @@ private fun HomeWeeklyRitualCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2,
             )
-        }
-    }
-}
-
-@Composable
-private fun HomeUpdateCard(
-    update: com.personal.lifeOS.core.ui.model.UpdateNudgeUiModel,
-    onOpenProfile: () -> Unit,
-) {
-    AppCard(elevated = false) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = update.title,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Text(
-                text = update.summary,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            TextButton(onClick = onOpenProfile) {
-                Text(if (update.required) "Install update" else "Review update")
-            }
-        }
-    }
-}
-
-@Composable
-private fun HomeFocusCard(
-    uiState: HomeUiState,
-    onOpenTasks: () -> Unit,
-) {
-    AppCard(elevated = true) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = "Focus",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Text(
-                text = "${uiState.pendingTaskCount} pending tasks · ${uiState.completedTodayCount} completed today",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Button(onClick = onOpenTasks) {
-                Text("Open Tasks")
-            }
-        }
-    }
-}
-
-@Composable
-private fun HomeInsightsTeaser(
-    uiState: HomeUiState,
-    onOpenInsights: () -> Unit,
-    onOpenLearning: () -> Unit = {},
-) {
-    AppCard(elevated = true) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.BarChart,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                    Text(
-                        text = "Insights",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                }
-                Text(
-                    text =
-                        uiState.topInsight
-                            ?: "Trends and patterns across your tasks, spending, and habits.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            TextButton(onClick = onOpenInsights) {
-                Text("View all")
-            }
-        }
-    }
-}
-
-@Composable
-private fun HomeCalendarCard(
-    uiState: HomeUiState,
-    onOpenCalendar: () -> Unit,
-) {
-    AppCard(elevated = true) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = "Next Event",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            if (uiState.nextEventTitle != null && uiState.nextEventTimeLabel != null) {
-                CalendarEventChip(
-                    title = uiState.nextEventTitle,
-                    timeLabel = uiState.nextEventTimeLabel,
-                )
-            } else {
-                Text(
-                    text = "No upcoming event scheduled.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Button(onClick = onOpenCalendar) {
-                Text("Open Calendar")
-            }
-        }
-    }
-}
-
-@Composable
-private fun HomeAssistantCard(
-    uiState: HomeUiState,
-    onOpenAssistant: () -> Unit,
-) {
-    AppCard(elevated = true) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = "Assistant",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Text(
-                text = "Ask about your day, tasks, or finances.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Button(onClick = onOpenAssistant) {
-                Text("Open Assistant")
-            }
         }
     }
 }

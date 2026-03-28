@@ -4,7 +4,6 @@ import com.personal.lifeOS.core.datastore.FeatureFlag
 import com.personal.lifeOS.core.ui.model.FreshnessUiModel
 import com.personal.lifeOS.core.ui.model.ImportHealthUiModel
 import com.personal.lifeOS.core.ui.model.SyncStatusUiModel
-import com.personal.lifeOS.core.ui.model.UpdateNudgeUiModel
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.dashboard.presentation.DashboardUiState
 
@@ -26,7 +25,6 @@ data class HomeUiState(
     val syncFreshness: FreshnessUiModel?,
     val weeklyRitual: HomeWeeklyRitualUiModel?,
     val quickActions: List<HomeQuickActionUiModel>,
-    val updateNudge: UpdateNudgeUiModel?,
     val isLoading: Boolean,
     val errorMessage: String?,
 )
@@ -106,20 +104,6 @@ fun DashboardUiState.toHomeUiState(): HomeUiState {
                 null
             },
         quickActions = buildQuickActions(),
-        updateNudge =
-            latestUpdate
-                ?.takeIf { featureFlags[FeatureFlag.OTA_UPDATES] != false }
-                ?.let { update ->
-                    UpdateNudgeUiModel(
-                        title = if (update.required) "Update required" else "Update ready",
-                        summary =
-                            buildString {
-                                append("Version ${update.versionName ?: update.versionCode}")
-                                append(" checked ${DateUtils.formatRelativeTime(update.checkedAt)}")
-                            },
-                        required = update.required,
-                    )
-                },
         isLoading = isLoading,
         errorMessage = error,
     )

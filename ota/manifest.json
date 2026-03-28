@@ -1,8 +1,8 @@
-{
-    "version_code":  16,
-    "version_name":  "1.2.5",
-    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.5/app-release-v1.2.5.apk",
-    "checksum_sha256":  "373d8812714ba0bdf674eeb4776cd3c9a764d18adcaaa716c31957077fa91933",
+﻿{
+    "version_code":  17,
+    "version_name":  "1.2.6",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.6/app-release-v1.2.6.apk",
+    "checksum_sha256":  "72a288c1cb6eff033e7296310391163ae62cac944a55a5327436154eeae689c2",
     "required":  false,
-    "release_notes":  "UI sweep release: aligns spacing, hierarchy, and safe-area handling across Home, Finance, Profile, Search, Review, Settings, auth/onboarding, and deeper utility screens so the app feels cleaner and more consistent end to end."
+    "release_notes":  "Finance and Home layout compaction update: reduced vertical stacking, restored horizontal summary flow, tightened spacing/alignment, and improved cross-screen UI consistency."
 }

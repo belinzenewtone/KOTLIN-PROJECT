@@ -61,7 +61,10 @@ import androidx.compose.animation.core.tween
 import com.personal.lifeOS.BuildConfig
 
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
+fun SettingsScreen(
+    viewModel: SettingsViewModel = hiltViewModel(),
+    onBack: (() -> Unit)? = null,
+) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val installedVersionLabel =
@@ -91,6 +94,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     PageScaffold(
         title = "Settings",
         subtitle = "Tailor your digital sanctuary to your specific needs.",
+        onBack = onBack,
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
         topBanner = {
             state.infoMessage?.let {

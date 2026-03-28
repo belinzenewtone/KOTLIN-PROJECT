@@ -9,10 +9,12 @@ import com.personal.lifeOS.features.search.presentation.SearchViewModel
 @Composable
 fun SearchScreen(
     viewModel: SearchViewModel = hiltViewModel(),
+    onBack: (() -> Unit)? = null,
     onOpenResult: (SearchResult) -> Unit = {},
 ) {
     LegacySearchScreen(
         viewModel = viewModel,
+        onBack = onBack,
         onOpenResult = onOpenResult,
     )
 }

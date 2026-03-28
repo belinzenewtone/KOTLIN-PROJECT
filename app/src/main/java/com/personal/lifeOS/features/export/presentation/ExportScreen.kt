@@ -46,13 +46,17 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun ExportScreen(viewModel: ExportViewModel = hiltViewModel()) {
+fun ExportScreen(
+    viewModel: ExportViewModel = hiltViewModel(),
+    onBack: (() -> Unit)? = null,
+) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
     PageScaffold(
         title = "Export Center",
         subtitle = "Create JSON, CSV, and shareable backups from the latest ledger state.",
+        onBack = onBack,
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
     ) {
         state.error?.let { message ->

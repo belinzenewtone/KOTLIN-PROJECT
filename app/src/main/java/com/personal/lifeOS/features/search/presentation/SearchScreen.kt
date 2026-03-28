@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -36,6 +35,7 @@ import com.personal.lifeOS.features.search.domain.model.SearchSource
 @Composable
 fun SearchScreen(
     viewModel: SearchViewModel = hiltViewModel(),
+    onBack: (() -> Unit)? = null,
     onOpenResult: (SearchResult) -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -51,7 +51,8 @@ fun SearchScreen(
 
     PageScaffold(
         title = "Search",
-        subtitle = "Cross-domain lookup for tasks, finance, calendar, and recurring rules.",
+        subtitle = "Instant cross-domain search — tasks, finance, calendar, and more.",
+        onBack = onBack,
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
     ) {
         AppCard(modifier = Modifier.fillMaxWidth(), elevated = false) {
@@ -59,29 +60,20 @@ fun SearchScreen(
                 SearchField(
                     value = state.query,
                     onValueChange = viewModel::setQuery,
-                    placeholder = "Search title, merchant, or category",
+                    placeholder = "Search by name, merchant, category, or date…",
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    OutlinedButton(
-                        onClick = viewModel::runSearch,
-                        enabled = !state.isLoading,
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Text(if (state.isLoading) "Searching..." else "Search")
-                    }
+                // Results update in real-time as you type — no search button needed.
+                // Clear button remains for convenience.
+                if (state.query.isNotBlank()) {
                     TextButton(
                         onClick = { viewModel.setQuery("") },
-                        enabled = state.query.isNotBlank(),
                     ) {
                         Text("Clear")
                     }
                 }
                 Text(
-                    text = "Search runs across tasks, events, transactions, budgets, incomes, and recurring rules.",
+                    text = "Searches across tasks, events, transactions, budgets, incomes, and recurring rules.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

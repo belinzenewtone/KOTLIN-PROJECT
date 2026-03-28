@@ -7,6 +7,20 @@ import com.personal.lifeOS.features.planner.presentation.PlannerScreen as Legacy
  * Feature-package bridge retained during phased package migration.
  */
 @Composable
-fun PlannerScreen() {
-    LegacyPlannerScreen()
+fun PlannerScreen(
+    onBack: (() -> Unit)? = null,
+    onOpenBudget: () -> Unit = {},
+    onOpenIncome: () -> Unit = {},
+    onOpenRecurring: () -> Unit = {},
+    onOpenExport: () -> Unit = {},
+    onOpenSearch: () -> Unit = {},
+) {
+    LegacyPlannerScreen(
+        onBack = onBack,
+        onOpenBudget = onOpenBudget,
+        onOpenIncome = onOpenIncome,
+        onOpenRecurring = onOpenRecurring,
+        onOpenExport = onOpenExport,
+        onOpenSearch = onOpenSearch,
+    )
 }

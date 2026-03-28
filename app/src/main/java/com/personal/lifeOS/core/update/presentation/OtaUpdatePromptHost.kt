@@ -217,9 +217,11 @@ private suspend fun downloadAndInstallUpdate(
                 context = context,
                 manifest = manifest,
                 onEnqueued = { runtime.onStateUpdated(startState.copy(activeDownloadId = it)) },
-                onProgress = { progress ->
-                    runtime.onStateUpdated(startState.copy(downloadPercent = progress))
-                },
+                // onProgress is intentionally a no-op: onProgressDetails already carries
+                // progressPercent plus bytes/speed. Calling both from startState.copy() in
+                // sequence caused the bytes/speed row to momentarily reset to zero between
+                // the two callbacks, producing the visible flash.
+                onProgress = {},
                 onProgressDetails = { details ->
                     runtime.onStateUpdated(
                         startState.copy(

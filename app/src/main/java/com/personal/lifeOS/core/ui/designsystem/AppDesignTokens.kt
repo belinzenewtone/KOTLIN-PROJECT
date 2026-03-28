@@ -76,8 +76,10 @@ object AppDesignTokens {
             primary = MaterialTheme.colorScheme.primary,
             primaryContainer = MaterialTheme.colorScheme.primaryContainer,
             surface = MaterialTheme.colorScheme.surface,
-            surfaceContainerLow = MaterialTheme.colorScheme.surfaceVariant,
-            surfaceContainerLowest = MaterialTheme.colorScheme.surface,
+            // Use the proper M3 surface-container tokens so cards have clear tonal hierarchy
+            // in both light and dark mode — no manual tinting required.
+            surfaceContainerLow = MaterialTheme.colorScheme.surfaceContainerLow,
+            surfaceContainerLowest = MaterialTheme.colorScheme.surfaceContainerLowest,
             onSurface = MaterialTheme.colorScheme.onSurface,
             onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant,
             outlineVariant = MaterialTheme.colorScheme.outlineVariant,

@@ -37,7 +37,10 @@ import com.personal.lifeOS.ui.theme.AppSpacing
 import com.personal.lifeOS.ui.theme.Success
 
 @Composable
-fun LearningScreen(viewModel: LearningViewModel = hiltViewModel()) {
+fun LearningScreen(
+    viewModel: LearningViewModel = hiltViewModel(),
+    onBack: (() -> Unit)? = null,
+) {
     val state by viewModel.uiState.collectAsState()
 
     val filtered = state.sessions.let { sessions ->
@@ -50,6 +53,7 @@ fun LearningScreen(viewModel: LearningViewModel = hiltViewModel()) {
     PageScaffold(
         title = "Learn",
         subtitle = "$completedCount of ${state.sessions.size} sessions completed",
+        onBack = onBack,
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
     ) {
         // Category filter chips

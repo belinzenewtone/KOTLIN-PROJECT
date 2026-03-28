@@ -310,21 +310,33 @@ private fun LifeOSNavigationGraph(
         navController = navController,
         startDestination = canonicalRoute(startDestination),
         modifier = Modifier.fillMaxSize(),
-        // Screen transitions — forward: fade-slide in from right; back: fade-slide out to right.
-        // Keeps navigation feeling snappy (300ms) without being distracting.
+        // Screen transitions — forward: fluid slide-in from right with spring; back: slide out.
+        // Spring damping gives a natural, intentional feel rather than a mechanical tween.
         enterTransition = {
-            fadeIn(tween(280, easing = EaseInOut)) +
-                slideInHorizontally(tween(280, easing = EaseInOut)) { it / 6 }
+            fadeIn(tween(260, easing = EaseInOut)) +
+                slideInHorizontally(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioNoBouncy,
+                        stiffness = Spring.StiffnessMediumLow,
+                    ),
+                ) { it / 4 }
         },
         exitTransition = {
-            fadeOut(tween(200, easing = EaseInOut))
+            fadeOut(tween(200, easing = EaseInOut)) +
+                slideOutHorizontally(tween(200, easing = EaseInOut)) { -it / 8 }
         },
         popEnterTransition = {
-            fadeIn(tween(200, easing = EaseInOut))
+            fadeIn(tween(220, easing = EaseInOut)) +
+                slideInHorizontally(tween(220, easing = EaseInOut)) { -it / 8 }
         },
         popExitTransition = {
-            fadeOut(tween(250, easing = EaseInOut)) +
-                slideOutHorizontally(tween(250, easing = EaseInOut)) { it / 6 }
+            fadeOut(tween(240, easing = EaseInOut)) +
+                slideOutHorizontally(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioNoBouncy,
+                        stiffness = Spring.StiffnessMediumLow,
+                    ),
+                ) { it / 4 }
         },
     ) {
         composable(AppRoute.Auth) {
@@ -397,15 +409,24 @@ private fun LifeOSNavigationGraph(
                 },
             )
         }
-        composable(AppRoute.Settings) { SettingsScreen() }
-        composable(AppRoute.Export) { ExportScreen() }
+        composable(AppRoute.Settings) {
+            SettingsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(AppRoute.Export) {
+            ExportScreen(onBack = { navController.popBackStack() })
+        }
 
         // Insights — accessible via Home header button (not a bottom tab per design decision)
-        composable(AppRoute.Analytics) { InsightsScreen() }
-        composable(AppRoute.Insights) { InsightsScreen() }
+        composable(AppRoute.Analytics) {
+            InsightsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(AppRoute.Insights) {
+            InsightsScreen(onBack = { navController.popBackStack() })
+        }
 
         composable(AppRoute.Search) {
             SearchScreen(
+                onBack = { navController.popBackStack() },
                 onOpenResult = { result ->
                     result.navigationTarget?.let { target ->
                         navController.navigate(target) {
@@ -419,6 +440,7 @@ private fun LifeOSNavigationGraph(
         // Finance Tools hub — launched from Finance screen's top bar
         composable(AppRoute.Planner) {
             PlannerScreen(
+                onBack = { navController.popBackStack() },
                 onOpenBudget = { navController.navigate(AppRoute.Budget) },
                 onOpenIncome = { navController.navigate(AppRoute.Income) },
                 onOpenRecurring = { navController.navigate(AppRoute.Recurring) },
@@ -428,15 +450,15 @@ private fun LifeOSNavigationGraph(
         }
 
         // Finance sub-screens
-        composable(AppRoute.Budget) { BudgetScreen() }
-        composable(AppRoute.Income) { IncomeScreen() }
-        composable(AppRoute.Recurring) { RecurringScreen() }
+        composable(AppRoute.Budget) { BudgetScreen(onBack = { navController.popBackStack() }) }
+        composable(AppRoute.Income) { IncomeScreen(onBack = { navController.popBackStack() }) }
+        composable(AppRoute.Recurring) { RecurringScreen(onBack = { navController.popBackStack() }) }
 
         // Weekly/monthly personal digest
-        composable(AppRoute.Review) { ReviewScreen() }
+        composable(AppRoute.Review) { ReviewScreen(onBack = { navController.popBackStack() }) }
 
         // Learning module
-        composable(AppRoute.Learning) { LearningScreen() }
+        composable(AppRoute.Learning) { LearningScreen(onBack = { navController.popBackStack() }) }
     }
 }
 

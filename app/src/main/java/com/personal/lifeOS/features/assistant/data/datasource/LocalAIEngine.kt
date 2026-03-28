@@ -178,52 +178,88 @@ class LocalAIEngine
         ): String {
             return when {
                 query.containsAny("today") -> {
-                    val total =
-                        transactionDao.getTotalSpendingBetween(
-                            DateUtils.todayStartMillis(), DateUtils.todayEndMillis(), userId,
-                        ).first() ?: 0.0
-                    val count =
-                        transactionDao.getTransactionsBetween(
-                            DateUtils.todayStartMillis(),
-                            DateUtils.todayEndMillis(),
-                            userId,
-                        ).first().size
-                    "Today you've spent **${DateUtils.formatCurrency(
-                        total,
-                    )}** across $count transaction${if (count != 1) "s" else ""}."
+                    val start = DateUtils.todayStartMillis()
+                    val end = DateUtils.todayEndMillis()
+                    val total = transactionDao.getTotalSpendingBetween(start, end, userId).first() ?: 0.0
+                    val txs = transactionDao.getTransactionsBetween(start, end, userId).first()
+                    if (txs.isEmpty()) return "No spending recorded today yet."
+                    val topCats = txs.groupBy { it.category }
+                        .entries.sortedByDescending { e -> e.value.sumOf { it.amount } }
+                        .take(3)
+                        .joinToString("\n") { (cat, items) ->
+                            "• **$cat**: ${DateUtils.formatCurrency(items.sumOf { it.amount })}"
+                        }
+                    val topTx = txs.maxByOrNull { it.amount }
+                    val topLine = if (topTx != null)
+                        "\n\nLargest: **${DateUtils.formatCurrency(topTx.amount)}** at ${topTx.merchant}"
+                    else ""
+                    "Today you've spent **${DateUtils.formatCurrency(total)}** across ${txs.size} transaction${if (txs.size != 1) "s" else ""}.\n\n$topCats$topLine"
                 }
                 query.containsAny("week", "this week") -> {
-                    val total =
-                        transactionDao.getTotalSpendingBetween(
-                            DateUtils.weekStartMillis(), DateUtils.todayEndMillis(), userId,
-                        ).first() ?: 0.0
-                    "This week you've spent **${DateUtils.formatCurrency(total)}**."
+                    val start = DateUtils.weekStartMillis()
+                    val end = DateUtils.todayEndMillis()
+                    val total = transactionDao.getTotalSpendingBetween(start, end, userId).first() ?: 0.0
+                    val txs = transactionDao.getTransactionsBetween(start, end, userId).first()
+                    if (txs.isEmpty()) return "No spending recorded this week yet."
+                    val catBreakdown = txs.groupBy { it.category }
+                        .entries.sortedByDescending { e -> e.value.sumOf { it.amount } }
+                        .take(4)
+                        .joinToString("\n") { (cat, items) ->
+                            val pct = if (total > 0) (items.sumOf { it.amount } / total * 100).toInt() else 0
+                            "• **$cat**: ${DateUtils.formatCurrency(items.sumOf { it.amount })} ($pct%)"
+                        }
+                    val top3Txs = txs.sortedByDescending { it.amount }.take(3)
+                        .joinToString("\n") { "• ${it.merchant}: ${DateUtils.formatCurrency(it.amount)}" }
+                    "This week you've spent **${DateUtils.formatCurrency(total)}** across ${txs.size} transaction${if (txs.size != 1) "s" else ""}.\n\n" +
+                        "**By category:**\n$catBreakdown\n\n" +
+                        "**Top transactions:**\n$top3Txs"
                 }
                 query.containsAny("month", "this month") -> {
-                    val total =
-                        transactionDao.getTotalSpendingBetween(
-                            DateUtils.monthStartMillis(), DateUtils.monthEndMillis(), userId,
-                        ).first() ?: 0.0
-                    "This month you've spent **${DateUtils.formatCurrency(total)}**."
+                    val start = DateUtils.monthStartMillis()
+                    val end = DateUtils.monthEndMillis()
+                    val total = transactionDao.getTotalSpendingBetween(start, end, userId).first() ?: 0.0
+                    val cats = transactionDao.getCategoryBreakdown(start, end, userId).first()
+                    if (cats.isEmpty()) return "No spending recorded this month yet."
+                    val catLines = cats.take(5).joinToString("\n") { cat ->
+                        val pct = if (total > 0) (cat.total / total * 100).toInt() else 0
+                        "• **${cat.category}**: ${DateUtils.formatCurrency(cat.total)} ($pct%)"
+                    }
+                    val txs = transactionDao.getTransactionsBetween(start, end, userId).first()
+                    val topTx = txs.maxByOrNull { it.amount }
+                    val topLine = if (topTx != null)
+                        "\n\nLargest single expense: **${DateUtils.formatCurrency(topTx.amount)}** at ${topTx.merchant}"
+                    else ""
+                    "This month you've spent **${DateUtils.formatCurrency(total)}** across ${txs.size} transaction${if (txs.size != 1) "s" else ""}.\n\n" +
+                        "**Top categories:**\n$catLines$topLine"
                 }
                 query.containsAny("food", "restaurant", "eat") -> {
-                    val txs = transactionDao.getByCategory("Food", userId).first()
+                    val txs = transactionDao.getByCategory("Food", userId).first() +
+                        transactionDao.getByCategory("Eating Out", userId).first()
                     val total = txs.sumOf { it.amount }
-                    "You've spent **${DateUtils.formatCurrency(total)}** on food across ${txs.size} transactions."
+                    if (txs.isEmpty()) return "No food spending recorded."
+                    val topMerchant = txs.groupBy { it.merchant }.maxByOrNull { e -> e.value.sumOf { it.amount } }
+                    val topLine = if (topMerchant != null)
+                        "\n\nMost spent at: **${topMerchant.key}** (${DateUtils.formatCurrency(topMerchant.value.sumOf { it.amount })})"
+                    else ""
+                    "You've spent **${DateUtils.formatCurrency(total)}** on food across ${txs.size} transactions.$topLine"
                 }
                 query.containsAny("transport", "uber", "bolt", "fuel") -> {
-                    val txs = transactionDao.getByCategory("Transport", userId).first()
+                    val txs = transactionDao.getByCategory("Transport", userId).first() +
+                        transactionDao.getByCategory("Fuel", userId).first()
                     val total = txs.sumOf { it.amount }
-                    "You've spent **${DateUtils.formatCurrency(total)}** on transport across ${txs.size} transactions."
+                    if (txs.isEmpty()) return "No transport spending recorded."
+                    "You've spent **${DateUtils.formatCurrency(total)}** on transport & fuel across ${txs.size} transactions."
                 }
                 else -> {
-                    val total =
-                        transactionDao.getTotalSpendingBetween(
-                            DateUtils.monthStartMillis(), DateUtils.monthEndMillis(), userId,
-                        ).first() ?: 0.0
-                    "This month you've spent **${DateUtils.formatCurrency(
-                        total,
-                    )}**. Ask about a specific period (today, this week) or category (food, transport) for more detail."
+                    val start = DateUtils.monthStartMillis()
+                    val end = DateUtils.monthEndMillis()
+                    val total = transactionDao.getTotalSpendingBetween(start, end, userId).first() ?: 0.0
+                    val cats = transactionDao.getCategoryBreakdown(start, end, userId).first()
+                    val topCat = cats.firstOrNull()
+                    val hint = if (topCat != null)
+                        " Your top category is **${topCat.category}** at ${DateUtils.formatCurrency(topCat.total)}."
+                    else ""
+                    "This month you've spent **${DateUtils.formatCurrency(total)}**.$hint\n\nAsk about a specific period (today, this week, this month) or category (food, transport) for a detailed breakdown."
                 }
             }
         }

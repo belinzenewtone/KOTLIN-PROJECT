@@ -54,7 +54,43 @@ object MpesaParserEnhanced {
         val balanceAfter: Double?,
         val date: Long,
         val rawSms: String,
-    )
+    ) {
+        /**
+         * True when money credited into the M-Pesa wallet:
+         *  RECEIVED — someone sent you money (P2P credit)
+         *  DEPOSIT  — agent or bank deposited cash into your wallet
+         *
+         * REVERSED is intentionally excluded — a reversal may return money to
+         * the wallet, but the original direction is already recorded. Callers
+         * should handle REVERSED separately if they need a net-zero adjustment.
+         */
+        val isIncome: Boolean
+            get() = category == MpesaParsingConfig.TransactionCategory.RECEIVED ||
+                category == MpesaParsingConfig.TransactionCategory.DEPOSIT
+
+        /**
+         * True when money debited from the M-Pesa wallet:
+         *  SENT      — P2P transfer to another person
+         *  AIRTIME   — prepaid airtime or data bundle purchase
+         *  PAYBILL   — utility/subscription payment via Paybill
+         *  BUY_GOODS — merchant till (Lipa na M-Pesa)
+         *  WITHDRAW  — cash withdrawal from agent or ATM
+         *  LOAN      — Fuliza loan repayment deducted automatically
+         *
+         * REVERSED and UNKNOWN are excluded — their monetary impact is ambiguous.
+         */
+        val isExpense: Boolean
+            get() = when (category) {
+                MpesaParsingConfig.TransactionCategory.SENT,
+                MpesaParsingConfig.TransactionCategory.AIRTIME,
+                MpesaParsingConfig.TransactionCategory.PAYBILL,
+                MpesaParsingConfig.TransactionCategory.BUY_GOODS,
+                MpesaParsingConfig.TransactionCategory.WITHDRAW,
+                MpesaParsingConfig.TransactionCategory.LOAN,
+                -> true
+                else -> false
+            }
+    }
 
     // ── Extraction regexes ────────────────────────────────────────────────────
 

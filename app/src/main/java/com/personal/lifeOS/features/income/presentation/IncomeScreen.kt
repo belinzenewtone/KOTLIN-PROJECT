@@ -17,12 +17,16 @@ import com.personal.lifeOS.core.ui.designsystem.PageScaffold
 import com.personal.lifeOS.ui.theme.AppSpacing
 
 @Composable
-fun IncomeScreen(viewModel: IncomeViewModel = hiltViewModel()) {
+fun IncomeScreen(
+    viewModel: IncomeViewModel = hiltViewModel(),
+    onBack: (() -> Unit)? = null,
+) {
     val state by viewModel.uiState.collectAsState()
 
     PageScaffold(
         title = "Income",
         subtitle = "${state.records.size} entries tracked",
+        onBack = onBack,
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
         actions = {
             TextButton(onClick = viewModel::showAddDialog) {

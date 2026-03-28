@@ -34,6 +34,7 @@ import com.personal.lifeOS.ui.theme.AppSpacing
  */
 @Composable
 fun PlannerScreen(
+    onBack: (() -> Unit)? = null,
     onOpenBudget: () -> Unit = {},
     onOpenIncome: () -> Unit = {},
     onOpenRecurring: () -> Unit = {},
@@ -43,6 +44,7 @@ fun PlannerScreen(
     PageScaffold(
         title = "Finance Tools",
         subtitle = "Manage budgets, income, and recurring payments",
+        onBack = onBack,
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
     ) {
         ToolCard(

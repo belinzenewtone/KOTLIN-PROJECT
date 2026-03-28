@@ -45,6 +45,7 @@ import com.personal.lifeOS.core.ui.designsystem.EmptyState
 import com.personal.lifeOS.core.ui.designsystem.InlineBanner
 import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
 import com.personal.lifeOS.core.ui.designsystem.LoadingState
+import com.personal.lifeOS.core.ui.designsystem.ShimmerLoadingState
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
 import com.personal.lifeOS.core.ui.designsystem.SearchField
 import com.personal.lifeOS.core.ui.designsystem.SegmentedControl
@@ -53,6 +54,7 @@ import com.personal.lifeOS.core.ui.designsystem.TopBannerTone
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.feature.finance.domain.model.FinanceTransaction
 import com.personal.lifeOS.feature.finance.domain.model.FinanceTransactionFilter
+import com.personal.lifeOS.ui.theme.Success
 import com.personal.lifeOS.ui.theme.Warning
 import com.personal.lifeOS.ui.theme.AppSpacing
 import java.time.Instant
@@ -141,7 +143,7 @@ fun FinanceScreen(
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
     ) {
         if (uiState.isLoading) {
-            LoadingState(label = "Loading finance data...")
+            ShimmerLoadingState(rows = 5)
             return@PageScaffold
         }
 
@@ -240,7 +242,7 @@ fun FinanceScreen(
                 AppCard(elevated = false) {
                     LazyColumn(
                         state = txListState,
-                        modifier = Modifier.height(300.dp),
+                        modifier = Modifier.height(420.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp),
                         contentPadding = PaddingValues(top = 6.dp, bottom = 4.dp),
                     ) {
@@ -635,7 +637,7 @@ private fun FinanceTransactionRow(
                 )
                 Text(
                     text = "${transaction.category} · ${DateUtils.formatDate(transaction.date, "MMM d, h:mm a")}",
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
@@ -645,7 +647,7 @@ private fun FinanceTransactionRow(
                         onClick = onRecategorize,
                         contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
                     ) {
-                        Text("Category", style = MaterialTheme.typography.labelSmall)
+                        Text("Category", style = MaterialTheme.typography.labelMedium)
                     }
                     TextButton(
                         onClick = onDelete,
@@ -653,16 +655,20 @@ private fun FinanceTransactionRow(
                     ) {
                         Text(
                             "Delete",
-                            style = MaterialTheme.typography.labelSmall,
+                            style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.error,
                         )
                     }
                 }
             }
+            // Income transactions (received / deposit) are highlighted in green
+            // so inflows are immediately distinguishable from outflows at a glance.
+            val isIncome = transaction.transactionType in listOf("RECEIVED", "DEPOSIT")
             Text(
-                text = DateUtils.formatCurrency(transaction.amount),
+                text = if (isIncome) "+${DateUtils.formatCurrency(transaction.amount)}"
+                       else DateUtils.formatCurrency(transaction.amount),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = if (isIncome) Success else MaterialTheme.colorScheme.onSurface,
             )
         }
     }

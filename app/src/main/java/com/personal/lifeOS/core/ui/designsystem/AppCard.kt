@@ -23,10 +23,13 @@ fun AppCard(
     content: @Composable () -> Unit,
 ) {
     val shape = RoundedCornerShape(AppDesignTokens.radius.lg)
+    // Surface hierarchy: surface < surfaceContainerLowest < surfaceContainerLow
+    // Non-elevated cards sit on bare surface; elevated cards step up to surfaceContainerLow
+    // so they visually "lift" off the page background in both light and dark themes.
     val baseColor =
         when {
             glass -> MaterialTheme.colorScheme.surface.copy(alpha = 0.72f)
-            elevated -> AppDesignTokens.colors.surfaceContainerLowest
+            elevated -> AppDesignTokens.colors.surfaceContainerLow
             else -> MaterialTheme.colorScheme.surface
         }
     Box(

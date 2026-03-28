@@ -7,6 +7,6 @@ import com.personal.lifeOS.features.export.presentation.ExportScreen as LegacyEx
  * Feature-package bridge retained during phased package migration.
  */
 @Composable
-fun ExportScreen() {
-    LegacyExportScreen()
+fun ExportScreen(onBack: (() -> Unit)? = null) {
+    LegacyExportScreen(onBack = onBack)
 }

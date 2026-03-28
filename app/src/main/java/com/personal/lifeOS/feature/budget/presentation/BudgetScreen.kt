@@ -7,6 +7,6 @@ import com.personal.lifeOS.features.budget.presentation.BudgetScreen as LegacyBu
  * Feature-package bridge retained during phased package migration.
  */
 @Composable
-fun BudgetScreen() {
-    LegacyBudgetScreen()
+fun BudgetScreen(onBack: (() -> Unit)? = null) {
+    LegacyBudgetScreen(onBack = onBack)
 }

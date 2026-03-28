@@ -11,6 +11,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -20,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -153,8 +156,15 @@ private fun OtaDialogBody(manifest: OtaUpdateManifest) {
 private fun OtaDialogProgress(state: OtaPromptUiState) {
     if (!state.isDownloading && state.downloadPercent == null) return
 
+    val targetProgress = (state.downloadPercent ?: 0).coerceIn(0, 100) / 100f
+    val animatedProgress by animateFloatAsState(
+        targetValue = targetProgress,
+        animationSpec = tween(durationMillis = 400),
+        label = "ota_progress",
+    )
+
     LinearProgressIndicator(
-        progress = { (state.downloadPercent ?: 0).coerceIn(0, 100) / 100f },
+        progress = { animatedProgress },
         modifier = Modifier.fillMaxWidth(),
     )
 

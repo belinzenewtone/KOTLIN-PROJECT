@@ -42,7 +42,8 @@ class SearchViewModel
             }
             searchJob =
                 viewModelScope.launch {
-                    delay(220)
+                    // 150ms debounce: snappy real-time search while avoiding excessive queries
+                    delay(150)
                     executeSearch(trimmed)
                 }
         }

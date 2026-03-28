@@ -29,12 +29,16 @@ import java.text.NumberFormat
 import java.util.Locale
 
 @Composable
-fun ReviewScreen(viewModel: ReviewViewModel = hiltViewModel()) {
+fun ReviewScreen(
+    viewModel: ReviewViewModel = hiltViewModel(),
+    onBack: (() -> Unit)? = null,
+) {
     val state by viewModel.uiState.collectAsState()
 
     PageScaffold(
         title = "Weekly Review",
         subtitle = state.weekLabel,
+        onBack = onBack,
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
     ) {
         if (state.isLoading) {

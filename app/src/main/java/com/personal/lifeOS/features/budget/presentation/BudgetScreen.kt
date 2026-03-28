@@ -15,12 +15,16 @@ import com.personal.lifeOS.core.ui.designsystem.TopBannerTone
 import com.personal.lifeOS.ui.theme.AppSpacing
 
 @Composable
-fun BudgetScreen(viewModel: BudgetViewModel = hiltViewModel()) {
+fun BudgetScreen(
+    viewModel: BudgetViewModel = hiltViewModel(),
+    onBack: (() -> Unit)? = null,
+) {
     val state by viewModel.uiState.collectAsState()
 
     PageScaffold(
         title = "Budgets",
         subtitle = "${state.budgets.size} ${if (state.budgets.size == 1) "category" else "categories"} tracked",
+        onBack = onBack,
         topBanner = {
             state.error?.let {
                 TopBanner(message = it, tone = TopBannerTone.ERROR)

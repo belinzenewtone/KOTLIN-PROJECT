@@ -7,6 +7,6 @@ import com.personal.lifeOS.features.settings.presentation.SettingsScreen as Lega
  * Feature-package bridge retained during phased package migration.
  */
 @Composable
-fun SettingsScreen() {
-    LegacySettingsScreen()
+fun SettingsScreen(onBack: (() -> Unit)? = null) {
+    LegacySettingsScreen(onBack = onBack)
 }

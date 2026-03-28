@@ -9,6 +9,9 @@ import com.personal.lifeOS.features.income.presentation.IncomeViewModel
  * Feature-package bridge retained during phased package migration.
  */
 @Composable
-fun IncomeScreen(viewModel: IncomeViewModel = hiltViewModel()) {
-    LegacyIncomeScreen(viewModel = viewModel)
+fun IncomeScreen(
+    viewModel: IncomeViewModel = hiltViewModel(),
+    onBack: (() -> Unit)? = null,
+) {
+    LegacyIncomeScreen(viewModel = viewModel, onBack = onBack)
 }

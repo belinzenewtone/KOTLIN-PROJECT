@@ -7,6 +7,6 @@ import com.personal.lifeOS.features.review.presentation.ReviewScreen as ProperRe
  * Navigation bridge — delegates to the fully-implemented weekly digest screen.
  */
 @Composable
-fun ReviewScreen() {
-    ProperReviewScreen()
+fun ReviewScreen(onBack: (() -> Unit)? = null) {
+    ProperReviewScreen(onBack = onBack)
 }

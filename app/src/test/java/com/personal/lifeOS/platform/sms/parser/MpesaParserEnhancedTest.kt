@@ -1,6 +1,7 @@
 package com.personal.lifeOS.platform.sms.parser
 
-import com.personal.lifeOS.platform.sms.parser.MpesaParsingConfig.*
+import com.personal.lifeOS.platform.sms.parser.MpesaParsingConfig.Confidence
+import com.personal.lifeOS.platform.sms.parser.MpesaParsingConfig.TransactionCategory
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -41,14 +42,14 @@ class MpesaParserEnhancedTest {
     fun testStage2_ExtractAmountKsh() {
         val sms = "ABC1234567 Confirmed. Ksh1,250.50 sent to John on 1/1/26 at 10:00 AM."
         val parsed = MpesaParserEnhanced.parse(sms)
-        assertEquals(1250.50, parsed?.amount, 0.01)
+        assertEquals(1250.50, requireNotNull(parsed).amount, 0.01)
     }
 
     @Test
     fun testStage2_ExtractAmountKES() {
         val sms = "ABC1234567 Confirmed. KES 999 sent to John on 1/1/26 at 10:00 AM."
         val parsed = MpesaParserEnhanced.parse(sms)
-        assertEquals(999.0, parsed?.amount, 0.01)
+        assertEquals(999.0, requireNotNull(parsed).amount, 0.01)
     }
 
     @Test
@@ -213,7 +214,7 @@ class MpesaParserEnhancedTest {
         val loan = MpesaParserEnhanced.parse(smsFulizaLoan)
         assertNotNull(loan)
         assertEquals("ABC1234567", loan?.mpesaCode)
-        assertEquals(5000.0, loan?.amount, 0.01)
+        assertEquals(5000.0, requireNotNull(loan).amount, 0.01)
 
         // Fuliza interest notice (different amount, same code)
         val smsFulizaInterest = "ABC1234567 Fuliza interest Ksh150 accrued on 2/1/26."
@@ -238,7 +239,7 @@ class MpesaParserEnhancedTest {
         val sms = "ABC1234567 Confirmed. ksh500 SENT TO JOHN on 1/1/26 at 10:00 AM."
         val parsed = MpesaParserEnhanced.parse(sms)
         assertNotNull(parsed)
-        assertEquals(500.0, parsed?.amount, 0.01)
+        assertEquals(500.0, requireNotNull(parsed).amount, 0.01)
     }
 
     // ── Stage 0: Fast Filter ──────────────────────────────────────────────────

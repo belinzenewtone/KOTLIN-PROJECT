@@ -15,6 +15,7 @@ fun DashboardScreen(
     onOpenAssistant: () -> Unit = {},
     onOpenProfile: () -> Unit = {},
     onOpenInsights: () -> Unit = {},
+    onOpenReview: () -> Unit = {},
     onOpenLearning: () -> Unit = {},
 ) {
     HomeScreen(
@@ -24,6 +25,7 @@ fun DashboardScreen(
         onOpenAssistant = onOpenAssistant,
         onOpenProfile = onOpenProfile,
         onOpenInsights = onOpenInsights,
+        onOpenReview = onOpenReview,
         onOpenLearning = onOpenLearning,
     )
 }

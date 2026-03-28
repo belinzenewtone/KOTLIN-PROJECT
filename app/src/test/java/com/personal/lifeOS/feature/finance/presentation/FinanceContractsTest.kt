@@ -11,6 +11,7 @@ import com.personal.lifeOS.features.budget.domain.model.Budget
 import com.personal.lifeOS.features.budget.domain.model.BudgetPeriod
 import com.personal.lifeOS.features.income.domain.model.IncomeRecord
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDateTime
@@ -119,6 +120,49 @@ class FinanceContractsTest {
         assertEquals(2, model.duplicateCount)
         assertEquals(1, model.parseFailureCount)
         assertTrue(model.lastImportSummary?.contains("Last import") == true)
+        assertEquals(1_700_000_000_000L, model.latestImportAt)
+    }
+
+    @Test
+    fun `finance helpers derive freshness review queue and budget guardrails`() {
+        val reference = localMillis(2026, 3, 19, 9, 0)
+        val snapshot =
+            FinanceSnapshot(
+                transactions =
+                    listOf(
+                        FinanceTransaction(
+                            id = 1,
+                            amount = 4_500.0,
+                            merchant = "Naivas",
+                            category = "Groceries",
+                            date = localMillis(2026, 3, 19, 8, 0),
+                        ),
+                    ),
+                budgets =
+                    listOf(
+                        Budget(
+                            id = 1,
+                            category = "Groceries",
+                            limitAmount = 5_000.0,
+                            period = BudgetPeriod.MONTHLY,
+                        ),
+                    ),
+            )
+        val importHealth =
+            ImportHealthSummary(
+                pending = 2,
+                latestImportAt = reference,
+            )
+        val summary = BuildFinanceSummaryUseCase()(snapshot, reference)
+
+        val freshness = buildFinanceFreshness(snapshot, importHealth, lastSyncAt = null)
+        val reviewQueue = buildReviewQueueSummary(importHealth)
+        val guardrail = buildBudgetGuardrail(summary, totalMonthBudget = 5_000.0)
+
+        assertNotNull(freshness)
+        assertEquals("2 transactions waiting for review", reviewQueue)
+        assertNotNull(guardrail)
+        assertTrue(guardrail?.message?.contains("%") == true || guardrail?.message?.contains("over") == true)
     }
 }
 

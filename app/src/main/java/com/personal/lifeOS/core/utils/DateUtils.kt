@@ -66,4 +66,22 @@ object DateUtils {
     fun formatCurrency(amount: Double): String {
         return "KSh ${String.format("%,.0f", amount)}"
     }
+
+    fun formatRelativeTime(
+        epochMillis: Long,
+        referenceTimeMillis: Long = System.currentTimeMillis(),
+    ): String {
+        val deltaMillis = (referenceTimeMillis - epochMillis).coerceAtLeast(0L)
+        val minutes = deltaMillis / 60_000L
+        val hours = deltaMillis / (60L * 60L * 1000L)
+        val days = deltaMillis / (24L * 60L * 60L * 1000L)
+
+        return when {
+            minutes < 1L -> "just now"
+            minutes < 60L -> "$minutes min ago"
+            hours < 24L -> "$hours hr ago"
+            days < 7L -> "$days day${if (days == 1L) "" else "s"} ago"
+            else -> formatDate(epochMillis, "MMM dd")
+        }
+    }
 }

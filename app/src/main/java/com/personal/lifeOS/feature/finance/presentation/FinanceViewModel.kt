@@ -4,6 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import com.personal.lifeOS.core.datastore.FeatureFlag
+import com.personal.lifeOS.core.datastore.FeatureFlagStore
+import com.personal.lifeOS.core.telemetry.HealthDiagnosticsRepository
 import com.personal.lifeOS.core.telemetry.ImportHealthSummary
 import com.personal.lifeOS.core.ui.model.SyncStatusUiModel
 import com.personal.lifeOS.feature.finance.domain.model.FinanceTransaction
@@ -49,11 +52,13 @@ class FinanceViewModel
         private val importMpesaMessagesUseCase: ImportMpesaMessagesUseCase,
         private val observeImportHealthUseCase: ObserveImportHealthUseCase,
         private val fulizaLoanRepository: FulizaLoanRepository,
+        private val healthDiagnosticsRepository: HealthDiagnosticsRepository,
+        private val featureFlagStore: FeatureFlagStore,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(FinanceUiState())
         val uiState: StateFlow<FinanceUiState> = _uiState.asStateFlow()
 
-        @OptIn(FlowPreview::class)
+        @OptIn(FlowPreview::class, kotlinx.coroutines.ExperimentalCoroutinesApi::class)
         val pagedTransactions: Flow<PagingData<FinanceTransaction>> =
             _uiState
                 .map { Pair(it.selectedFilter, it.searchQuery) }
@@ -66,11 +71,14 @@ class FinanceViewModel
 
         private var latestSnapshot = FinanceSnapshot()
         private var latestImportHealth = ImportHealthSummary()
+        private var latestSyncUpdatedAt: Long? = null
 
         init {
+            loadFeatureFlags()
             observeFinanceSnapshot()
             observeImportHealth()
             observeFulizaDebt()
+            observeSyncHealth()
         }
 
         fun onEvent(event: FinanceUiEvent) {
@@ -134,17 +142,55 @@ class FinanceViewModel
 
         private fun refreshDerivedState() {
             _uiState.update { current ->
+                val summary = buildFinanceSummaryUseCase(latestSnapshot)
+                val syncStatus =
+                    when {
+                        current.errorMessage.isNullOrBlank().not() -> SyncStatusUiModel.FAILED
+                        latestSyncUpdatedAt == null && latestImportHealth.latestImportAt == null -> SyncStatusUiModel.LOCAL_ONLY
+                        latestImportHealth.parseFailed > 0 -> SyncStatusUiModel.FAILED
+                        else -> SyncStatusUiModel.SYNCED
+                    }
                 current.copy(
-                    summary = buildFinanceSummaryUseCase(latestSnapshot),
+                    summary = summary,
                     importHealth = latestImportHealth.toUiModel(current.importResultMessage),
-                    syncStatus =
-                        if (current.errorMessage.isNullOrBlank()) {
-                            SyncStatusUiModel.SYNCED
-                        } else {
-                            SyncStatusUiModel.FAILED
-                        },
+                    syncStatus = syncStatus,
+                    freshness = buildFinanceFreshness(latestSnapshot, latestImportHealth, latestSyncUpdatedAt),
+                    reviewQueueSummary = buildReviewQueueSummary(latestImportHealth),
+                    budgetGuardrail = buildBudgetGuardrail(summary, latestSnapshot.totalBudgetLimit),
+                    exportNudge = buildExportNudge(summary),
+                    totalMonthBudget = latestSnapshot.totalBudgetLimit,
                     isLoading = false,
                 )
+            }
+        }
+
+        private fun observeSyncHealth() {
+            healthDiagnosticsRepository.observeSyncHealth()
+                .onEach { summary ->
+                    latestSyncUpdatedAt = summary.latestJobUpdatedAt
+                    _uiState.update { current ->
+                        current.copy(
+                            syncStatus =
+                                when {
+                                    summary.failed > 0 -> SyncStatusUiModel.FAILED
+                                    summary.syncing > 0 -> SyncStatusUiModel.SYNCING
+                                    summary.queued > 0 -> SyncStatusUiModel.QUEUED
+                                    summary.latestJobUpdatedAt != null -> SyncStatusUiModel.SYNCED
+                                    else -> current.syncStatus
+                                },
+                        )
+                    }
+                    refreshDerivedState()
+                }.catch { /* non-fatal: finance still renders with local state */ }
+                .launchIn(viewModelScope)
+        }
+
+        private fun loadFeatureFlags() {
+            viewModelScope.launch {
+                runCatching { featureFlagStore.isEnabled(FeatureFlag.FINANCE_HEALTH_V2) }
+                    .onSuccess { enabled ->
+                        _uiState.update { it.copy(enhancedUiEnabled = enabled) }
+                    }
             }
         }
 

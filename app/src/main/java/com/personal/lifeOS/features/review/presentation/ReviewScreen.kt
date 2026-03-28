@@ -45,15 +45,44 @@ fun ReviewScreen(viewModel: ReviewViewModel = hiltViewModel()) {
             color = MaterialTheme.colorScheme.onSurface,
         )
 
-        // ── Spending summary card ────────────────────────────────────────────
+        state.ritual?.let { ritual ->
+            ReviewRitualCard(ritual = ritual)
+        }
         ReviewSummaryCard(state = state)
-
-        // ── Task completion card ─────────────────────────────────────────────
         ReviewTaskCard(state = state)
-
-        // ── Insights this week ───────────────────────────────────────────────
+        ReviewBulletCard(
+            title = "Wins",
+            items = state.wins,
+        )
+        ReviewBulletCard(
+            title = "Risks",
+            items = state.risks,
+        )
         if (state.topInsights.isNotEmpty()) {
             ReviewInsightsCard(insights = state.topInsights)
+        }
+    }
+}
+
+@Composable
+private fun ReviewRitualCard(ritual: ReviewRitualUiModel) {
+    AppCard(elevated = true) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = ritual.title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = ritual.summary,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = ritual.nextStepLabel,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
         }
     }
 }
@@ -72,6 +101,14 @@ private fun ReviewSummaryCard(state: ReviewUiState) {
             ReviewStatRow(
                 label = "Total this week",
                 value = ksh.format(state.summary.totalSpend),
+            )
+            ReviewStatRow(
+                label = "Posture",
+                value = state.summary.postureLabel,
+            )
+            ReviewStatRow(
+                label = "Week delta",
+                value = state.summary.weekDeltaLabel,
             )
             state.summary.topCategory?.let { cat ->
                 ReviewStatRow(label = "Top category", value = cat)
@@ -102,15 +139,18 @@ private fun ReviewTaskCard(state: ReviewUiState) {
 }
 
 @Composable
-private fun ReviewInsightsCard(insights: List<String>) {
-    AppCard(elevated = true) {
+private fun ReviewBulletCard(
+    title: String,
+    items: List<String>,
+) {
+    AppCard(elevated = false) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(
-                text = "Top Insights",
+                text = title,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
-            insights.forEachIndexed { index, insight ->
+            items.forEachIndexed { index, item ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -122,7 +162,7 @@ private fun ReviewInsightsCard(insights: List<String>) {
                         fontFamily = FontFamily.Monospace,
                     )
                     Text(
-                        text = insight,
+                        text = item,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.weight(1f),
@@ -134,11 +174,20 @@ private fun ReviewInsightsCard(insights: List<String>) {
 }
 
 @Composable
+private fun ReviewInsightsCard(insights: List<String>) {
+    ReviewBulletCard(
+        title = "Top Insights",
+        items = insights,
+    )
+}
+
+@Composable
 private fun ReviewStatRow(label: String, value: String) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 2.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(

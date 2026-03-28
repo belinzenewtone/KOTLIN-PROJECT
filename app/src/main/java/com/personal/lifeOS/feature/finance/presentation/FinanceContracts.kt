@@ -1,8 +1,11 @@
 package com.personal.lifeOS.feature.finance.presentation
 
 import com.personal.lifeOS.core.telemetry.ImportHealthSummary
+import com.personal.lifeOS.core.ui.model.FreshnessUiModel
 import com.personal.lifeOS.core.ui.model.ImportHealthUiModel
 import com.personal.lifeOS.core.ui.model.SyncStatusUiModel
+import com.personal.lifeOS.core.utils.DateUtils
+import com.personal.lifeOS.feature.finance.domain.model.FinanceSnapshot
 import com.personal.lifeOS.feature.finance.domain.model.FinanceSpendingSummary
 import com.personal.lifeOS.feature.finance.domain.model.FinanceTransaction
 import com.personal.lifeOS.feature.finance.domain.model.FinanceTransactionFilter
@@ -16,19 +19,32 @@ data class FinanceUiState(
     val searchQuery: String = "",
     val importHealth: ImportHealthUiModel = ImportHealthUiModel(),
     val syncStatus: SyncStatusUiModel = SyncStatusUiModel.UNKNOWN,
+    val freshness: FreshnessUiModel? = null,
+    val reviewQueueSummary: String? = null,
+    val budgetGuardrail: FinanceGuardrailUiModel? = null,
+    val exportNudge: FinanceActionNudgeUiModel? = null,
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val importResultMessage: String? = null,
     val showAddDialog: Boolean = false,
     val showImportDialog: Boolean = false,
     val showCategoryPicker: FinanceTransaction? = null,
-    /** Net outstanding Fuliza balance in KES. Null = unknown/loading. 0.0 = fully repaid. */
     val fulizaNetOutstandingKes: Double? = null,
     val showFulizaBanner: Boolean = false,
-    /** Count of open or partially repaid Fuliza loans. */
     val fulizaOpenCount: Int = 0,
-    /** Total monthly budget across all budget categories. */
     val totalMonthBudget: Double = 0.0,
+    val enhancedUiEnabled: Boolean = true,
+)
+
+data class FinanceGuardrailUiModel(
+    val title: String,
+    val message: String,
+)
+
+data class FinanceActionNudgeUiModel(
+    val title: String,
+    val summary: String,
+    val actionLabel: String,
 )
 
 sealed interface FinanceUiEvent {
@@ -83,5 +99,70 @@ internal fun ImportHealthSummary.toUiModel(importResultMessage: String?): Import
                             )
                     "Last import $formatted"
                 },
+        latestImportAt = latestImportAt,
+    )
+}
+
+internal fun buildFinanceFreshness(
+    snapshot: FinanceSnapshot,
+    importHealth: ImportHealthSummary,
+    lastSyncAt: Long?,
+): FreshnessUiModel? {
+    val timestamp = importHealth.latestImportAt ?: lastSyncAt ?: snapshot.transactions.maxOfOrNull { it.date } ?: return null
+    val supporting =
+        when {
+            importHealth.pending > 0 -> "${importHealth.pending} items waiting for review"
+            importHealth.parseFailed > 0 -> "${importHealth.parseFailed} import issue${if (importHealth.parseFailed == 1) "" else "s"}"
+            else -> "Recent ledger activity is visible"
+        }
+    val staleReference = System.currentTimeMillis() - timestamp > 48L * 60L * 60L * 1000L
+    return FreshnessUiModel(
+        label = "Updated ${DateUtils.formatRelativeTime(timestamp)}",
+        supportingLabel = supporting,
+        isStale = staleReference,
+    )
+}
+
+internal fun buildReviewQueueSummary(importHealth: ImportHealthSummary): String? {
+    return when {
+        importHealth.pending > 0 ->
+            "${importHealth.pending} transaction${if (importHealth.pending == 1) "" else "s"} waiting for review"
+        importHealth.parseFailed > 0 ->
+            "${importHealth.parseFailed} import issue${if (importHealth.parseFailed == 1) "" else "s"} need attention"
+        else -> null
+    }
+}
+
+internal fun buildBudgetGuardrail(
+    summary: FinanceSpendingSummary,
+    totalMonthBudget: Double,
+): FinanceGuardrailUiModel? {
+    if (totalMonthBudget <= 0.0 || summary.monthTotal <= 0.0) return null
+    val spendRatio = summary.monthTotal / totalMonthBudget
+    return when {
+        spendRatio >= 1.0 ->
+            FinanceGuardrailUiModel(
+                title = "Budget guardrail",
+                message = "You are ${DateUtils.formatCurrency(summary.monthTotal - totalMonthBudget)} over the current monthly budget.",
+            )
+        spendRatio >= 0.8 ->
+            FinanceGuardrailUiModel(
+                title = "Budget guardrail",
+                message = "You have used ${(spendRatio * 100).toInt()}% of the monthly budget. Review the top category before month end.",
+            )
+        else -> null
+    }
+}
+
+internal fun buildExportNudge(summary: FinanceSpendingSummary): FinanceActionNudgeUiModel {
+    return FinanceActionNudgeUiModel(
+        title = "Exports and reports",
+        summary =
+            if (summary.transactionCount == 0) {
+                "Prepare a clean export setup before the ledger grows."
+            } else {
+                "Create a CSV, JSON, or shareable report from ${summary.transactionCount} visible transactions."
+            },
+        actionLabel = "Open export center",
     )
 }

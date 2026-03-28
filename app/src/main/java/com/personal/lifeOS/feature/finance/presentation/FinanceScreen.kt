@@ -2,6 +2,7 @@ package com.personal.lifeOS.feature.finance.presentation
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -34,15 +34,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import com.personal.lifeOS.core.ui.designsystem.AppCard
 import com.personal.lifeOS.core.ui.designsystem.BudgetProgressIndicator
 import com.personal.lifeOS.core.ui.designsystem.EmptyState
@@ -59,12 +56,17 @@ import com.personal.lifeOS.core.ui.designsystem.TopBannerTone
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.feature.finance.domain.model.FinanceTransaction
 import com.personal.lifeOS.feature.finance.domain.model.FinanceTransactionFilter
+import com.personal.lifeOS.ui.theme.Warning
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Composable
 @Suppress("LongMethod", "CyclomaticComplexMethod")
 fun FinanceScreen(
     viewModel: FinanceViewModel = hiltViewModel(),
-    onOpenTools: () -> Unit = {}, // kept for nav compatibility, no longer shown as button
+    onOpenTools: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val lazyItems = viewModel.pagedTransactions.collectAsLazyPagingItems()
@@ -81,9 +83,6 @@ fun FinanceScreen(
             FinanceTransactionFilter.THIS_MONTH -> 3
         }
 
-    // Day label tracks the topmost visible transaction as the user scrolls.
-    // Guard: lazyItems[index] throws IndexOutOfBoundsException when itemCount == 0
-    // (enablePlaceholders = false means no null-sentinel for out-of-range access).
     val dayLabel by remember(lazyItems.itemCount) {
         derivedStateOf {
             val idx = txListState.firstVisibleItemIndex
@@ -99,7 +98,9 @@ fun FinanceScreen(
                         else -> date.format(DateTimeFormatter.ofPattern("MMM d"))
                     }
                 } ?: ""
-            } else ""
+            } else {
+                ""
+            }
         }
     }
 
@@ -127,7 +128,7 @@ fun FinanceScreen(
                     imageVector = Icons.Filled.Add,
                     contentDescription = "Add transaction",
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = androidx.compose.ui.Modifier.size(24.dp),
+                    modifier = Modifier.size(24.dp),
                 )
             }
             IconButton(onClick = { viewModel.onEvent(FinanceUiEvent.ShowImportDialog) }) {
@@ -135,7 +136,7 @@ fun FinanceScreen(
                     imageVector = Icons.Filled.FileDownload,
                     contentDescription = "Import from SMS",
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = androidx.compose.ui.Modifier.size(24.dp),
+                    modifier = Modifier.size(24.dp),
                 )
             }
         },
@@ -146,10 +147,22 @@ fun FinanceScreen(
             return@PageScaffold
         }
 
+        if (uiState.enhancedUiEnabled) {
+            FinanceImportBanner(
+                uiState = uiState,
+                onReview = { viewModel.onEvent(FinanceUiEvent.ShowImportDialog) },
+            )
+        }
+
         FinanceSummaryStrip(uiState = uiState)
+        uiState.budgetGuardrail?.let { guardrail ->
+            InlineBanner(
+                message = "${guardrail.title} · ${guardrail.message}",
+                tone = InlineBannerTone.WARNING,
+            )
+        }
         FinanceBudgetPressure(uiState = uiState)
 
-        // Fuliza summary card — only shown when there is an outstanding balance
         if (uiState.showFulizaBanner) {
             FulizaSummaryCard(
                 outstanding = uiState.fulizaNetOutstandingKes ?: 0.0,
@@ -161,6 +174,21 @@ fun FinanceScreen(
             monthSpend = uiState.summary.monthTotal,
             monthBudget = uiState.totalMonthBudget,
         )
+
+        if (uiState.enhancedUiEnabled) {
+            uiState.reviewQueueSummary?.let { summary ->
+                ReviewQueueCard(
+                    summary = summary,
+                    onOpenReview = { viewModel.onEvent(FinanceUiEvent.ShowImportDialog) },
+                )
+            }
+            uiState.exportNudge?.let { exportNudge ->
+                FinanceActionNudgeCard(
+                    nudge = exportNudge,
+                    onOpenTools = onOpenTools,
+                )
+            }
+        }
 
         ImportHealthPanel(
             model = uiState.importHealth,
@@ -193,12 +221,16 @@ fun FinanceScreen(
 
         if (lazyItems.itemCount == 0 && lazyItems.loadState.refresh !is LoadState.Loading) {
             EmptyState(
-                title = "No matching transactions",
-                description = "Try another filter or import MPESA messages.",
+                title = if (query.isBlank()) "No transactions yet" else "No matching transactions",
+                description =
+                    if (query.isBlank()) {
+                        "Import MPESA messages or add a transaction to start your ledger."
+                    } else {
+                        "Try another filter or refine your search."
+                    },
             )
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                // ── Transactions section header (sits tight above the card) ──
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -218,7 +250,6 @@ fun FinanceScreen(
                     }
                 }
 
-                // ── Scrollable transactions box: loads pages as user scrolls ──
                 AppCard(elevated = false) {
                     LazyColumn(
                         state = txListState,
@@ -241,10 +272,9 @@ fun FinanceScreen(
                                 )
                             }
                         }
-                        // Loading indicator at the bottom while fetching the next page
                         if (lazyItems.loadState.append is LoadState.Loading) {
                             item {
-                                androidx.compose.foundation.layout.Box(
+                                Box(
                                     modifier = Modifier.fillMaxWidth(),
                                     contentAlignment = Alignment.Center,
                                 ) {
@@ -261,7 +291,6 @@ fun FinanceScreen(
         }
     }
 
-    // ── Delete confirmation dialog ────────────────────────────────────────────
     deleteTarget?.let { tx ->
         AlertDialog(
             onDismissRequest = { deleteTarget = null },
@@ -327,6 +356,53 @@ fun FinanceScreen(
 }
 
 @Composable
+private fun FinanceImportBanner(
+    uiState: FinanceUiState,
+    onReview: () -> Unit,
+) {
+    AppCard(elevated = true) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "Import health",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    uiState.freshness?.let { freshness ->
+                        Text(
+                            text = freshness.label,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                TextButton(onClick = onReview) {
+                    Text("Review")
+                }
+            }
+            Text(
+                text =
+                    "${uiState.importHealth.pendingReviewCount} pending · ${uiState.importHealth.duplicateCount} duplicates · ${uiState.importHealth.parseFailureCount} issues",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            uiState.freshness?.supportingLabel?.let { supportingLabel ->
+                Text(
+                    text = supportingLabel,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun FinanceSummaryStrip(uiState: FinanceUiState) {
     Row(
         modifier =
@@ -355,7 +431,7 @@ private fun FinanceSummaryStrip(uiState: FinanceUiState) {
 
 @Composable
 private fun FinanceBudgetPressure(uiState: FinanceUiState) {
-    val syntheticBudget = (uiState.summary.monthTotal * 1.20).coerceAtLeast(1.0)
+    val budgetAmount = uiState.totalMonthBudget.takeIf { it > 0.0 } ?: (uiState.summary.monthTotal * 1.20).coerceAtLeast(1.0)
     AppCard(elevated = true) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
@@ -365,8 +441,65 @@ private fun FinanceBudgetPressure(uiState: FinanceUiState) {
             )
             BudgetProgressIndicator(
                 spentAmount = uiState.summary.monthTotal,
-                budgetAmount = syntheticBudget,
+                budgetAmount = budgetAmount,
             )
+        }
+    }
+}
+
+@Composable
+private fun ReviewQueueCard(
+    summary: String,
+    onOpenReview: () -> Unit,
+) {
+    AppCard(elevated = false) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    text = "Review queue",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            TextButton(onClick = onOpenReview) {
+                Text("Open")
+            }
+        }
+    }
+}
+
+@Composable
+private fun FinanceActionNudgeCard(
+    nudge: FinanceActionNudgeUiModel,
+    onOpenTools: () -> Unit,
+) {
+    AppCard(elevated = false) {
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(
+                text = nudge.title,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = nudge.summary,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            TextButton(onClick = onOpenTools) {
+                Text(nudge.actionLabel)
+            }
         }
     }
 }
@@ -383,7 +516,6 @@ private fun FinanceTransactionRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Left: merchant + category/date (takes only the space it needs, not full width)
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(1.dp),
@@ -421,7 +553,6 @@ private fun FinanceTransactionRow(
                     }
                 }
             }
-            // Right: amount
             Text(
                 text = DateUtils.formatCurrency(transaction.amount),
                 style = MaterialTheme.typography.bodyMedium,
@@ -460,8 +591,8 @@ private fun FulizaSummaryCard(
                 Text(
                     text = DateUtils.formatCurrency(outstanding),
                     style = MaterialTheme.typography.titleMedium,
-                    color = com.personal.lifeOS.ui.theme.Warning,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = Warning,
+                    fontWeight = FontWeight.Bold,
                 )
             }
             Text(
@@ -476,16 +607,17 @@ private fun FulizaSummaryCard(
 @Composable
 private fun SpendingVelocityBanner(monthSpend: Double, monthBudget: Double) {
     if (monthBudget <= 0.0) return
-    val dayOfMonth = java.time.LocalDate.now().dayOfMonth
-    if (dayOfMonth < 3) return // too early in month to predict reliably
+    val dayOfMonth = LocalDate.now().dayOfMonth
+    if (dayOfMonth < 3) return
     val dailyRate = monthSpend / dayOfMonth
-    val daysInMonth = java.time.LocalDate.now().lengthOfMonth()
+    val daysInMonth = LocalDate.now().lengthOfMonth()
     val projected = dailyRate * daysInMonth
     val overshoot = projected - monthBudget
-    if (overshoot <= 0.0) return // on track, no noise
+    if (overshoot <= 0.0) return
     InlineBanner(
-        message = "At this pace: ${DateUtils.formatCurrency(projected)} projected — " +
-            "${DateUtils.formatCurrency(overshoot)} over budget",
+        message =
+            "At this pace: ${DateUtils.formatCurrency(projected)} projected — " +
+                "${DateUtils.formatCurrency(overshoot)} over budget",
         tone = InlineBannerTone.WARNING,
     )
 }

@@ -16,6 +16,7 @@ data class SearchUiState(
     val query: String = "",
     val isLoading: Boolean = false,
     val results: List<SearchResult> = emptyList(),
+    val groupedSearchEnabled: Boolean = true,
     val error: String? = null,
 )
 

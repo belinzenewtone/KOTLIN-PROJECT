@@ -20,6 +20,30 @@ enum class FeatureFlag(
         key = "background_sync",
         defaultEnabled = true,
     ),
+    HOME_RITUALS(
+        key = "home_rituals",
+        defaultEnabled = true,
+    ),
+    FINANCE_HEALTH_V2(
+        key = "finance_health_v2",
+        defaultEnabled = true,
+    ),
+    GROUPED_SEARCH(
+        key = "grouped_search",
+        defaultEnabled = true,
+    ),
+    EXPORT_CENTER_V2(
+        key = "export_center_v2",
+        defaultEnabled = true,
+    ),
+    REVIEW_RITUALS(
+        key = "review_rituals",
+        defaultEnabled = true,
+    ),
+    SYNC_CIRCUIT_BREAKER(
+        key = "sync_circuit_breaker",
+        defaultEnabled = true,
+    ),
     ;
 
     companion object {

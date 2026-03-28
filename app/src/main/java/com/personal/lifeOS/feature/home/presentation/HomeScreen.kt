@@ -26,8 +26,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.personal.lifeOS.core.ui.designsystem.AppCard
 import com.personal.lifeOS.core.ui.designsystem.CalendarEventChip
 import com.personal.lifeOS.core.ui.designsystem.FinanceSummaryCard
-import com.personal.lifeOS.core.ui.designsystem.InlineBanner
-import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
 import com.personal.lifeOS.core.ui.designsystem.LoadingState
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
 import com.personal.lifeOS.core.ui.designsystem.SyncStatusPill
@@ -44,7 +42,8 @@ fun HomeScreen(
     onOpenAssistant: () -> Unit,
     onOpenProfile: () -> Unit,
     onOpenInsights: () -> Unit,
-    onOpenLearning: () -> Unit = {}, // kept for nav compat — Learn card removed from Home
+    onOpenReview: () -> Unit,
+    onOpenLearning: () -> Unit = {},
 ) {
     val dashboardState by viewModel.uiState.collectAsState()
     val uiState = dashboardState.toHomeUiState()
@@ -61,7 +60,6 @@ fun HomeScreen(
             }
         },
         actions = {
-            // Insights icon — visible in the header, not hidden, not a nav tab
             IconButton(onClick = onOpenInsights) {
                 Icon(
                     imageVector = Icons.Filled.BarChart,
@@ -88,13 +86,68 @@ fun HomeScreen(
             color = MaterialTheme.colorScheme.onSurface,
         )
 
+        HomeSyncCard(uiState = uiState)
         HomeSummaryStrip(uiState = uiState)
+        HomeQuickActionsRow(
+            uiState = uiState,
+            onOpenTasks = onOpenTasks,
+            onOpenFinance = onOpenFinance,
+            onOpenCalendar = onOpenCalendar,
+            onOpenAssistant = onOpenAssistant,
+            onOpenReview = onOpenReview,
+        )
+        uiState.weeklyRitual?.let { ritual ->
+            HomeWeeklyRitualCard(
+                ritual = ritual,
+                onOpenReview = onOpenReview,
+            )
+        }
+        uiState.updateNudge?.let { update ->
+            HomeUpdateCard(
+                update = update,
+                onOpenProfile = onOpenProfile,
+            )
+        }
         HomeFocusCard(uiState = uiState, onOpenTasks = onOpenTasks)
         HomeInsightsTeaser(uiState = uiState, onOpenInsights = onOpenInsights)
         HomeCalendarCard(uiState = uiState, onOpenCalendar = onOpenCalendar)
-
         HomeAssistantCard(uiState = uiState, onOpenAssistant = onOpenAssistant)
-        HomeSyncRow(uiState = uiState)
+    }
+}
+
+@Composable
+private fun HomeSyncCard(uiState: HomeUiState) {
+    AppCard(elevated = true) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text = "Sync",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    uiState.syncFreshness?.let { freshness ->
+                        Text(
+                            text = freshness.label,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                SyncStatusPill(status = uiState.syncStatus)
+            }
+            uiState.syncFreshness?.supportingLabel?.let { supportingLabel ->
+                Text(
+                    text = supportingLabel,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
 
@@ -131,6 +184,103 @@ private fun HomeSummaryStrip(uiState: HomeUiState) {
 }
 
 @Composable
+private fun HomeQuickActionsRow(
+    uiState: HomeUiState,
+    onOpenTasks: () -> Unit,
+    onOpenFinance: () -> Unit,
+    onOpenCalendar: () -> Unit,
+    onOpenAssistant: () -> Unit,
+    onOpenReview: () -> Unit,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        uiState.quickActions.forEach { action ->
+            AppCard(
+                modifier = Modifier.width(172.dp),
+                elevated = false,
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = action.label,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = action.supportingText,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    TextButton(
+                        onClick = when (action.label) {
+                            "Tasks" -> onOpenTasks
+                            "Finance" -> onOpenFinance
+                            "Calendar" -> onOpenCalendar
+                            "Assistant" -> onOpenAssistant
+                            else -> onOpenReview
+                        },
+                    ) {
+                        Text("Open")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HomeWeeklyRitualCard(
+    ritual: HomeWeeklyRitualUiModel,
+    onOpenReview: () -> Unit,
+) {
+    AppCard(elevated = true) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = ritual.title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = ritual.summary,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Button(onClick = onOpenReview) {
+                Text(ritual.ctaLabel)
+            }
+        }
+    }
+}
+
+@Composable
+private fun HomeUpdateCard(
+    update: com.personal.lifeOS.core.ui.model.UpdateNudgeUiModel,
+    onOpenProfile: () -> Unit,
+) {
+    AppCard(elevated = false) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = update.title,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = update.summary,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            TextButton(onClick = onOpenProfile) {
+                Text(if (update.required) "Install update" else "Review update")
+            }
+        }
+    }
+}
+
+@Composable
 private fun HomeFocusCard(
     uiState: HomeUiState,
     onOpenTasks: () -> Unit,
@@ -154,11 +304,6 @@ private fun HomeFocusCard(
     }
 }
 
-/**
- * Insights teaser card — sits naturally in the Home feed so users discover Insights
- * without it being a full tab. Tapping the card or the "View all" button opens the
- * Insights screen.
- */
 @Composable
 private fun HomeInsightsTeaser(
     uiState: HomeUiState,
@@ -183,7 +328,6 @@ private fun HomeInsightsTeaser(
                         imageVector = Icons.Filled.BarChart,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.width(18.dp),
                     )
                     Text(
                         text = "Insights",
@@ -192,8 +336,9 @@ private fun HomeInsightsTeaser(
                     )
                 }
                 Text(
-                    text = uiState.topInsight
-                        ?: "Trends and patterns across your tasks, spending, and habits.",
+                    text =
+                        uiState.topInsight
+                            ?: "Trends and patterns across your tasks, spending, and habits.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -259,17 +404,3 @@ private fun HomeAssistantCard(
         }
     }
 }
-
-@Composable
-private fun HomeSyncRow(uiState: HomeUiState) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = "Sync",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        SyncStatusPill(status = uiState.syncStatus)
-    }
-}
-
-// HomeLearningCard removed — Learn section not yet built; dead card removed to keep Home clean.

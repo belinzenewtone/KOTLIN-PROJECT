@@ -54,24 +54,30 @@ class DatabaseMigrationV1112Test {
         assertNotNull(dailyViewSql)
         assertNotNull(monthlyViewSql)
         assertEquals(
-            "CREATE VIEW `daily_spend` AS SELECT user_id,\n" +
-                "       strftime('%Y-%m-%d', date / 1000, 'unixepoch', 'localtime') AS spend_date,\n" +
-                "       SUM(amount) AS total_amount,\n" +
-                "       COUNT(*) AS tx_count\n" +
-                "FROM transactions\n" +
-                "WHERE deleted_at IS NULL\n" +
-                "GROUP BY user_id, strftime('%Y-%m-%d', date / 1000, 'unixepoch', 'localtime')",
-            dailyViewSql,
+            normalizeSql(
+                "CREATE VIEW `daily_spend` AS " +
+                    "SELECT user_id, " +
+                    "strftime('%Y-%m-%d', date / 1000, 'unixepoch', 'localtime') AS spend_date, " +
+                    "SUM(amount) AS total_amount, " +
+                    "COUNT(*) AS tx_count " +
+                    "FROM transactions " +
+                    "WHERE deleted_at IS NULL " +
+                    "GROUP BY user_id, strftime('%Y-%m-%d', date / 1000, 'unixepoch', 'localtime')",
+            ),
+            normalizeSql(dailyViewSql),
         )
         assertEquals(
-            "CREATE VIEW `monthly_spend` AS SELECT user_id,\n" +
-                "       strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime') AS spend_month,\n" +
-                "       SUM(amount) AS total_amount,\n" +
-                "       COUNT(*) AS tx_count\n" +
-                "FROM transactions\n" +
-                "WHERE deleted_at IS NULL\n" +
-                "GROUP BY user_id, strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime')",
-            monthlyViewSql,
+            normalizeSql(
+                "CREATE VIEW `monthly_spend` AS " +
+                    "SELECT user_id, " +
+                    "strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime') AS spend_month, " +
+                    "SUM(amount) AS total_amount, " +
+                    "COUNT(*) AS tx_count " +
+                    "FROM transactions " +
+                    "WHERE deleted_at IS NULL " +
+                    "GROUP BY user_id, strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime')",
+            ),
+            normalizeSql(monthlyViewSql),
         )
 
         db.close()
@@ -120,4 +126,6 @@ class DatabaseMigrationV1112Test {
             return if (cursor.moveToFirst()) cursor.getString(0) else null
         }
     }
+
+    private fun normalizeSql(sql: String?): String? = sql?.replace("\\s+".toRegex(), " ")?.trim()
 }

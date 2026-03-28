@@ -1,234 +1,173 @@
 package com.personal.lifeOS.platform.sms.dedupe
 
+import androidx.paging.PagingData
+import com.personal.lifeOS.features.expenses.domain.model.CategoryBreakdown
+import com.personal.lifeOS.features.expenses.domain.model.Transaction
 import com.personal.lifeOS.features.expenses.domain.repository.ExpenseRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnitRunner
-import org.mockito.kotlin.whenever
 
-/**
- * Tests for dual-key M-Pesa deduplication engine.
- *
- * Tests cover:
- * - Primary key: mpesa_code (exact transaction reference)
- * - Secondary key: source_hash (SMS body variant detection, esp. Fuliza)
- * - Tertiary: heuristic fallback (same amount + merchant + time window)
- */
-@RunWith(MockitoJUnitRunner::class)
 class MpesaDedupeEngineEnhancedTest {
+    @Test
+    fun `duplicate is detected from exact mpesa code first`() = runTest {
+        val repository = FakeExpenseRepository(existingMpesaCodes = setOf("ABC1234567"))
+        val engine = MpesaDedupeEngineEnhanced(repository)
 
-    @Mock
-    private lateinit var mockExpenseRepository: ExpenseRepository
+        val duplicate = engine.isDuplicate(
+            mpesaCode = "ABC1234567",
+            rawMessage = "ABC1234567 Confirmed. Ksh1,000 sent to John on 1/1/26.",
+            amount = 1000.0,
+            merchant = "John",
+            timestamp = 1_700_000_000_000L,
+        )
 
-    private lateinit var dedupeEngine: MpesaDedupeEngineEnhanced
-
-    @Before
-    fun setUp() {
-        dedupeEngine = MpesaDedupeEngineEnhanced(mockExpenseRepository)
+        assertTrue(duplicate)
     }
 
-    // ── Primary Key: M-Pesa Code ──────────────────────────────────────────────
-
     @Test
-    fun testPrimaryKey_DetectDuplicateByMpesaCode() = runTest {
-        val mpesaCode = "ABC1234567"
-        val rawMessage = "ABC1234567 Confirmed. Ksh1,000 sent to John on 1/1/26."
+    fun `duplicate is detected from source hash when code is new`() = runTest {
+        val repository = FakeExpenseRepository(existingSourceHashes = setOf(hashOf("seed message")))
+        val engine = MpesaDedupeEngineEnhanced(repository)
+        val rawMessage = "seed message"
 
-        whenever(mockExpenseRepository.existsByMpesaCode(mpesaCode)).thenReturn(true)
-        whenever(mockExpenseRepository.existsBySourceHash(any())).thenReturn(false)
-
-        val isDuplicate = dedupeEngine.isDuplicate(
-            mpesaCode = mpesaCode,
+        val duplicate = engine.isDuplicate(
+            mpesaCode = "NEW1234567",
             rawMessage = rawMessage,
             amount = 1000.0,
             merchant = "John",
-            timestamp = System.currentTimeMillis(),
+            timestamp = 1_700_000_000_000L,
         )
 
-        assert(isDuplicate)
+        assertTrue(duplicate)
     }
 
     @Test
-    fun testPrimaryKey_AllowNewMpesaCode() = runTest {
-        val mpesaCode = "ABC1234567"
-        val rawMessage = "ABC1234567 Confirmed. Ksh1,000 sent to John on 1/1/26."
+    fun `duplicate is detected from semantic hash across device variants`() = runTest {
+        val repository = FakeExpenseRepository(
+            existingSemanticHashes = setOf(
+                semanticHashFor(
+                    transactionType = "TRANSACTION",
+                    amount = 2500.0,
+                    timestampMs = 1_700_000_000_000L,
+                    counterparty = "KPLC PREPAID",
+                ),
+            ),
+        )
+        val engine = MpesaDedupeEngineEnhanced(repository)
 
-        whenever(mockExpenseRepository.existsByMpesaCode(mpesaCode)).thenReturn(false)
-        whenever(mockExpenseRepository.existsBySourceHash(any())).thenReturn(false)
-        whenever(mockExpenseRepository.existsPotentialDuplicate(any(), any(), any(), any())).thenReturn(false)
+        val duplicate = engine.isDuplicate(
+            mpesaCode = "XYZ1234567",
+            rawMessage = "different body entirely",
+            amount = 2500.0,
+            merchant = "KPLC PREPAID",
+            timestamp = 1_700_000_000_000L,
+        )
 
-        val isDuplicate = dedupeEngine.isDuplicate(
-            mpesaCode = mpesaCode,
-            rawMessage = rawMessage,
+        assertTrue(duplicate)
+    }
+
+    @Test
+    fun `heuristic duplicate catches same amount merchant and time window`() = runTest {
+        val repository = FakeExpenseRepository(heuristicDuplicate = true)
+        val engine = MpesaDedupeEngineEnhanced(repository)
+
+        val duplicate = engine.isDuplicate(
+            mpesaCode = "UNIQUE1234",
+            rawMessage = "UNIQUE1234 Confirmed. Ksh1,000 sent to John on 1/1/26.",
             amount = 1000.0,
             merchant = "John",
-            timestamp = System.currentTimeMillis(),
+            timestamp = 1_700_000_000_000L,
         )
 
-        assert(!isDuplicate)
-    }
-
-    // ── Secondary Key: Source Hash ────────────────────────────────────────────
-
-    @Test
-    fun testSecondaryKey_DetectDuplicateBySourceHash() = runTest {
-        val sms1 = "ABC1234567 Confirmed. Ksh5,000 from your M-PESA Fuliza on 1/1/26."
-        val sms2 = "ABC1234567 Fuliza interest Ksh150 accrued on 2/1/26."
-
-        whenever(mockExpenseRepository.existsByMpesaCode(any())).thenReturn(false)
-        // First message already imported, second has different text but same code
-        whenever(mockExpenseRepository.existsBySourceHash(any())).thenAnswer { invocation ->
-            // Simulate that the first SMS hash is already in DB
-            val providedHash = invocation.arguments[0] as String
-            providedHash == computeHash(sms1)
-        }
-
-        val isFirstDuplicate = dedupeEngine.isDuplicate(
-            mpesaCode = "ABC1234567",
-            rawMessage = sms1,
-            amount = 5000.0,
-            merchant = "Fuliza",
-            timestamp = System.currentTimeMillis(),
-        )
-
-        val isSecondDuplicate = dedupeEngine.isDuplicate(
-            mpesaCode = "ABC1234567",
-            rawMessage = sms2,
-            amount = 150.0,
-            merchant = "Fuliza",
-            timestamp = System.currentTimeMillis(),
-        )
-
-        // The first one passes (no duplicate yet)
-        // The second should also pass primary check (code match would catch it too in real scenario)
-        assert(!isFirstDuplicate)
+        assertTrue(duplicate)
     }
 
     @Test
-    fun testSecondaryKey_DifferentMessageSameCodeAreDetected() = runTest {
-        // Fuliza scenario: same transaction code, different SMS bodies
-        val messageBody1 = "ABC1234567 Confirmed. Ksh5,000 from your M-PESA Fuliza on 1/1/26."
-        val messageBody2 = "ABC1234567 Fuliza Interest Ksh150 charged on 1/1/26."
+    fun `new transaction passes when no dedupe key matches`() = runTest {
+        val repository = FakeExpenseRepository()
+        val engine = MpesaDedupeEngineEnhanced(repository)
 
-        val hash1 = computeHash(messageBody1)
-        val hash2 = computeHash(messageBody2)
-
-        assert(hash1 != hash2) // Different content = different hashes
-        assert(hash1 != hash2) // Verify they're actually different
-    }
-
-    // ── Tertiary: Heuristic Fallback ──────────────────────────────────────────
-
-    @Test
-    fun testTertiary_DetectDuplicateByHeuristic() = runTest {
-        val mpesaCode = "ABC1234567"
-        val rawMessage = "ABC1234567 Confirmed. Ksh1,000 sent to John on 1/1/26."
-        val now = System.currentTimeMillis()
-
-        whenever(mockExpenseRepository.existsByMpesaCode(mpesaCode)).thenReturn(false)
-        whenever(mockExpenseRepository.existsBySourceHash(any())).thenReturn(false)
-        // Heuristic: same amount + merchant + time within 5 min
-        whenever(mockExpenseRepository.existsPotentialDuplicate(
+        val duplicate = engine.isDuplicate(
+            mpesaCode = "UNIQUE1234",
+            rawMessage = "UNIQUE1234 Confirmed. Ksh1,000 sent to John on 1/1/26.",
             amount = 1000.0,
             merchant = "John",
-            date = now,
-            windowMillis = 5 * 60 * 1000L,
-        )).thenReturn(true)
-
-        val isDuplicate = dedupeEngine.isDuplicate(
-            mpesaCode = mpesaCode,
-            rawMessage = rawMessage,
-            amount = 1000.0,
-            merchant = "John",
-            timestamp = now,
+            timestamp = 1_700_000_000_000L,
         )
 
-        assert(isDuplicate)
+        assertFalse(duplicate)
     }
 
-    @Test
-    fun testTertiary_AllowIfDifferentAmount() = runTest {
-        val mpesaCode = "ABC1234567"
-        val rawMessage = "ABC1234567 Confirmed. Ksh1,000 sent to John on 1/1/26."
-        val now = System.currentTimeMillis()
+    private fun hashOf(text: String): String {
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        return digest.digest(text.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
+    }
 
-        whenever(mockExpenseRepository.existsByMpesaCode(mpesaCode)).thenReturn(false)
-        whenever(mockExpenseRepository.existsBySourceHash(any())).thenReturn(false)
-        // Heuristic: same merchant but DIFFERENT amount = not a duplicate
-        whenever(mockExpenseRepository.existsPotentialDuplicate(
-            amount = 1000.0,
-            merchant = "John",
-            date = now,
-            windowMillis = 5 * 60 * 1000L,
-        )).thenReturn(false)
-
-        val isDuplicate = dedupeEngine.isDuplicate(
-            mpesaCode = mpesaCode,
-            rawMessage = rawMessage,
-            amount = 1000.0,
-            merchant = "John",
-            timestamp = now,
+    private fun semanticHashFor(
+        transactionType: String,
+        amount: Double,
+        timestampMs: Long,
+        counterparty: String,
+    ): String {
+        return MpesaDedupeEngineEnhanced(FakeExpenseRepository()).computeSemanticHash(
+            transactionType = transactionType,
+            amount = amount,
+            timestampMs = timestampMs,
+            counterparty = counterparty,
         )
-
-        assert(!isDuplicate)
     }
+}
 
-    // ── Fuliza-Specific Scenarios ─────────────────────────────────────────────
+private class FakeExpenseRepository(
+    private val existingMpesaCodes: Set<String> = emptySet(),
+    private val existingSourceHashes: Set<String> = emptySet(),
+    private val existingSemanticHashes: Set<String> = emptySet(),
+    private val heuristicDuplicate: Boolean = false,
+) : ExpenseRepository {
+    override fun getAllTransactions(): Flow<List<Transaction>> = flowOf(emptyList())
 
-    @Test
-    fun testFuliza_ScenarioDuplicate() = runTest {
-        // Step 1: User receives Fuliza loan
-        val smsFulizaLoan = "ABC1234567 Confirmed. Ksh5,000 from your M-PESA Fuliza on 1/1/26."
+    override fun getTransactionsBetween(start: Long, end: Long): Flow<List<Transaction>> = flowOf(emptyList())
 
-        whenever(mockExpenseRepository.existsByMpesaCode("ABC1234567")).thenReturn(false)
-        whenever(mockExpenseRepository.existsBySourceHash(computeHash(smsFulizaLoan))).thenReturn(true)  // First message imported
+    override fun getByCategory(category: String): Flow<List<Transaction>> = flowOf(emptyList())
 
-        val isFirstDuplicate = dedupeEngine.isDuplicate(
-            mpesaCode = "ABC1234567",
-            rawMessage = smsFulizaLoan,
-            amount = 5000.0,
-            merchant = "Fuliza",
-            timestamp = System.currentTimeMillis(),
-        )
+    override fun getTotalSpendingBetween(start: Long, end: Long): Flow<Double> = flowOf(0.0)
 
-        // Step 2: Interest notice arrives (same code, different body)
-        val smsFulizaInterest = "ABC1234567 Fuliza interest Ksh150 accrued on 2/1/26."
+    override fun getCategoryBreakdown(start: Long, end: Long): Flow<List<CategoryBreakdown>> = flowOf(emptyList())
 
-        // Reset mocks for second check
-        whenever(mockExpenseRepository.existsByMpesaCode("ABC1234567")).thenReturn(true)  // Code now exists
-        whenever(mockExpenseRepository.existsBySourceHash(computeHash(smsFulizaInterest))).thenReturn(false)
+    override fun getTransactionCount(): Flow<Int> = flowOf(0)
 
-        val isSecondDuplicate = dedupeEngine.isDuplicate(
-            mpesaCode = "ABC1234567",
-            rawMessage = smsFulizaInterest,
-            amount = 150.0,
-            merchant = "Fuliza",
-            timestamp = System.currentTimeMillis(),
-        )
+    override suspend fun addTransaction(transaction: Transaction): Long = 0L
 
-        // First should be kept (initial import)
-        // Second should be rejected (primary key match → already imported)
-        assert(!isFirstDuplicate)
-        assert(isSecondDuplicate)  // Caught by code match
-    }
+    override suspend fun updateTransaction(transaction: Transaction) = Unit
 
-    // ── Helper Functions ──────────────────────────────────────────────────────
+    override suspend fun deleteTransaction(transaction: Transaction) = Unit
 
-    private fun computeHash(text: String): String {
-        return try {
-            val digest = java.security.MessageDigest.getInstance("SHA-256")
-            val hashBytes = digest.digest(text.toByteArray(Charsets.UTF_8))
-            hashBytes.joinToString("") { "%02x".format(it) }
-        } catch (e: Exception) {
-            text.hashCode().toString()
-        }
-    }
+    override suspend fun getById(id: Long): Transaction? = null
 
-    companion object {
-        // Mock helper
-        private fun any(): String = org.mockito.kotlin.any()
-    }
+    override suspend fun existsByMpesaCode(code: String): Boolean = code in existingMpesaCodes
+
+    override suspend fun existsBySourceHash(sourceHash: String): Boolean = sourceHash in existingSourceHashes
+
+    override suspend fun existsBySemanticHash(semanticHash: String): Boolean = semanticHash in existingSemanticHashes
+
+    override suspend fun existsPotentialDuplicate(
+        amount: Double,
+        merchant: String,
+        date: Long,
+        windowMillis: Long,
+    ): Boolean = heuristicDuplicate
+
+    override suspend fun importFromSms(smsBody: String): Transaction? = null
+
+    override suspend fun updateMerchantCategory(merchant: String, category: String) = Unit
+
+    override fun pagedTransactions(
+        startMs: Long?,
+        endMs: Long?,
+        searchQuery: String,
+    ): Flow<PagingData<Transaction>> = flowOf(PagingData.empty())
 }

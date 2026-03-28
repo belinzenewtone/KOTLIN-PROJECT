@@ -184,6 +184,7 @@ object MpesaParsingConfig {
                 Regex("paid to\\s+[A-Z]", RegexOption.IGNORE_CASE),
             ),
             counterpartyPatterns = listOf(
+                Regex("buy goods from\\s+(.+?)(?:\\s+on\\s|\\.|$)", RegexOption.IGNORE_CASE),
                 Regex("(?:Ksh|KES)\\s?[\\d,.]+\\s+paid to\\s+(.+?)\\s+via\\s+kopo\\s+kopo(?:\\.\\s|\\s+on\\s|\\s+New\\s|$)", RegexOption.IGNORE_CASE),
                 Regex("(?:Ksh|KES)\\s?[\\d,.]+\\s+paid to\\s+(.+?)(?:\\s+on\\s\\d|\\.\\s|confirmed|$)", RegexOption.IGNORE_CASE),
                 Regex("paid to\\s+(.+?)(?:\\s+on\\s\\d|\\.\\s|confirmed|$)", RegexOption.IGNORE_CASE),

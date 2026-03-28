@@ -1,5 +1,6 @@
 package com.personal.lifeOS.feature.finance.data.repository
 
+import androidx.paging.PagingData
 import com.personal.lifeOS.feature.finance.domain.repository.FinanceRepository
 import com.personal.lifeOS.features.budget.domain.model.Budget
 import com.personal.lifeOS.features.budget.domain.model.BudgetPeriod
@@ -12,6 +13,7 @@ import com.personal.lifeOS.features.income.domain.repository.IncomeRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -126,6 +128,10 @@ private class FakeExpenseRepository : ExpenseRepository {
 
     override suspend fun existsByMpesaCode(code: String): Boolean = false
 
+    override suspend fun existsBySourceHash(sourceHash: String): Boolean = false
+
+    override suspend fun existsBySemanticHash(semanticHash: String): Boolean = false
+
     override suspend fun existsPotentialDuplicate(
         amount: Double,
         merchant: String,
@@ -139,6 +145,12 @@ private class FakeExpenseRepository : ExpenseRepository {
         merchant: String,
         category: String,
     ) = Unit
+
+    override fun pagedTransactions(
+        startMs: Long?,
+        endMs: Long?,
+        searchQuery: String,
+    ): Flow<PagingData<Transaction>> = flowOf(PagingData.empty())
 }
 
 private class FakeBudgetRepository : BudgetRepository {

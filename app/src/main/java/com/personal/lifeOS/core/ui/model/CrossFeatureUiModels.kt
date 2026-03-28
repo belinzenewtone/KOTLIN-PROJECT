@@ -23,10 +23,23 @@ data class ImportHealthUiModel(
     val duplicateCount: Int = 0,
     val parseFailureCount: Int = 0,
     val lastImportSummary: String? = null,
+    val latestImportAt: Long? = null,
 )
 
 data class AssistantActionProposalUiModel(
     val title: String,
     val summary: String,
     val riskLabel: String,
+)
+
+data class FreshnessUiModel(
+    val label: String,
+    val supportingLabel: String? = null,
+    val isStale: Boolean = false,
+)
+
+data class UpdateNudgeUiModel(
+    val title: String,
+    val summary: String,
+    val required: Boolean,
 )

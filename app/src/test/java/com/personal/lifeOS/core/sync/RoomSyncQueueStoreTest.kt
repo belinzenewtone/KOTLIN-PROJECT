@@ -132,6 +132,10 @@ private class FakeSyncJobDao : SyncJobDao {
         return before - records.size
     }
 
+    override suspend fun getPendingCount(): Int {
+        return records.count { it.status in setOf("QUEUED", "FAILED") }
+    }
+
     fun snapshot(): List<SyncJobEntity> = records.toList()
 
     private fun publish() {

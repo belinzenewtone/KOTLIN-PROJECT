@@ -8,6 +8,7 @@ import com.personal.lifeOS.core.database.dao.TaskDao
 import com.personal.lifeOS.core.database.dao.TransactionDao
 import com.personal.lifeOS.core.security.AuthSessionStore
 import com.personal.lifeOS.core.utils.DateUtils
+import com.personal.lifeOS.navigation.AppRoute
 import com.personal.lifeOS.features.search.domain.model.SearchResult
 import com.personal.lifeOS.features.search.domain.model.SearchSource
 import com.personal.lifeOS.features.search.domain.repository.SearchRepository
@@ -33,7 +34,8 @@ class SearchRepositoryImpl
             val userId = authSessionStore.getUserId()
             if (userId.isBlank()) return emptyList()
 
-            val likeQuery = "%${query.trim()}%"
+            val trimmedQuery = query.trim()
+            val likeQuery = "%$trimmedQuery%"
             if (query.isBlank()) return emptyList()
 
             val results =
@@ -46,6 +48,8 @@ class SearchRepositoryImpl
                                 title = tx.merchant,
                                 subtitle = "${tx.category} • ${DateUtils.formatCurrency(tx.amount)}",
                                 timestamp = tx.date,
+                                relevanceScore = scoreResult(trimmedQuery, tx.merchant, tx.category),
+                                navigationTarget = AppRoute.Finance,
                             )
                         },
                     )
@@ -57,6 +61,8 @@ class SearchRepositoryImpl
                                 title = task.title,
                                 subtitle = task.description.ifBlank { task.status },
                                 timestamp = task.createdAt,
+                                relevanceScore = scoreResult(trimmedQuery, task.title, task.description, task.status),
+                                navigationTarget = AppRoute.Tasks,
                             )
                         },
                     )
@@ -68,6 +74,8 @@ class SearchRepositoryImpl
                                 title = event.title,
                                 subtitle = event.description.ifBlank { event.type },
                                 timestamp = event.date,
+                                relevanceScore = scoreResult(trimmedQuery, event.title, event.description, event.type),
+                                navigationTarget = AppRoute.Calendar,
                             )
                         },
                     )
@@ -79,6 +87,8 @@ class SearchRepositoryImpl
                                 title = budget.category,
                                 subtitle = "Limit ${DateUtils.formatCurrency(budget.limitAmount)}",
                                 timestamp = budget.createdAt,
+                                relevanceScore = scoreResult(trimmedQuery, budget.category),
+                                navigationTarget = AppRoute.Budget,
                             )
                         },
                     )
@@ -90,6 +100,8 @@ class SearchRepositoryImpl
                                 title = income.source,
                                 subtitle = DateUtils.formatCurrency(income.amount),
                                 timestamp = income.date,
+                                relevanceScore = scoreResult(trimmedQuery, income.source),
+                                navigationTarget = AppRoute.Income,
                             )
                         },
                     )
@@ -101,11 +113,43 @@ class SearchRepositoryImpl
                                 title = rule.title,
                                 subtitle = "${rule.type} • ${rule.cadence}",
                                 timestamp = rule.nextRunAt,
+                                relevanceScore = scoreResult(trimmedQuery, rule.title, rule.type, rule.cadence),
+                                navigationTarget = AppRoute.Recurring,
                             )
                         },
                     )
                 }
 
-            return results.sortedByDescending { it.timestamp }
+            return results.sortedWith(
+                compareByDescending<SearchResult> { it.relevanceScore }
+                    .thenByDescending { it.timestamp },
+            )
+        }
+
+        private fun scoreResult(
+            query: String,
+            primary: String,
+            vararg secondary: String,
+        ): Int {
+            val normalizedQuery = query.trim().lowercase()
+            val fields = listOf(primary, *secondary)
+                .map { it.lowercase() }
+
+            val exact = fields.any { it == normalizedQuery }
+            if (exact) return 400
+
+            val prefix = fields.any { it.startsWith(normalizedQuery) }
+            if (prefix) return 250
+
+            val wordPrefix =
+                fields.any { candidate ->
+                    candidate.split(' ', '-', '_').any { token -> token.startsWith(normalizedQuery) }
+                }
+            if (wordPrefix) return 160
+
+            val contains = fields.any { it.contains(normalizedQuery) }
+            if (contains) return 100
+
+            return 0
         }
     }

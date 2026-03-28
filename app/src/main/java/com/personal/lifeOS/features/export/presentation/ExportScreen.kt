@@ -1,17 +1,13 @@
 package com.personal.lifeOS.features.export.presentation
 
 import android.content.Intent
-import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -29,15 +25,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.personal.lifeOS.core.ui.designsystem.AppCard
+import com.personal.lifeOS.core.ui.designsystem.EmptyState
+import com.personal.lifeOS.core.ui.designsystem.InlineBanner
+import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
+import com.personal.lifeOS.core.ui.designsystem.PageScaffold
 import com.personal.lifeOS.features.export.domain.model.ExportDomain
 import com.personal.lifeOS.features.export.domain.model.ExportFormat
 import com.personal.lifeOS.features.export.domain.model.ExportHistoryItem
 import com.personal.lifeOS.features.export.domain.model.ExportPreview
 import com.personal.lifeOS.features.export.domain.model.ExportResult
 import com.personal.lifeOS.platform.files.ExportShareHelper
-import com.personal.lifeOS.ui.components.GlassCard
-import com.personal.lifeOS.ui.theme.AppSpacing
-import com.personal.lifeOS.ui.theme.Error
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -47,43 +45,34 @@ fun ExportScreen(viewModel: ExportViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = AppSpacing.ScreenHorizontal)
-                .padding(top = AppSpacing.ScreenTop, bottom = AppSpacing.Section),
-        verticalArrangement = Arrangement.spacedBy(AppSpacing.Section),
+    PageScaffold(
+        title = "Export Center",
+        subtitle = "Create JSON, CSV, and shareable backups from the latest ledger state.",
     ) {
-        Text("Export", style = MaterialTheme.typography.titleLarge)
+        state.error?.let { message ->
+            InlineBanner(
+                message = message,
+                tone = InlineBannerTone.ERROR,
+            )
+        }
+
         ExportConfigurationCard(state = state, viewModel = viewModel)
         ExportPreviewCard(state.preview, state.isPreviewLoading)
-        ExportResultCard(state.result)
+        ExportResultCard(
+            result = state.result,
+            onShare = { result ->
+                val shareIntent =
+                    ExportShareHelper.createShareIntent(
+                        context = context,
+                        filePath = result.filePath,
+                        mimeType = result.mimeType,
+                    )
+                if (shareIntent != null) {
+                    context.startActivity(Intent.createChooser(shareIntent, "Share export file"))
+                }
+            },
+        )
         ExportHistoryCard(state.history)
-
-        state.result?.let { result ->
-            OutlinedButton(
-                onClick = {
-                    val shareIntent =
-                        ExportShareHelper.createShareIntent(
-                            context = context,
-                            filePath = result.filePath,
-                            mimeType = result.mimeType,
-                        )
-                    if (shareIntent != null) {
-                        context.startActivity(Intent.createChooser(shareIntent, "Share export file"))
-                    }
-                },
-            ) {
-                Text("Share latest export")
-            }
-        }
-
-        state.error?.let { message ->
-            Text(message, style = MaterialTheme.typography.bodySmall, color = Error)
-        }
     }
 }
 
@@ -92,10 +81,10 @@ private fun ExportConfigurationCard(
     state: ExportUiState,
     viewModel: ExportViewModel,
 ) {
-    GlassCard(modifier = Modifier.fillMaxWidth()) {
+    AppCard(modifier = Modifier.fillMaxWidth(), elevated = true) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
-                "Create JSON or CSV exports for selected domains and date windows.",
+                "Choose a format, scope, and date window before generating the export.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -129,7 +118,7 @@ private fun ExportConfigurationCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text("Encrypt file", style = MaterialTheme.typography.titleSmall)
                     Text(
-                        "Protect export with passphrase (AES-GCM).",
+                        "Protect the export with a passphrase when the file is leaving your device.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -173,15 +162,22 @@ private fun ExportPreviewCard(
     preview: ExportPreview?,
     isLoading: Boolean,
 ) {
-    GlassCard(modifier = Modifier.fillMaxWidth()) {
+    AppCard(modifier = Modifier.fillMaxWidth(), elevated = false) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Preview", style = MaterialTheme.typography.titleMedium)
             if (isLoading) {
-                Text("Preparing preview...", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    "Preparing preview...",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 return@Column
             }
             if (preview == null) {
-                Text("Preview unavailable.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                EmptyState(
+                    title = "Preview unavailable",
+                    description = "Pick a format and date window to estimate the export size.",
+                )
                 return@Column
             }
             Text("Total items: ${preview.totalItems}", style = MaterialTheme.typography.bodyMedium)
@@ -197,30 +193,43 @@ private fun ExportPreviewCard(
 }
 
 @Composable
-private fun ExportResultCard(result: ExportResult?) {
+private fun ExportResultCard(
+    result: ExportResult?,
+    onShare: (ExportResult) -> Unit,
+) {
     if (result == null) return
 
-    GlassCard(modifier = Modifier.fillMaxWidth()) {
+    AppCard(modifier = Modifier.fillMaxWidth(), elevated = true) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Export complete", style = MaterialTheme.typography.titleMedium)
+            Text("Latest export", style = MaterialTheme.typography.titleMedium)
             Text("Items: ${result.itemCount}", style = MaterialTheme.typography.bodyMedium)
-            Text("Path: ${result.filePath}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                "Path: ${result.filePath}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             Text(
                 "Time: ${formatTimestamp(result.exportedAt)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            OutlinedButton(onClick = { onShare(result) }) {
+                Text("Share latest export")
+            }
         }
     }
 }
 
 @Composable
 private fun ExportHistoryCard(history: List<ExportHistoryItem>) {
-    GlassCard(modifier = Modifier.fillMaxWidth()) {
+    AppCard(modifier = Modifier.fillMaxWidth(), elevated = false) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("History", style = MaterialTheme.typography.titleMedium)
             if (history.isEmpty()) {
-                Text("No exports yet.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                EmptyState(
+                    title = "No exports yet",
+                    description = "Your latest export runs will appear here with status and item count.",
+                )
                 return@Column
             }
             history.take(8).forEachIndexed { index, item ->
@@ -235,7 +244,11 @@ private fun ExportHistoryCard(history: List<ExportHistoryItem>) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     item.errorMessage?.let { error ->
-                        Text(error, style = MaterialTheme.typography.labelSmall, color = Error)
+                        Text(
+                            error,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
                     }
                 }
                 if (index < history.lastIndex) {

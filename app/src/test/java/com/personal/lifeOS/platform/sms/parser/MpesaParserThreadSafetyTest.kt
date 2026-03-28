@@ -82,7 +82,7 @@ class MpesaParserThreadSafetyTest {
         }
 
         // All parsed amounts for paybill SMS must be 2500.0
-        val paybillResults = results.filterIndexed { index, _ -> index % 2 == 1 }
+        val paybillResults = results.filterIndexed { index, _ -> index % 2 == 0 }
         paybillResults.forEach { result ->
             assertEquals(
                 "Paybill SMS amount must not be corrupted by concurrent sent-SMS parse",

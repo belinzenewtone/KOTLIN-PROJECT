@@ -6,6 +6,8 @@ data class SearchResult(
     val title: String,
     val subtitle: String,
     val timestamp: Long,
+    val relevanceScore: Int = 0,
+    val navigationTarget: String? = null,
 )
 
 enum class SearchSource {
@@ -15,4 +17,17 @@ enum class SearchSource {
     BUDGET,
     INCOME,
     RECURRING_RULE,
+    ;
+
+    val groupLabel: String
+        get() =
+            when (this) {
+                TRANSACTION,
+                BUDGET,
+                INCOME,
+                -> "Finance"
+                TASK -> "Tasks"
+                EVENT -> "Calendar"
+                RECURRING_RULE -> "Recurring"
+            }
 }

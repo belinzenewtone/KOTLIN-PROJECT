@@ -75,9 +75,7 @@ class MpesaMessageParserFixturesTest {
         val noticeSms =
             "Fuliza service charge Ksh10.00 daily charges apply. Outstanding amount is Ksh500."
 
-        assertNotNull("Notice SMS should have no code — parse returns null") {
-            MpesaSmsParser.parse(noticeSms)
-        }
+        assertEquals(null, MpesaSmsParser.parse(noticeSms))
         // Without a code the parse returns null regardless; with code it should also return null
         val noticeWithCode =
             "AB1234567X Fuliza service charge Ksh10.00. Outstanding amount is Ksh500. Access fee charged."

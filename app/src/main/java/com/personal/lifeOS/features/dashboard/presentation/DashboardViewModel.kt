@@ -2,6 +2,11 @@ package com.personal.lifeOS.features.dashboard.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.personal.lifeOS.core.datastore.FeatureFlag
+import com.personal.lifeOS.core.datastore.FeatureFlagStore
+import com.personal.lifeOS.core.telemetry.HealthDiagnosticsRepository
+import com.personal.lifeOS.core.telemetry.SyncHealthSummary
+import com.personal.lifeOS.core.update.AppUpdateInfo
 import com.personal.lifeOS.features.dashboard.domain.model.DashboardData
 import com.personal.lifeOS.features.dashboard.domain.usecase.GetDashboardDataUseCase
 import com.personal.lifeOS.features.insights.domain.usecase.RefreshDeterministicInsightsUseCase
@@ -18,6 +23,9 @@ import javax.inject.Inject
 
 data class DashboardUiState(
     val data: DashboardData = DashboardData(),
+    val syncHealth: SyncHealthSummary = SyncHealthSummary(),
+    val latestUpdate: AppUpdateInfo? = null,
+    val featureFlags: Map<FeatureFlag, Boolean> = emptyMap(),
     val isLoading: Boolean = true,
     val error: String? = null,
 )
@@ -28,6 +36,8 @@ class DashboardViewModel
     constructor(
         private val getDashboardDataUseCase: GetDashboardDataUseCase,
         private val refreshDeterministicInsightsUseCase: RefreshDeterministicInsightsUseCase,
+        private val healthDiagnosticsRepository: HealthDiagnosticsRepository,
+        private val featureFlagStore: FeatureFlagStore,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(DashboardUiState())
         val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
@@ -35,6 +45,9 @@ class DashboardViewModel
         init {
             refreshInsights()
             loadDashboard()
+            observeSyncHealth()
+            observeUpdateDiagnostics()
+            loadFeatureFlags()
         }
 
         private fun refreshInsights() {
@@ -52,5 +65,26 @@ class DashboardViewModel
                     _uiState.update { it.copy(error = e.message, isLoading = false) }
                 }
                 .launchIn(viewModelScope)
+        }
+
+        private fun observeSyncHealth() {
+            healthDiagnosticsRepository.observeSyncHealth()
+                .onEach { health ->
+                    _uiState.update { it.copy(syncHealth = health) }
+                }.launchIn(viewModelScope)
+        }
+
+        private fun observeUpdateDiagnostics() {
+            healthDiagnosticsRepository.observeLatestUpdateInfo()
+                .onEach { latestUpdate ->
+                    _uiState.update { it.copy(latestUpdate = latestUpdate) }
+                }.launchIn(viewModelScope)
+        }
+
+        private fun loadFeatureFlags() {
+            viewModelScope.launch {
+                runCatching { featureFlagStore.snapshot() }
+                    .onSuccess { flags -> _uiState.update { it.copy(featureFlags = flags) } }
+            }
         }
     }

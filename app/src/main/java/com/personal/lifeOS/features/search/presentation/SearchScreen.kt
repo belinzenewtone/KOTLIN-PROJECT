@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -30,17 +31,24 @@ import com.personal.lifeOS.features.search.domain.model.SearchResult
 import com.personal.lifeOS.features.search.domain.model.SearchSource
 
 @Composable
-fun SearchScreen(viewModel: SearchViewModel = hiltViewModel()) {
+fun SearchScreen(
+    viewModel: SearchViewModel = hiltViewModel(),
+    onOpenResult: (SearchResult) -> Unit = {},
+) {
     val state by viewModel.uiState.collectAsState()
     var selectedFilter by rememberSaveable { mutableStateOf(SearchResultFilter.ALL) }
     val filteredResults =
         remember(state.results, selectedFilter) {
             state.results.filterBy(selectedFilter)
         }
+    val groupedResults =
+        remember(filteredResults) {
+            filteredResults.groupBy { it.source.groupLabel }
+        }
 
     PageScaffold(
         title = "Search",
-        subtitle = "Cross-domain lookup for tasks, events, finance, and recurring rules.",
+        subtitle = "Cross-domain lookup for tasks, finance, calendar, and recurring rules.",
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -96,29 +104,79 @@ fun SearchScreen(viewModel: SearchViewModel = hiltViewModel()) {
             return@PageScaffold
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            filteredResults.forEach { result ->
-                SearchResultCard(result = result)
+        Text(
+            text = "${filteredResults.size} result${if (filteredResults.size == 1) "" else "s"}",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            if (state.groupedSearchEnabled) {
+                groupedResults.forEach { (group, results) ->
+                    SearchResultGroup(
+                        title = group,
+                        results = results,
+                        onOpenResult = onOpenResult,
+                    )
+                }
+            } else {
+                filteredResults.forEach { result ->
+                    SearchResultCard(result = result, onOpenResult = onOpenResult)
+                }
             }
         }
     }
 }
 
 @Composable
-private fun SearchResultCard(result: SearchResult) {
+private fun SearchResultGroup(
+    title: String,
+    results: List<SearchResult>,
+    onOpenResult: (SearchResult) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        results.forEach { result ->
+            SearchResultCard(result = result, onOpenResult = onOpenResult)
+        }
+    }
+}
+
+@Composable
+private fun SearchResultCard(
+    result: SearchResult,
+    onOpenResult: (SearchResult) -> Unit,
+) {
     AppCard(modifier = Modifier.fillMaxWidth(), elevated = true) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(result.title, style = MaterialTheme.typography.titleMedium)
-            Text(
-                text = result.subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                "${result.source.name} • ${DateUtils.formatDate(result.timestamp, "MMM dd, yyyy h:mm a")}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(result.title, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = result.subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    "${result.source.groupLabel} • ${DateUtils.formatDate(result.timestamp, "MMM dd, yyyy h:mm a")}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            if (result.navigationTarget != null) {
+                TextButton(onClick = { onOpenResult(result) }) {
+                    Text("Open")
+                }
+            }
         }
     }
 }

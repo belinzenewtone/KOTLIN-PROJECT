@@ -167,11 +167,12 @@ object MpesaParserEnhanced {
     private fun cleanCounterparty(value: String): String? {
         return value
             .replace("\\s+".toRegex(), " ")
+            .replace("\\s+\\d{9,12}$".toRegex(), "")
             .replace("\\s+via\\s+kopo\\s+kopo.*$".toRegex(RegexOption.IGNORE_CASE), "")
             .trimEnd('.')
             .replace("\\s+New M-PESA.*$".toRegex(RegexOption.IGNORE_CASE), "")
             .trim()
-            .takeIf { it.isNotBlank() }
+            .takeIf { it.isNotBlank() && !it.startsWith("on ", ignoreCase = true) }
     }
 
     // ── Stage 6: Description builder ─────────────────────────────────────────

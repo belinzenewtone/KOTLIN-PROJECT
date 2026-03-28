@@ -158,14 +158,14 @@ class SearchRepositoryRoomIntegrationTest {
     private fun assertSortedCrossDomainResults(results: List<SearchResult>) {
         assertEquals(6, results.size)
         assertEquals(
-            listOf("income-6", "rule-5", "budget-4", "event-3", "task-2", "tx-1"),
+            listOf("budget-4", "income-6", "rule-5", "event-3", "task-2", "tx-1"),
             results.map { it.id },
         )
         assertEquals(
             listOf(
+                SearchSource.BUDGET,
                 SearchSource.INCOME,
                 SearchSource.RECURRING_RULE,
-                SearchSource.BUDGET,
                 SearchSource.EVENT,
                 SearchSource.TASK,
                 SearchSource.TRANSACTION,

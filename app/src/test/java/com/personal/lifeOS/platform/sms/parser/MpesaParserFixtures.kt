@@ -55,7 +55,7 @@ object MpesaParserFixtures {
                 sms = "QL33445566 Confirmed. Ksh3,000.00 withdrawn from Agent 123456 on 15/3/26 at 9:10 AM.",
                 code = "QL33445566",
                 amount = 3000.0,
-                merchant = "ATM Withdrawal",
+                merchant = "Cash Withdrawal",
                 category = TransactionCategory.WITHDRAW,
             ),
             MpesaParserFixture(

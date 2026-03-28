@@ -7,6 +7,7 @@ import com.personal.lifeOS.features.dashboard.domain.model.UpcomingEvent
 import com.personal.lifeOS.features.dashboard.presentation.DashboardUiState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class HomeContractsTest {
@@ -44,5 +45,8 @@ class HomeContractsTest {
         assertEquals(1, mapped.completedTodayCount)
         assertNotNull(mapped.nextEventTitle)
         assertNotNull(mapped.topInsight)
+        assertNotNull(mapped.weeklyRitual)
+        assertEquals(5, mapped.quickActions.size)
+        assertTrue(mapped.syncFreshness?.label?.isNotBlank() != false)
     }
 }

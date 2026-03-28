@@ -369,6 +369,7 @@ private fun LifeOSNavigationGraph(
                 onOpenAssistant = { navController.navigate(AppRoute.Assistant) },
                 onOpenProfile = { navController.navigate(AppRoute.Profile) },
                 onOpenInsights = { navController.navigate(AppRoute.Insights) },
+                onOpenReview = { navController.navigate(AppRoute.Review) },
                 onOpenLearning = { navController.navigate(AppRoute.Learning) },
             )
         }
@@ -380,6 +381,7 @@ private fun LifeOSNavigationGraph(
                 onOpenAssistant = { navController.navigate(AppRoute.Assistant) },
                 onOpenProfile = { navController.navigate(AppRoute.Profile) },
                 onOpenInsights = { navController.navigate(AppRoute.Insights) },
+                onOpenReview = { navController.navigate(AppRoute.Review) },
                 onOpenLearning = { navController.navigate(AppRoute.Learning) },
             )
         }
@@ -414,7 +416,17 @@ private fun LifeOSNavigationGraph(
         composable(AppRoute.Analytics) { InsightsScreen() }
         composable(AppRoute.Insights) { InsightsScreen() }
 
-        composable(AppRoute.Search) { SearchScreen() }
+        composable(AppRoute.Search) {
+            SearchScreen(
+                onOpenResult = { result ->
+                    result.navigationTarget?.let { target ->
+                        navController.navigate(target) {
+                            launchSingleTop = true
+                        }
+                    }
+                },
+            )
+        }
 
         // Finance Tools hub — launched from Finance screen's top bar
         composable(AppRoute.Planner) {

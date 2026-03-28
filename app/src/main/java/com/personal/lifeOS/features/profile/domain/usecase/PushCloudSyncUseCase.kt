@@ -1,14 +1,17 @@
 package com.personal.lifeOS.features.profile.domain.usecase
 
-import com.personal.lifeOS.core.utils.CloudSyncService
+import com.personal.lifeOS.core.sync.SyncCoordinator
+import com.personal.lifeOS.core.sync.model.SyncTrigger
 import javax.inject.Inject
 
 class PushCloudSyncUseCase
     @Inject
     constructor(
-        private val cloudSyncService: CloudSyncService,
+        private val syncCoordinator: SyncCoordinator,
     ) {
         suspend operator fun invoke(): String {
-            return cloudSyncService.pushToCloud().message
+            syncCoordinator.enqueueDefault(SyncTrigger.USER_PULL_TO_REFRESH)
+            syncCoordinator.runPending()
+            return "Queued sync started. Recent changes are moving through the sync pipeline."
         }
     }

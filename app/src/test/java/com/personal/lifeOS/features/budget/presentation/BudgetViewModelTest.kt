@@ -1,5 +1,6 @@
 package com.personal.lifeOS.features.budget.presentation
 
+import androidx.paging.PagingData
 import com.personal.lifeOS.features.budget.domain.model.Budget
 import com.personal.lifeOS.features.budget.domain.model.BudgetPeriod
 import com.personal.lifeOS.features.budget.domain.repository.BudgetRepository
@@ -13,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -38,7 +40,7 @@ class BudgetViewModelTest {
                 viewModel.saveBudget()
                 advanceUntilIdle()
 
-                assertEquals("Category is required", viewModel.uiState.value.error)
+                assertEquals("Please select a category", viewModel.uiState.value.error)
                 assertTrue(budgetRepository.savedBudgets.isEmpty())
             } finally {
                 Dispatchers.resetMain()
@@ -83,6 +85,7 @@ private fun createViewModel(
             ),
         addBudgetUseCase = AddBudgetUseCase(budgetRepository),
         deleteBudgetUseCase = DeleteBudgetUseCase(budgetRepository),
+        budgetRepository = budgetRepository,
     )
 }
 
@@ -142,6 +145,10 @@ private class BudgetVmFakeExpenseRepository : ExpenseRepository {
 
     override suspend fun existsByMpesaCode(code: String): Boolean = false
 
+    override suspend fun existsBySourceHash(sourceHash: String): Boolean = false
+
+    override suspend fun existsBySemanticHash(semanticHash: String): Boolean = false
+
     override suspend fun existsPotentialDuplicate(
         amount: Double,
         merchant: String,
@@ -155,4 +162,10 @@ private class BudgetVmFakeExpenseRepository : ExpenseRepository {
         merchant: String,
         category: String,
     ) = Unit
+
+    override fun pagedTransactions(
+        startMs: Long?,
+        endMs: Long?,
+        searchQuery: String,
+    ): Flow<PagingData<Transaction>> = flowOf(PagingData.empty())
 }

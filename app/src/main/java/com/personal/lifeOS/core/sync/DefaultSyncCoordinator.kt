@@ -15,6 +15,7 @@ class DefaultSyncCoordinator
         private val dispatcher: SyncDispatcher,
         private val backoffPolicy: SyncBackoffPolicy,
         private val telemetry: SyncTelemetry,
+        private val circuitBreaker: SyncCircuitBreaker,
     ) : SyncCoordinator {
         override suspend fun enqueueDefault(trigger: SyncTrigger) {
             when (trigger) {
@@ -54,14 +55,26 @@ class DefaultSyncCoordinator
         override fun observeQueue(): Flow<List<SyncJobEntity>> = queueStore.observeJobs()
 
         private suspend fun processJob(job: SyncJobEntity) {
+            if (!circuitBreaker.shouldAllow()) {
+                val blockedUntil = circuitBreaker.snapshot().openUntilMillis
+                queueStore.markFailed(
+                    job = job,
+                    error = "Sync circuit breaker open",
+                    nextRunAt = blockedUntil.takeIf { it > 0L } ?: backoffPolicy.nextRetryAt(job.attemptCount + 1),
+                )
+                telemetry.onJobFailed(job.jobType, "Sync circuit breaker open")
+                return
+            }
             queueStore.markSyncing(job)
             telemetry.onJobStarted(job.jobType)
             val result = runCatching { dispatcher.dispatch(job).getOrThrow() }
             result.onSuccess {
                 queueStore.markSynced(job)
+                circuitBreaker.onSuccess()
                 telemetry.onJobSucceeded(job.jobType)
             }.onFailure { error ->
-                val nextRunAt = backoffPolicy.nextRetryAt(job.attemptCount + 1)
+                val breakerState = circuitBreaker.onFailure()
+                val nextRunAt = maxOf(backoffPolicy.nextRetryAt(job.attemptCount + 1), breakerState.openUntilMillis)
                 queueStore.markFailed(job, error.message, nextRunAt)
                 telemetry.onJobFailed(job.jobType, error.message)
             }

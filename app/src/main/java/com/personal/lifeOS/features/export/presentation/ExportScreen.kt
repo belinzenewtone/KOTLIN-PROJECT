@@ -1,15 +1,17 @@
 package com.personal.lifeOS.features.export.presentation
 
 import android.content.Intent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -23,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -85,7 +88,7 @@ private fun ExportConfigurationCard(
     viewModel: ExportViewModel,
 ) {
     AppCard(modifier = Modifier.fillMaxWidth(), elevated = true) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Text(
                 "Choose a format, scope, and date window before generating the export.",
                 style = MaterialTheme.typography.bodyMedium,
@@ -93,21 +96,21 @@ private fun ExportConfigurationCard(
             )
 
             Text("Format", style = MaterialTheme.typography.titleSmall)
-            OptionRow(
+            optionRow(
                 options = ExportFormat.entries.map { it.name },
                 selected = state.selectedFormat.name,
                 onSelect = { selected -> viewModel.setFormat(ExportFormat.valueOf(selected)) },
             )
 
             Text("Domain", style = MaterialTheme.typography.titleSmall)
-            OptionRow(
+            optionRow(
                 options = state.selectedFormat.allowedDomains().map { it.name },
                 selected = state.selectedDomain.name,
                 onSelect = { selected -> viewModel.setDomain(ExportDomain.valueOf(selected)) },
             )
 
             Text("Date window", style = MaterialTheme.typography.titleSmall)
-            OptionRow(
+            optionRow(
                 options = ExportDatePreset.entries.map { it.name },
                 selected = state.selectedDatePreset.name,
                 onSelect = { selected -> viewModel.setDatePreset(ExportDatePreset.valueOf(selected)) },
@@ -146,6 +149,7 @@ private fun ExportConfigurationCard(
             Button(
                 onClick = viewModel::export,
                 enabled = !state.isExporting,
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 if (state.isExporting) {
                     CircularProgressIndicator(
@@ -263,21 +267,47 @@ private fun ExportHistoryCard(history: List<ExportHistoryItem>) {
 }
 
 @Composable
-@OptIn(ExperimentalLayoutApi::class)
-private fun OptionRow(
+private fun optionRow(
     options: List<String>,
     selected: String,
     onSelect: (String) -> Unit,
 ) {
-    FlowRow(
-        modifier = Modifier.fillMaxWidth(),
+    LazyRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        options.forEach { option ->
-            OutlinedButton(onClick = { onSelect(option) }) {
-                val marker = if (selected == option) "• " else ""
-                Text("$marker${option.lowercase().replace('_', ' ')}")
+        items(options) { option ->
+            val isSelected = selected == option
+            OutlinedButton(
+                onClick = { onSelect(option) },
+                border =
+                    BorderStroke(
+                        width = 1.dp,
+                        color =
+                            if (isSelected) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)
+                            },
+                    ),
+                colors =
+                    ButtonDefaults.outlinedButtonColors(
+                        containerColor =
+                            if (isSelected) {
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                            } else {
+                                Color.Transparent
+                            },
+                    ),
+            ) {
+                Text(
+                    text = option.lowercase().replace('_', ' '),
+                    color =
+                        if (isSelected) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
+                )
             }
         }
     }

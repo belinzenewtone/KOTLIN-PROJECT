@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.personal.lifeOS.core.ui.designsystem.AppCard
@@ -53,21 +54,37 @@ fun SearchScreen(
         subtitle = "Cross-domain lookup for tasks, finance, calendar, and recurring rules.",
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            SearchField(
-                value = state.query,
-                onValueChange = viewModel::setQuery,
-                placeholder = "Search title, merchant, or category",
-                modifier = Modifier.weight(1f),
-            )
-            OutlinedButton(
-                onClick = viewModel::runSearch,
-                enabled = !state.isLoading,
-            ) {
-                Text("Search")
+        AppCard(modifier = Modifier.fillMaxWidth(), elevated = false) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                SearchField(
+                    value = state.query,
+                    onValueChange = viewModel::setQuery,
+                    placeholder = "Search title, merchant, or category",
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    OutlinedButton(
+                        onClick = viewModel::runSearch,
+                        enabled = !state.isLoading,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(if (state.isLoading) "Searching..." else "Search")
+                    }
+                    TextButton(
+                        onClick = { viewModel.setQuery("") },
+                        enabled = state.query.isNotBlank(),
+                    ) {
+                        Text("Clear")
+                    }
+                }
+                Text(
+                    text = "Search runs across tasks, events, transactions, budgets, incomes, and recurring rules.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
 
@@ -186,11 +203,15 @@ private fun SearchResultCard(
                     text = result.subtitle,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     "${result.source.groupLabel} • ${DateUtils.formatDate(result.timestamp, "MMM dd, yyyy h:mm a")}",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
             if (result.navigationTarget != null) {

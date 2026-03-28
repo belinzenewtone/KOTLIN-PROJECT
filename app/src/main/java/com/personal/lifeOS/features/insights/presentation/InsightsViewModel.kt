@@ -52,8 +52,18 @@ class InsightsViewModel
         fun refresh() {
             viewModelScope.launch {
                 _uiState.update { it.copy(isRefreshing = true) }
-                refreshDeterministicInsights()
-                _uiState.update { it.copy(isRefreshing = false) }
+                runCatching { refreshDeterministicInsights() }
+                    .onSuccess {
+                        _uiState.update { it.copy(isRefreshing = false, error = null) }
+                    }
+                    .onFailure { error ->
+                        _uiState.update {
+                            it.copy(
+                                isRefreshing = false,
+                                error = error.message ?: "Unable to refresh insights right now.",
+                            )
+                        }
+                    }
             }
         }
 

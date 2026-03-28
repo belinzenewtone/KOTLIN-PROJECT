@@ -26,7 +26,6 @@ class SearchViewModelTest {
                 val viewModel = SearchViewModel(repository)
 
                 viewModel.setQuery("   ")
-                viewModel.runSearch()
                 advanceUntilIdle()
 
                 assertTrue(viewModel.uiState.value.results.isEmpty())
@@ -64,7 +63,6 @@ class SearchViewModelTest {
                 val viewModel = SearchViewModel(repository)
 
                 viewModel.setQuery("review")
-                viewModel.runSearch()
                 advanceUntilIdle()
 
                 val state = viewModel.uiState.value
@@ -90,7 +88,6 @@ class SearchViewModelTest {
                 val viewModel = SearchViewModel(repository)
 
                 viewModel.setQuery("finance")
-                viewModel.runSearch()
                 advanceUntilIdle()
 
                 val state = viewModel.uiState.value

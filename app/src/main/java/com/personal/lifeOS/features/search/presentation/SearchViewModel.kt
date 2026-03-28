@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.personal.lifeOS.features.search.domain.model.SearchResult
 import com.personal.lifeOS.features.search.domain.repository.SearchRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,9 +30,21 @@ class SearchViewModel
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(SearchUiState())
         val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
+        private var searchJob: Job? = null
 
         fun setQuery(value: String) {
-            _uiState.update { it.copy(query = value) }
+            val trimmed = value.trimStart()
+            _uiState.update { it.copy(query = trimmed, error = null) }
+            searchJob?.cancel()
+            if (trimmed.isBlank()) {
+                _uiState.update { it.copy(results = emptyList(), isLoading = false) }
+                return
+            }
+            searchJob =
+                viewModelScope.launch {
+                    delay(220)
+                    executeSearch(trimmed)
+                }
         }
 
         fun runSearch() {
@@ -41,19 +55,23 @@ class SearchViewModel
             }
 
             viewModelScope.launch {
-                _uiState.update { it.copy(isLoading = true, error = null) }
-                runCatching { repository.search(query) }
-                    .onSuccess { results ->
-                        _uiState.update { it.copy(isLoading = false, results = results) }
-                    }
-                    .onFailure { error ->
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                error = error.message ?: "Search failed",
-                            )
-                        }
-                    }
+                executeSearch(query)
             }
+        }
+
+        private suspend fun executeSearch(query: String) {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            runCatching { repository.search(query) }
+                .onSuccess { results ->
+                    _uiState.update { it.copy(isLoading = false, results = results) }
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = error.message ?: "Search failed",
+                        )
+                    }
+                }
         }
     }

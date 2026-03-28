@@ -53,6 +53,7 @@ class InsightRepositoryImpl
             }
         }
 
+        @Suppress("LongMethod")
         override suspend fun refreshDeterministicCards(now: Long) {
             val userId = authSessionStore.getUserId()
             if (userId.isBlank()) {
@@ -135,9 +136,28 @@ class InsightRepositoryImpl
 
             val allEntities = engineEntities + recurringEntities
             insightCardDao.deleteDeterministic(userId)
-            if (allEntities.isNotEmpty()) {
-                insightCardDao.insertAll(allEntities)
-            }
+            val entitiesToPersist =
+                if (allEntities.isNotEmpty()) {
+                    allEntities
+                } else {
+                    listOf(
+                        InsightCardEntity(
+                            id = deterministicId("BASELINE_SUMMARY"),
+                            userId = userId,
+                            kind = "BASELINE_SUMMARY",
+                            title = "Your insights are ready",
+                            body = "Keep adding tasks, events, and finance activity to unlock deeper trends.",
+                            confidence = null,
+                            isAiGenerated = false,
+                            freshUntil = now + Duration.ofHours(6).toMillis(),
+                            createdAt = now,
+                            updatedAt = now,
+                            syncState = "LOCAL_ONLY",
+                            recordSource = "SYSTEM",
+                        ),
+                    )
+                }
+            insightCardDao.insertAll(entitiesToPersist)
         }
 
         private fun deterministicId(kind: String): Long {

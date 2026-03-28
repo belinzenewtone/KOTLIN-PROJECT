@@ -1,6 +1,7 @@
 package com.personal.lifeOS.core.ui.designsystem
 
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
@@ -23,7 +24,7 @@ fun SearchField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
         singleLine = true,
         shape = RoundedCornerShape(AppDesignTokens.radius.md),
         placeholder = {

@@ -14,10 +14,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoGraph
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PsychologyAlt
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TaskAlt
-import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -91,7 +89,6 @@ fun HomeScreen(
                 onOpenReview = { onOpenRoute(AppRoute.Review) },
             )
         }
-        HomeToolsRow(onOpenRoute = onOpenRoute)
     }
 }
 
@@ -151,10 +148,10 @@ private fun HomeAgendaCard(
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
             HomeAgendaRow(
-                icon = Icons.Filled.PsychologyAlt,
-                title = "Assistant",
-                value = "Open",
-                onClick = { onOpenRoute(AppRoute.Assistant) },
+                icon = Icons.Filled.Search,
+                title = "Search",
+                value = "Find",
+                onClick = { onOpenRoute(AppRoute.Search) },
             )
         }
     }
@@ -196,49 +193,6 @@ private fun HomeAgendaRow(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-    }
-}
-
-@Composable
-private fun HomeToolsRow(onOpenRoute: (String) -> Unit) {
-    Text(
-        text = "Tools",
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-
-    val tools =
-        listOf(
-            Triple("Search", Icons.Filled.Search, AppRoute.Search),
-            Triple("Review", Icons.Filled.Update, AppRoute.Review),
-            Triple("Analytics", Icons.Filled.AutoGraph, AppRoute.Insights),
-        )
-
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        items(tools) { (label, icon, route) ->
-            AppCard(
-                elevated = false,
-                modifier = Modifier.clickable { onOpenRoute(route) },
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                    Text(
-                        text = label,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                }
-            }
-        }
     }
 }
 

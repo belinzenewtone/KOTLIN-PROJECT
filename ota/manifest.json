@@ -1,8 +1,8 @@
 ﻿{
-    "version_code":  17,
-    "version_name":  "1.2.6",
-    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.6/app-release-v1.2.6.apk",
-    "checksum_sha256":  "72a288c1cb6eff033e7296310391163ae62cac944a55a5327436154eeae689c2",
+    "version_code":  18,
+    "version_name":  "1.2.7",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.7/app-release-v1.2.7.apk",
+    "checksum_sha256":  "58b15e6d033177b86389ed7b0bea5ea42dfb6743cf5934d30f82e8ae0717a89c",
     "required":  false,
-    "release_notes":  "Finance and Home layout compaction update: reduced vertical stacking, restored horizontal summary flow, tightened spacing/alignment, and improved cross-screen UI consistency."
+    "release_notes":  "UI refinement release: removed Home tools row, added Search entry in Home agenda, fixed blank Insights, improved Weekly Review section separation, smoothed task swipe behavior, removed duplicate Finance import panel, expanded Export/Reports card spacing, cleaned Export selector states, improved Search layout and overflow handling, and aligned Recurring page top padding."
 }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -96,28 +97,28 @@ private fun ReviewRitualCard(ritual: ReviewRitualUiModel) {
 @Composable
 private fun ReviewSummaryCard(state: ReviewUiState) {
     val ksh = NumberFormat.getCurrencyInstance(Locale("en", "KE"))
+    val summaryRows =
+        buildList {
+            add("Total this week" to ksh.format(state.summary.totalSpend))
+            add("Posture" to state.summary.postureLabel)
+            add("Week delta" to state.summary.weekDeltaLabel)
+            state.summary.topCategory?.let { category ->
+                add("Top category" to category)
+            }
+        }
 
     AppCard(elevated = true) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 text = "Spending",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
-            ReviewStatRow(
-                label = "Total this week",
-                value = ksh.format(state.summary.totalSpend),
-            )
-            ReviewStatRow(
-                label = "Posture",
-                value = state.summary.postureLabel,
-            )
-            ReviewStatRow(
-                label = "Week delta",
-                value = state.summary.weekDeltaLabel,
-            )
-            state.summary.topCategory?.let { cat ->
-                ReviewStatRow(label = "Top category", value = cat)
+            summaryRows.forEachIndexed { index, (label, value) ->
+                ReviewStatRow(label = label, value = value)
+                if (index < summaryRows.lastIndex) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                }
             }
         }
     }
@@ -125,21 +126,24 @@ private fun ReviewSummaryCard(state: ReviewUiState) {
 
 @Composable
 private fun ReviewTaskCard(state: ReviewUiState) {
+    val taskRows =
+        listOf(
+            "Completed today" to state.summary.tasksCompleted.toString(),
+            "Still pending" to state.summary.tasksPending.toString(),
+        )
     AppCard(elevated = true) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 text = "Tasks",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
-            ReviewStatRow(
-                label = "Completed today",
-                value = state.summary.tasksCompleted.toString(),
-            )
-            ReviewStatRow(
-                label = "Still pending",
-                value = state.summary.tasksPending.toString(),
-            )
+            taskRows.forEachIndexed { index, (label, value) ->
+                ReviewStatRow(label = label, value = value)
+                if (index < taskRows.lastIndex) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                }
+            }
         }
     }
 }

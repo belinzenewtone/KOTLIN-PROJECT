@@ -207,6 +207,7 @@ private fun TasksBody(
  * Only renders if [tasks] is non-empty.
  */
 @OptIn(ExperimentalMaterial3Api::class)
+@Suppress("CyclomaticComplexMethod", "LongMethod")
 @Composable
 private fun PrioritySection(
     priority: TaskPriority,
@@ -234,14 +235,14 @@ private fun PrioritySection(
                 confirmValueChange = { value ->
                     when (value) {
                         SwipeToDismissBoxValue.StartToEnd -> {
-                            // Complete task
-                            onCompleteTask(task)
-                            true
+                            if (task.status != com.personal.lifeOS.features.tasks.domain.model.TaskStatus.COMPLETED) {
+                                onCompleteTask(task)
+                            }
+                            false
                         }
                         SwipeToDismissBoxValue.EndToStart -> {
-                            // Delete task
                             onDeleteTask(task)
-                            true
+                            false
                         }
                         else -> false
                     }
@@ -254,12 +255,12 @@ private fun PrioritySection(
                 backgroundContent = {
                     val direction = dismissState.dismissDirection
                     val bgColor by animateColorAsState(
-                        when (dismissState.targetValue) {
-                            SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.primaryContainer
-                            SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.errorContainer
-                            else -> MaterialTheme.colorScheme.surface
+                        when (direction) {
+                            SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+                            SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f)
+                            else -> Color.Transparent
                         },
-                        label = "swipe_bg"
+                        label = "swipe_bg",
                     )
                     val icon = when (direction) {
                         SwipeToDismissBoxValue.StartToEnd -> Icons.Filled.CheckCircle
@@ -268,6 +269,7 @@ private fun PrioritySection(
                     }
                     val alignment = when (direction) {
                         SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                        SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
                         else -> Alignment.CenterEnd
                     }
                     Box(

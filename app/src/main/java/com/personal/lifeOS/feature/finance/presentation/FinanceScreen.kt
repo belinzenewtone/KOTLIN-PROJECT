@@ -42,7 +42,6 @@ import androidx.paging.compose.itemKey
 import com.personal.lifeOS.core.ui.designsystem.AppCard
 import com.personal.lifeOS.core.ui.designsystem.BudgetProgressIndicator
 import com.personal.lifeOS.core.ui.designsystem.EmptyState
-import com.personal.lifeOS.core.ui.designsystem.ImportHealthPanel
 import com.personal.lifeOS.core.ui.designsystem.InlineBanner
 import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
 import com.personal.lifeOS.core.ui.designsystem.LoadingState
@@ -182,11 +181,6 @@ fun FinanceScreen(
                 }
             }
         }
-
-        ImportHealthPanel(
-            model = uiState.importHealth,
-            onReview = { viewModel.onEvent(FinanceUiEvent.ShowImportDialog) },
-        )
 
         SegmentedControl(
             items = filters,
@@ -520,23 +514,18 @@ private fun FinanceCompactCalloutsRow(
     val hasNudge = exportNudge != null
     if (!hasReview && !hasNudge) return
 
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        if (reviewQueueSummary != null) {
-            item {
-                FinanceReviewQueueCard(
-                    summary = reviewQueueSummary,
-                    onOpenReview = onOpenReview,
-                )
-            }
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        reviewQueueSummary?.let {
+            FinanceReviewQueueCard(
+                summary = it,
+                onOpenReview = onOpenReview,
+            )
         }
-
-        if (exportNudge != null) {
-            item {
-                FinanceExportNudgeCard(
-                    nudge = exportNudge,
-                    onOpenTools = onOpenTools,
-                )
-            }
+        exportNudge?.let {
+            FinanceExportNudgeCard(
+                nudge = it,
+                onOpenTools = onOpenTools,
+            )
         }
     }
 }
@@ -547,10 +536,10 @@ private fun FinanceReviewQueueCard(
     onOpenReview: () -> Unit,
 ) {
     AppCard(
-        modifier = Modifier.width(220.dp),
+        modifier = Modifier.fillMaxWidth(),
         elevated = false,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -586,10 +575,10 @@ private fun FinanceExportNudgeCard(
     onOpenTools: () -> Unit,
 ) {
     AppCard(
-        modifier = Modifier.width(220.dp),
+        modifier = Modifier.fillMaxWidth(),
         elevated = false,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -597,7 +586,7 @@ private fun FinanceExportNudgeCard(
             ) {
                 Text(
                     text = nudge.title,
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
@@ -611,7 +600,7 @@ private fun FinanceExportNudgeCard(
             }
             Text(
                 text = nudge.summary,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,

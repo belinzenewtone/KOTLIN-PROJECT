@@ -3,8 +3,6 @@ package com.personal.lifeOS.feature.finance.presentation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -43,7 +42,6 @@ import androidx.paging.compose.itemKey
 import com.personal.lifeOS.core.ui.designsystem.AppCard
 import com.personal.lifeOS.core.ui.designsystem.BudgetProgressIndicator
 import com.personal.lifeOS.core.ui.designsystem.EmptyState
-import com.personal.lifeOS.core.ui.designsystem.FinanceSummaryCard
 import com.personal.lifeOS.core.ui.designsystem.ImportHealthPanel
 import com.personal.lifeOS.core.ui.designsystem.InlineBanner
 import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
@@ -162,32 +160,26 @@ fun FinanceScreen(
                 tone = InlineBannerTone.WARNING,
             )
         }
-        FinanceBudgetPressure(uiState = uiState)
-
-        if (uiState.showFulizaBanner) {
-            FulizaSummaryCard(
-                outstanding = uiState.fulizaNetOutstandingKes ?: 0.0,
-                openCount = uiState.fulizaOpenCount,
-            )
-        }
-
-        SpendingVelocityBanner(
-            monthSpend = uiState.summary.monthTotal,
-            monthBudget = uiState.totalMonthBudget,
-        )
+        FinanceCompactInsightsRow(uiState = uiState)
 
         if (uiState.enhancedUiEnabled) {
             uiState.reviewQueueSummary?.let { summary ->
-                ReviewQueueCard(
-                    summary = summary,
+                FinanceCompactCalloutsRow(
+                    reviewQueueSummary = summary,
+                    exportNudge = uiState.exportNudge,
                     onOpenReview = { viewModel.onEvent(FinanceUiEvent.ShowImportDialog) },
-                )
-            }
-            uiState.exportNudge?.let { exportNudge ->
-                FinanceActionNudgeCard(
-                    nudge = exportNudge,
                     onOpenTools = onOpenTools,
                 )
+            }
+            if (uiState.reviewQueueSummary == null) {
+                uiState.exportNudge?.let { exportNudge ->
+                    FinanceCompactCalloutsRow(
+                        reviewQueueSummary = null,
+                        exportNudge = exportNudge,
+                        onOpenReview = {},
+                        onOpenTools = onOpenTools,
+                    )
+                }
             }
         }
 
@@ -407,39 +399,106 @@ private fun FinanceImportBanner(
 }
 
 @Composable
-@OptIn(ExperimentalLayoutApi::class)
 private fun FinanceSummaryStrip(uiState: FinanceUiState) {
-    FlowRow(
-        modifier = Modifier.fillMaxWidth(),
+    val metrics =
+        listOf(
+            "Today" to uiState.summary.todayTotal,
+            "Week" to uiState.summary.weekTotal,
+            "Month" to uiState.summary.monthTotal,
+        )
+
+    LazyRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        FinanceSummaryCard(
-            title = "Today",
-            amount = uiState.summary.todayTotal,
-            modifier = Modifier.width(168.dp),
-        )
-        FinanceSummaryCard(
-            title = "This Week",
-            amount = uiState.summary.weekTotal,
-            modifier = Modifier.width(168.dp),
-        )
-        FinanceSummaryCard(
-            title = "This Month",
-            amount = uiState.summary.monthTotal,
-            modifier = Modifier.width(168.dp),
-        )
+        items(metrics) { (title, amount) ->
+            FinanceCompactSummaryCard(
+                title = title,
+                amount = amount,
+                modifier = Modifier.width(160.dp),
+            )
+        }
     }
 }
 
 @Composable
-private fun FinanceBudgetPressure(uiState: FinanceUiState) {
-    val budgetAmount = uiState.totalMonthBudget.takeIf { it > 0.0 } ?: (uiState.summary.monthTotal * 1.20).coerceAtLeast(1.0)
-    AppCard(elevated = true) {
+private fun FinanceCompactSummaryCard(
+    title: String,
+    amount: Double,
+    modifier: Modifier = Modifier,
+) {
+    AppCard(
+        modifier = modifier,
+        elevated = true,
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = DateUtils.formatCurrency(amount),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+            )
+        }
+    }
+}
+
+@Composable
+private fun FinanceCompactInsightsRow(uiState: FinanceUiState) {
+    val spendingVelocityInsight =
+        buildSpendingVelocityInsight(
+            monthSpend = uiState.summary.monthTotal,
+            monthBudget = uiState.totalMonthBudget,
+        )
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        item {
+            FinanceBudgetPressure(
+                uiState = uiState,
+                modifier = Modifier.width(236.dp),
+            )
+        }
+        if (uiState.showFulizaBanner) {
+            item {
+                FulizaSummaryCard(
+                    outstanding = uiState.fulizaNetOutstandingKes ?: 0.0,
+                    openCount = uiState.fulizaOpenCount,
+                    modifier = Modifier.width(236.dp),
+                )
+            }
+        }
+        spendingVelocityInsight?.let { insight ->
+            item {
+                FinanceVelocityCard(
+                    projected = insight.projected,
+                    overshoot = insight.overshoot,
+                    modifier = Modifier.width(236.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FinanceBudgetPressure(
+    uiState: FinanceUiState,
+    modifier: Modifier = Modifier,
+) {
+    val budgetAmount =
+        uiState.totalMonthBudget.takeIf { it > 0.0 }
+            ?: (uiState.summary.monthTotal * 1.20).coerceAtLeast(1.0)
+    AppCard(
+        modifier = modifier,
+        elevated = true,
+    ) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                text = "Budget Pressure",
-                style = MaterialTheme.typography.titleMedium,
+                text = "Budget",
+                style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurface,
             )
             BudgetProgressIndicator(
@@ -451,58 +510,112 @@ private fun FinanceBudgetPressure(uiState: FinanceUiState) {
 }
 
 @Composable
-private fun ReviewQueueCard(
-    summary: String,
+private fun FinanceCompactCalloutsRow(
+    reviewQueueSummary: String?,
+    exportNudge: FinanceActionNudgeUiModel?,
     onOpenReview: () -> Unit,
+    onOpenTools: () -> Unit,
 ) {
-    AppCard(elevated = false) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Text(
-                    text = "Review queue",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = summary,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+    val hasReview = reviewQueueSummary != null
+    val hasNudge = exportNudge != null
+    if (!hasReview && !hasNudge) return
+
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        if (reviewQueueSummary != null) {
+            item {
+                FinanceReviewQueueCard(
+                    summary = reviewQueueSummary,
+                    onOpenReview = onOpenReview,
                 )
             }
-            TextButton(onClick = onOpenReview) {
-                Text("Open")
+        }
+
+        if (exportNudge != null) {
+            item {
+                FinanceExportNudgeCard(
+                    nudge = exportNudge,
+                    onOpenTools = onOpenTools,
+                )
             }
         }
     }
 }
 
 @Composable
-private fun FinanceActionNudgeCard(
+private fun FinanceReviewQueueCard(
+    summary: String,
+    onOpenReview: () -> Unit,
+) {
+    AppCard(
+        modifier = Modifier.width(220.dp),
+        elevated = false,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Review queue",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                )
+                TextButton(
+                    onClick = onOpenReview,
+                    contentPadding = PaddingValues(horizontal = 2.dp, vertical = 0.dp),
+                ) {
+                    Text("Open")
+                }
+            }
+            Text(
+                text = summary,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@Composable
+private fun FinanceExportNudgeCard(
     nudge: FinanceActionNudgeUiModel,
     onOpenTools: () -> Unit,
 ) {
-    AppCard(elevated = false) {
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(
-                text = nudge.title,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
+    AppCard(
+        modifier = Modifier.width(220.dp),
+        elevated = false,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = nudge.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                )
+                TextButton(
+                    onClick = onOpenTools,
+                    contentPadding = PaddingValues(horizontal = 2.dp, vertical = 0.dp),
+                ) {
+                    Text(nudge.actionLabel, maxLines = 1)
+                }
+            }
             Text(
                 text = nudge.summary,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
             )
-            TextButton(onClick = onOpenTools) {
-                Text(nudge.actionLabel)
-            }
         }
     }
 }
@@ -569,8 +682,12 @@ private fun FinanceTransactionRow(
 private fun FulizaSummaryCard(
     outstanding: Double,
     openCount: Int,
+    modifier: Modifier = Modifier,
 ) {
-    AppCard(elevated = true) {
+    AppCard(
+        modifier = modifier,
+        elevated = true,
+    ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
@@ -607,20 +724,59 @@ private fun FulizaSummaryCard(
     }
 }
 
-@Composable
-private fun SpendingVelocityBanner(monthSpend: Double, monthBudget: Double) {
-    if (monthBudget <= 0.0) return
+private data class SpendingVelocityInsight(
+    val projected: Double,
+    val overshoot: Double,
+)
+
+private fun buildSpendingVelocityInsight(
+    monthSpend: Double,
+    monthBudget: Double,
+): SpendingVelocityInsight? {
+    if (monthBudget <= 0.0) return null
     val dayOfMonth = LocalDate.now().dayOfMonth
-    if (dayOfMonth < 3) return
+    if (dayOfMonth < 3) return null
     val dailyRate = monthSpend / dayOfMonth
     val daysInMonth = LocalDate.now().lengthOfMonth()
     val projected = dailyRate * daysInMonth
     val overshoot = projected - monthBudget
-    if (overshoot <= 0.0) return
-    InlineBanner(
-        message =
-            "At this pace: ${DateUtils.formatCurrency(projected)} projected — " +
-                "${DateUtils.formatCurrency(overshoot)} over budget",
-        tone = InlineBannerTone.WARNING,
-    )
+    return if (overshoot > 0.0) {
+        SpendingVelocityInsight(projected = projected, overshoot = overshoot)
+    } else {
+        null
+    }
+}
+
+@Composable
+private fun FinanceVelocityCard(
+    projected: Double,
+    overshoot: Double,
+    modifier: Modifier = Modifier,
+) {
+    AppCard(
+        modifier = modifier,
+        elevated = false,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = "Spending pace",
+                style = MaterialTheme.typography.titleSmall,
+                color = Warning,
+            )
+            Text(
+                text = "${DateUtils.formatCurrency(projected)} projected",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            )
+            Text(
+                text = "${DateUtils.formatCurrency(overshoot)} over budget",
+                style = MaterialTheme.typography.labelSmall,
+                color = Warning,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            )
+        }
+    }
 }

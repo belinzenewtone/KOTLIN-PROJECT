@@ -7,6 +7,8 @@ import com.personal.lifeOS.features.recurring.presentation.RecurringScreen as Le
  * Feature-package bridge retained during phased package migration.
  */
 @Composable
-fun RecurringScreen() {
-    LegacyRecurringScreen()
+fun RecurringScreen(
+    onBack: (() -> Unit)? = null,
+) {
+    LegacyRecurringScreen(onBack = onBack)
 }

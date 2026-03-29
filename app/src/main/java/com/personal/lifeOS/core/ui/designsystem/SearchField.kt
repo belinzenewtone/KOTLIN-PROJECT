@@ -26,7 +26,7 @@ fun SearchField(
         onValueChange = onValueChange,
         modifier = modifier.fillMaxWidth(),
         singleLine = true,
-        shape = RoundedCornerShape(AppDesignTokens.radius.md),
+        shape = RoundedCornerShape(AppDesignTokens.radius.lg),
         placeholder = {
             Text(
                 text = placeholder,
@@ -51,8 +51,10 @@ fun SearchField(
         },
         colors =
             OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f),
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.72f),
             ),
     )
 }

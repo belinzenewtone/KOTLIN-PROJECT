@@ -58,6 +58,7 @@ fun InsightsScreen(
     val state by viewModel.uiState.collectAsState()
 
     PageScaffold(
+        headerEyebrow = "Trends",
         title = "Insights",
         subtitle = "Spending trends and habits",
         onBack = onBack,

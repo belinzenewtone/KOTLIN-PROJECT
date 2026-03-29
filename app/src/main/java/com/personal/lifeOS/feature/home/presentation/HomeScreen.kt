@@ -34,10 +34,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.personal.lifeOS.core.ui.designsystem.AppCard
 import com.personal.lifeOS.core.ui.designsystem.FinanceSummaryCard
+import com.personal.lifeOS.core.ui.designsystem.HeroStatChip
+import com.personal.lifeOS.core.ui.designsystem.HeroSurface
 import com.personal.lifeOS.core.ui.designsystem.LoadingState
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
+import com.personal.lifeOS.core.ui.designsystem.PageHeaderVariant
 import com.personal.lifeOS.core.ui.designsystem.TopBanner
 import com.personal.lifeOS.core.ui.designsystem.TopBannerTone
+import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.dashboard.presentation.DashboardViewModel
 import com.personal.lifeOS.navigation.AppRoute
 import com.personal.lifeOS.ui.theme.AppSpacing
@@ -54,6 +58,7 @@ fun HomeScreen(
     PageScaffold(
         title = "Today",
         subtitle = uiState.dateLabel,
+        headerVariant = PageHeaderVariant.COMPACT,
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
         topBanner = {
             uiState.errorMessage?.let {
@@ -77,10 +82,32 @@ fun HomeScreen(
             return@PageScaffold
         }
 
-        Text(
-            text = uiState.greeting,
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface,
+        HeroSurface(
+            eyebrow = "Daily focus",
+            title = uiState.greeting,
+            subtitle = "Review priorities, schedule, and your spend trend.",
+            footer = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    HeroStatChip(
+                        label = "Tasks",
+                        value =
+                            if (uiState.pendingTaskCount == 0) {
+                                "All clear"
+                            } else {
+                                "${uiState.pendingTaskCount} open"
+                            },
+                        modifier = Modifier.weight(1f),
+                    )
+                    HeroStatChip(
+                        label = "Net",
+                        value = DateUtils.formatCurrency(uiState.monthNet),
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            },
         )
 
         HomeSummaryStrip(uiState = uiState)

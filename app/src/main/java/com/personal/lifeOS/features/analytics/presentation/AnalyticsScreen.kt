@@ -28,6 +28,7 @@ fun AnalyticsScreen(viewModel: AnalyticsViewModel = hiltViewModel()) {
     val spendingData = state.selectedSpendingData()
 
     PageScaffold(
+        headerEyebrow = "Overview",
         title = "Analytics",
         subtitle = "Productivity and finance trends in one place",
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),

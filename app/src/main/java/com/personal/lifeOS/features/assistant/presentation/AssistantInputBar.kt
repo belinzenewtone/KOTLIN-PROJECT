@@ -4,6 +4,7 @@ import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.CircularProgressIndicator
@@ -28,7 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.ui.theme.AppSpacing
@@ -56,7 +58,6 @@ internal fun InputBar(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface)
                 // navigationBarsPadding handles both gesture-swipe bar AND button-nav bar.
                 // This is the ONLY inset that should be applied here — the keyboard inset
                 // is handled by the parent Column's imePadding().
@@ -64,7 +65,15 @@ internal fun InputBar(
                 // Slide in extra clearance for the floating bottom nav only when
                 // the keyboard is not visible.
                 .padding(bottom = floatingBarClearance)
-                .padding(horizontal = AppSpacing.ScreenHorizontal, vertical = 10.dp),
+                .padding(horizontal = AppSpacing.ScreenHorizontal, vertical = 10.dp)
+                .clip(RoundedCornerShape(AppDesignTokens.radius.lg))
+                .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.92f))
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f),
+                    shape = RoundedCornerShape(AppDesignTokens.radius.lg),
+                )
+                .padding(horizontal = 10.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -78,8 +87,8 @@ internal fun InputBar(
                 OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
                     cursorColor = MaterialTheme.colorScheme.primary,
                 ),
             singleLine = false,

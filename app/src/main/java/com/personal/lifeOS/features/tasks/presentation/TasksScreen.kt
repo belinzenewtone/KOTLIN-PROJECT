@@ -164,6 +164,7 @@ private fun TasksBody(
             Modifier
                 .fillMaxSize()
                 .padding(padding),
+        headerEyebrow = "Execution",
         title = "Tasks",
         subtitle = "${state.pendingTasks.size} open • ${state.completedTasks.size} completed",
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFab),

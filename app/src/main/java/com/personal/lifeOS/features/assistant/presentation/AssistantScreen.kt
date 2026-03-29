@@ -54,7 +54,20 @@ fun AssistantScreen(viewModel: AssistantViewModel = hiltViewModel()) {
                 // the bottom by exactly the keyboard height, pushing InputBar up above it.
                 .imePadding(),
     ) {
-        AssistantHeader(isProcessing = state.isProcessing, onClearChat = viewModel::clearChat)
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = AppSpacing.ScreenHorizontal,
+                        vertical = AppSpacing.Section,
+                    ),
+        ) {
+            AssistantHeader(
+                isProcessing = state.isProcessing,
+                onClearChat = viewModel::clearChat,
+            )
+        }
 
         LazyColumn(
             state = listState,

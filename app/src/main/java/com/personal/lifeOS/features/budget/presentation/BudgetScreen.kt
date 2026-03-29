@@ -22,6 +22,7 @@ fun BudgetScreen(
     val state by viewModel.uiState.collectAsState()
 
     PageScaffold(
+        headerEyebrow = "Spending Guardrails",
         title = "Budgets",
         subtitle = "${state.budgets.size} ${if (state.budgets.size == 1) "category" else "categories"} tracked",
         onBack = onBack,

@@ -35,6 +35,7 @@ fun RecurringScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         PageScaffold(
+            headerEyebrow = "Automation",
             title = "Recurring",
             subtitle = "Subscriptions and repeating items",
             contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),

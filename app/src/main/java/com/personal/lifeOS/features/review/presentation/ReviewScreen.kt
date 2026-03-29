@@ -36,6 +36,7 @@ fun ReviewScreen(
     val state by viewModel.uiState.collectAsState()
 
     PageScaffold(
+        headerEyebrow = "Weekly Ritual",
         title = "Weekly Review",
         subtitle = state.weekLabel,
         onBack = onBack,

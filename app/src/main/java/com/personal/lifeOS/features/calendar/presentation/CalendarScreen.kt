@@ -142,6 +142,7 @@ private fun CalendarBody(
             Modifier
                 .fillMaxSize()
                 .padding(padding),
+        headerEyebrow = "Schedule",
         title = "Calendar",
         subtitle = DateUtils.formatDate(System.currentTimeMillis(), "MMMM yyyy"),
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFab),

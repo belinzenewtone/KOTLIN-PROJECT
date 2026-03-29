@@ -52,6 +52,7 @@ fun ProfileScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         PageScaffold(
+            headerEyebrow = "Personal Space",
             title = "Profile",
             subtitle = "Account, security, and preferences",
             contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),

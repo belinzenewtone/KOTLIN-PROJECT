@@ -40,6 +40,7 @@ fun PlannerScreen(
     onOpenSearch: () -> Unit = {},
 ) {
     PageScaffold(
+        headerEyebrow = "Finance Tools",
         title = "Finance Hub",
         subtitle = "Manage budgets, income, recurring items, and exports",
         onBack = onBack,

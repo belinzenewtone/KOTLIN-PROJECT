@@ -93,6 +93,7 @@ fun SettingsScreen(
     }
 
     PageScaffold(
+        headerEyebrow = "Preferences",
         title = "Settings",
         subtitle = "Preferences and customization",
         onBack = onBack,

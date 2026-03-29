@@ -53,6 +53,8 @@ import androidx.compose.ui.unit.dp
 import com.personal.lifeOS.R
 import com.personal.lifeOS.core.ui.designsystem.AppCard
 import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
+import com.personal.lifeOS.core.ui.designsystem.HeroStatChip
+import com.personal.lifeOS.core.ui.designsystem.HeroSurface
 
 @Composable
 internal fun AuthLoadingState() {
@@ -86,15 +88,16 @@ internal fun AuthLoadingState() {
 
 @Composable
 internal fun AuthBrandingHeader(isSignUpMode: Boolean) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.sm),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+    HeroSurface(
+        eyebrow = if (isSignUpMode) "Create account" else "Sign in",
+        title = if (isSignUpMode) "Build your PersonalOS space" else "Welcome back",
+        subtitle =
+            if (isSignUpMode) {
+                "Create your profile and continue into onboarding."
+            } else {
+                "Sign in to continue with your tasks, calendar, and finance flow."
+            },
+        action = {
             Box(
                 modifier =
                     Modifier
@@ -117,35 +120,24 @@ internal fun AuthBrandingHeader(isSignUpMode: Boolean) {
                     modifier = Modifier.size(24.dp),
                 )
             }
-            Text(
-                text = "PersonalOS",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-            )
-        }
-        if (isSignUpMode) {
-            Text(
-                text = "Need help?",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-
-    Text(
-        text = if (isSignUpMode) "Create your account" else "Welcome Back",
-        style = MaterialTheme.typography.headlineLarge,
-        fontWeight = FontWeight.Bold,
-    )
-    Text(
-        text =
-            if (isSignUpMode) {
-                "Start your journey toward focused planning."
-            } else {
-                "Enter your details to access your digital sanctuary."
-            },
-        style = MaterialTheme.typography.bodyLarge,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        },
+        footer = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                HeroStatChip(
+                    label = "Security",
+                    value = "Biometric-ready",
+                    modifier = Modifier.weight(1f),
+                )
+                HeroStatChip(
+                    label = "Sync",
+                    value = "Cloud-safe",
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        },
     )
 }
 
@@ -172,7 +164,7 @@ internal fun SignInCard(
                 isPassword = true,
                 showPassword = state.showPassword,
                 onTogglePassword = { viewModel.onEvent(AuthUiEvent.TogglePasswordVisibility) },
-                placeholder = "........",
+                placeholder = "Enter your password",
                 trailingTextAction = "Forgot?",
                 onTrailingTextAction = { viewModel.onEvent(AuthUiEvent.SendPasswordReset) },
             )
@@ -182,8 +174,8 @@ internal fun SignInCard(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .height(52.dp),
-                shape = RoundedCornerShape(AppDesignTokens.radius.md),
+                        .height(54.dp),
+                shape = RoundedCornerShape(AppDesignTokens.radius.pill),
             ) {
                 if (state.isLoading) {
                     CircularProgressIndicator(
@@ -235,7 +227,7 @@ internal fun SignUpCard(
                 isPassword = true,
                 showPassword = state.showPassword,
                 onTogglePassword = { viewModel.onEvent(AuthUiEvent.TogglePasswordVisibility) },
-                placeholder = "........",
+                placeholder = "Create a secure password",
             )
             AuthTextField(
                 value = state.signUpConfirmPassword,
@@ -245,7 +237,7 @@ internal fun SignUpCard(
                 isPassword = true,
                 showPassword = state.showPassword,
                 onTogglePassword = { viewModel.onEvent(AuthUiEvent.TogglePasswordVisibility) },
-                placeholder = "........",
+                placeholder = "Re-enter your password",
             )
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -266,8 +258,8 @@ internal fun SignUpCard(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .height(52.dp),
-                shape = RoundedCornerShape(AppDesignTokens.radius.md),
+                        .height(54.dp),
+                shape = RoundedCornerShape(AppDesignTokens.radius.pill),
             ) {
                 if (state.isLoading) {
                     CircularProgressIndicator(
@@ -294,13 +286,13 @@ private fun AuthSwitcherLabel(
     action: String,
     onClick: () -> Unit,
 ) {
-    Row(
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Text(
-            text = "$prefix ",
+            text = prefix,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -336,9 +328,10 @@ private fun AuthTextField(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = label.uppercase(),
+                text = label,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
             )
             if (!trailingTextAction.isNullOrBlank() && onTrailingTextAction != null) {
                 Text(

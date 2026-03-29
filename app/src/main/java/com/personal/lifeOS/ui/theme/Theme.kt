@@ -2,14 +2,18 @@ package com.personal.lifeOS.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 // ── Light mode — Stitch "Digital Sanctuary" palette (2025 refresh) ──────────
@@ -79,7 +83,6 @@ private val DarkColorScheme =
 
 private val HeadlineFamily = FontFamily.SansSerif
 private val BodyFamily = FontFamily.SansSerif
-private val MonoFamily = FontFamily.Monospace
 
 /**
  * Typography must NOT have hardcoded colors — Material3 automatically applies
@@ -94,6 +97,7 @@ private val LifeOSTypography =
                 fontWeight = FontWeight.Bold,
                 fontSize = 36.sp,
                 lineHeight = 42.sp,
+                platformStyle = PlatformTextStyle(includeFontPadding = false),
             ),
         headlineLarge =
             TextStyle(
@@ -101,6 +105,7 @@ private val LifeOSTypography =
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 28.sp,
                 lineHeight = 34.sp,
+                platformStyle = PlatformTextStyle(includeFontPadding = false),
             ),
         headlineMedium =
             TextStyle(
@@ -108,6 +113,7 @@ private val LifeOSTypography =
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 22.sp,
                 lineHeight = 30.sp,
+                platformStyle = PlatformTextStyle(includeFontPadding = false),
             ),
         headlineSmall =
             TextStyle(
@@ -115,20 +121,23 @@ private val LifeOSTypography =
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 20.sp,
                 lineHeight = 28.sp,
+                platformStyle = PlatformTextStyle(includeFontPadding = false),
             ),
         titleLarge =
             TextStyle(
                 fontFamily = HeadlineFamily,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.SemiBold,
                 fontSize = 18.sp,
                 lineHeight = 24.sp,
+                platformStyle = PlatformTextStyle(includeFontPadding = false),
             ),
         titleMedium =
             TextStyle(
                 fontFamily = HeadlineFamily,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp,
                 lineHeight = 22.sp,
+                platformStyle = PlatformTextStyle(includeFontPadding = false),
             ),
         titleSmall =
             TextStyle(
@@ -136,6 +145,7 @@ private val LifeOSTypography =
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
                 lineHeight = 20.sp,
+                platformStyle = PlatformTextStyle(includeFontPadding = false),
             ),
         bodyLarge =
             TextStyle(
@@ -143,6 +153,7 @@ private val LifeOSTypography =
                 fontWeight = FontWeight.Normal,
                 fontSize = 16.sp,
                 lineHeight = 24.sp,
+                platformStyle = PlatformTextStyle(includeFontPadding = false),
             ),
         bodyMedium =
             TextStyle(
@@ -150,6 +161,7 @@ private val LifeOSTypography =
                 fontWeight = FontWeight.Normal,
                 fontSize = 14.sp,
                 lineHeight = 20.sp,
+                platformStyle = PlatformTextStyle(includeFontPadding = false),
             ),
         bodySmall =
             TextStyle(
@@ -157,28 +169,41 @@ private val LifeOSTypography =
                 fontWeight = FontWeight.Normal,
                 fontSize = 12.sp,
                 lineHeight = 16.sp,
+                platformStyle = PlatformTextStyle(includeFontPadding = false),
             ),
         labelLarge =
             TextStyle(
-                fontFamily = MonoFamily,
-                fontWeight = FontWeight.Medium,
+                fontFamily = BodyFamily,
+                fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
                 lineHeight = 20.sp,
+                platformStyle = PlatformTextStyle(includeFontPadding = false),
             ),
         labelMedium =
             TextStyle(
-                fontFamily = MonoFamily,
-                fontWeight = FontWeight.Normal,
+                fontFamily = BodyFamily,
+                fontWeight = FontWeight.Medium,
                 fontSize = 13.sp,
                 lineHeight = 18.sp,
+                platformStyle = PlatformTextStyle(includeFontPadding = false),
             ),
         labelSmall =
             TextStyle(
-                fontFamily = MonoFamily,
-                fontWeight = FontWeight.Normal,
+                fontFamily = BodyFamily,
+                fontWeight = FontWeight.Medium,
                 fontSize = 12.sp,
                 lineHeight = 16.sp,
+                platformStyle = PlatformTextStyle(includeFontPadding = false),
             ),
+    )
+
+private val LifeOSShapes =
+    Shapes(
+        extraSmall = RoundedCornerShape(10.dp),
+        small = RoundedCornerShape(14.dp),
+        medium = RoundedCornerShape(18.dp),
+        large = RoundedCornerShape(24.dp),
+        extraLarge = RoundedCornerShape(32.dp),
     )
 
 @Composable
@@ -196,6 +221,7 @@ fun LifeOSTheme(
     MaterialTheme(
         colorScheme = if (useDarkTheme) DarkColorScheme else LightColorScheme,
         typography = LifeOSTypography,
+        shapes = LifeOSShapes,
         content = content,
     )
 }

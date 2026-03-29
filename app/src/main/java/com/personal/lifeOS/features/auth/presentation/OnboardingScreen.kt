@@ -51,6 +51,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.personal.lifeOS.R
 import com.personal.lifeOS.core.ui.designsystem.AppCard
 import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
+import com.personal.lifeOS.core.ui.designsystem.HeroSurface
 import com.personal.lifeOS.core.ui.designsystem.InlineBanner
 import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
 
@@ -77,33 +78,28 @@ fun OnboardingScreen(
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .imePadding()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = AppDesignTokens.spacing.md, vertical = AppDesignTokens.spacing.sm),
         verticalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.md),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            IconButton(
-                onClick = {
-                    if (state.currentStep == 1) onBackToAuth() else viewModel.onEvent(OnboardingUiEvent.GoBack)
-                },
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-            }
-            Text(
-                text = "PersonalOS",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            Box(modifier = Modifier.size(48.dp))
-        }
+        HeroSurface(
+            eyebrow = "Step ${state.currentStep} of 4",
+            title = "PersonalOS setup",
+            subtitle = onboardingStepSubtitle(state.currentStep),
+            action = {
+                IconButton(
+                    onClick = {
+                        if (state.currentStep == 1) onBackToAuth() else viewModel.onEvent(OnboardingUiEvent.GoBack)
+                    },
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            },
+        )
 
         state.errorMessage?.let {
             InlineBanner(
@@ -113,14 +109,11 @@ fun OnboardingScreen(
         }
 
         AppCard(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.fillMaxWidth(),
             elevated = true,
         ) {
             Column(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState()),
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.lg),
             ) {
                 when (state.currentStep) {
@@ -151,7 +144,7 @@ fun OnboardingScreen(
                 Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-            shape = RoundedCornerShape(AppDesignTokens.radius.md),
+            shape = RoundedCornerShape(AppDesignTokens.radius.pill),
         ) {
             if (state.isSaving) {
                 CircularProgressIndicator(
@@ -177,6 +170,14 @@ fun OnboardingScreen(
         OnboardingProgressFooter(step = state.currentStep)
     }
 }
+
+private fun onboardingStepSubtitle(step: Int): String =
+    when (step) {
+        1 -> "A calm setup to personalize your planning and finance workspace."
+        2 -> "Understand the core pillars that shape your daily flow."
+        3 -> "Add your profile details so your workspace feels personal."
+        else -> "Final checks before launching into your dashboard."
+    }
 
 @Composable
 private fun OnboardingWelcomeStep() {
@@ -325,6 +326,6 @@ private fun OnboardingProgressFooter(step: Int) {
                 )
             }
         }
-        Text("STEP $step OF 4", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("Step $step of 4", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

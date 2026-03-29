@@ -52,6 +52,7 @@ fun LearningScreen(
     val completedCount = state.sessions.count { it.isCompleted }
 
     PageScaffold(
+        headerEyebrow = "Growth",
         title = "Learn",
         subtitle = "$completedCount of ${state.sessions.size} sessions completed",
         onBack = onBack,

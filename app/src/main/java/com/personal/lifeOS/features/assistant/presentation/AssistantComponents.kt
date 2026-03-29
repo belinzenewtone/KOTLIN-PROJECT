@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,53 +30,72 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.personal.lifeOS.core.ui.designsystem.AppCard
 import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
+import com.personal.lifeOS.core.ui.designsystem.HeroStatChip
+import com.personal.lifeOS.core.ui.designsystem.HeroSurface
 import com.personal.lifeOS.features.assistant.domain.model.ChatMessage
 import com.personal.lifeOS.features.assistant.domain.model.MessageSender
 import com.personal.lifeOS.features.assistant.domain.model.suggestedPrompts
-import com.personal.lifeOS.ui.theme.Accent
 import com.personal.lifeOS.ui.theme.AppSpacing
-import com.personal.lifeOS.ui.theme.Warning
 
 @Composable
 internal fun AssistantHeader(isProcessing: Boolean, onClearChat: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier =
-                Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Filled.SmartToy,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(22.dp),
-            )
-        }
-        Spacer(Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text("BELTECH Assistant", style = MaterialTheme.typography.titleLarge)
-            Text(
-                text = if (isProcessing) "Thinking..." else "Online",
-                style = MaterialTheme.typography.labelSmall,
-                color = if (isProcessing) Warning else Accent,
-            )
-        }
-        IconButton(onClick = onClearChat, enabled = !isProcessing) {
-            Icon(
-                imageVector = Icons.Filled.DeleteSweep,
-                contentDescription = "Clear chat",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(22.dp),
-            )
-        }
-    }
+    HeroSurface(
+        eyebrow = "AI workspace",
+        title = "BELTECH Assistant",
+        subtitle =
+            if (isProcessing) {
+                "Thinking through your latest request."
+            } else {
+                "Ask about tasks, calendar, or finance and get instant help."
+            },
+        action = {
+            Box(
+                modifier =
+                    Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.SmartToy,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+            IconButton(
+                onClick = onClearChat,
+                enabled = !isProcessing,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.DeleteSweep,
+                    contentDescription = "Clear chat",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        },
+        footer = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                HeroStatChip(
+                    label = "Status",
+                    value = if (isProcessing) "Thinking" else "Ready",
+                    modifier = Modifier.weight(1f),
+                )
+                HeroStatChip(
+                    label = "Context",
+                    value = "All modules",
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        },
+    )
 }
 
 @Composable
@@ -199,14 +219,13 @@ private fun SuggestedPromptsGrid(onSelect: (String) -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 row.forEach { prompt ->
-                    Box(
+                    AppCard(
                         modifier =
                             Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(AppDesignTokens.radius.md))
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
-                                .clickable { onSelect(prompt) }
-                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                                .clickable { onSelect(prompt) },
+                        elevated = false,
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
                     ) {
                         Text(
                             text = prompt,

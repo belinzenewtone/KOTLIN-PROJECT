@@ -50,6 +50,7 @@ fun SearchScreen(
         }
 
     PageScaffold(
+        headerEyebrow = "Global Lookup",
         title = "Search",
         subtitle = "Search across tasks, events, and finance",
         onBack = onBack,

@@ -24,6 +24,7 @@ fun IncomeScreen(
     val state by viewModel.uiState.collectAsState()
 
     PageScaffold(
+        headerEyebrow = "Cash Flow",
         title = "Income",
         subtitle = "${state.records.size} entries tracked",
         onBack = onBack,

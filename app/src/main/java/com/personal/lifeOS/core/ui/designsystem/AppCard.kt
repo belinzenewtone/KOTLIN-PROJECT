@@ -6,11 +6,15 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
@@ -39,14 +43,59 @@ fun AppCard(
             elevated -> null  // tonal fill expresses elevation; border is redundant
             else -> BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
         }
-    val baseModifier = modifier
-        .fillMaxWidth()
-        .background(baseColor, shape)
+    val elevation =
+        when {
+            glass -> AppDesignTokens.elevation.floating
+            elevated -> AppDesignTokens.elevation.card * 2
+            else -> 0.dp
+        }
+    val cardModifier =
+        modifier
+            .fillMaxWidth()
+            .then(
+                if (elevation > 0.dp) {
+                    Modifier.shadow(
+                        elevation = elevation,
+                        shape = shape,
+                        ambientColor = Color.Black.copy(alpha = 0.16f),
+                        spotColor = Color.Black.copy(alpha = 0.16f),
+                    )
+                } else {
+                    Modifier
+                },
+            )
+            .clip(shape)
+            .background(baseColor, shape)
+            .then(
+                if (borderStroke != null) {
+                    Modifier.border(borderStroke, shape)
+                } else {
+                    Modifier
+                },
+            )
     Box(
         modifier =
-            (if (borderStroke != null) baseModifier.border(borderStroke, shape) else baseModifier)
-                .padding(contentPadding),
+            cardModifier,
     ) {
-        content()
+        if (glass || elevated) {
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        Color.White.copy(alpha = 0.14f),
+                                        Color.White.copy(alpha = 0.05f),
+                                        Color.Transparent,
+                                    ),
+                            ),
+                        ),
+            )
+        }
+        Box(modifier = Modifier.padding(contentPadding)) {
+            content()
+        }
     }
 }

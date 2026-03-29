@@ -105,6 +105,7 @@ fun FinanceScreen(
     }
 
     PageScaffold(
+        headerEyebrow = "Money OS",
         title = "Finance",
         subtitle = "Track spending, imports, and ledger health",
         topBanner = {

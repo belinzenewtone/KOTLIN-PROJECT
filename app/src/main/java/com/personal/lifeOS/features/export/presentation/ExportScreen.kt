@@ -55,7 +55,7 @@ fun ExportScreen(
 
     PageScaffold(
         title = "Export Center",
-        subtitle = "Create JSON, CSV, and shareable backups from the latest ledger state.",
+        subtitle = "Export or backup your data",
         onBack = onBack,
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
     ) {

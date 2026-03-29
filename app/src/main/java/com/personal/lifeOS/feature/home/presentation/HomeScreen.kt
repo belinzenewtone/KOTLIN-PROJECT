@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.AutoGraph
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Person
@@ -143,14 +145,14 @@ private fun HomeAgendaCard(
             HomeAgendaRow(
                 icon = Icons.Filled.AutoGraph,
                 title = "Insights",
-                value = "View",
+                value = "Trends",
                 onClick = { onOpenRoute(AppRoute.Insights) },
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
             HomeAgendaRow(
                 icon = Icons.Filled.Search,
                 title = "Search",
-                value = "Find",
+                value = "Explore",
                 onClick = { onOpenRoute(AppRoute.Search) },
             )
         }
@@ -181,6 +183,7 @@ private fun HomeAgendaRow(
                 imageVector = icon,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp),
             )
             Text(
                 text = title,
@@ -188,11 +191,22 @@ private fun HomeAgendaRow(
                 color = MaterialTheme.colorScheme.onSurface,
             )
         }
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(12.dp),
+            )
+        }
     }
 }
 

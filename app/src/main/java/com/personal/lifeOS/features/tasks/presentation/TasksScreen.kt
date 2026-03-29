@@ -43,6 +43,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.personal.lifeOS.core.ui.designsystem.EmptyState
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
 import com.personal.lifeOS.core.ui.designsystem.SearchField
+import com.personal.lifeOS.core.ui.designsystem.SuperAddBottomSheet
+import com.personal.lifeOS.core.ui.designsystem.SuperKind
 import com.personal.lifeOS.core.ui.designsystem.TaskRow
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.tasks.domain.model.Task
@@ -124,7 +126,21 @@ fun TasksScreen(viewModel: TasksViewModel = hiltViewModel()) {
     }
 
     if (state.showDialog) {
-        TaskDialog(state = state, viewModel = viewModel)
+        SuperAddBottomSheet(
+            defaultKind = SuperKind.TASK,
+            isEdit = state.editingTask != null,
+            editTitle = state.title,
+            editDescription = state.description,
+            editPriority = state.priority,
+            editDeadline = state.deadline,
+            onDismiss = { viewModel.hideDialog() },
+            onSaveTask = { title, desc, priority, deadline ->
+                viewModel.saveTaskWith(title, desc, priority, deadline)
+            },
+            onSaveEvent = { _, _, _, _, _, _, _, _ ->
+                // Tasks screen never saves events — no-op
+            },
+        )
     }
 }
 

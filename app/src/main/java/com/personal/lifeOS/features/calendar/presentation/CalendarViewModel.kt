@@ -91,6 +91,8 @@ class CalendarViewModel
             importance: EventImportance,
             date: Long,
             endDate: Long?,
+            hasReminder: Boolean = false,
+            reminderMinutesBefore: Int = 15,
         ) {
             viewModelScope.launch {
                 try {
@@ -105,6 +107,8 @@ class CalendarViewModel
                                 type = type,
                                 importance = importance,
                                 status = EventStatus.PENDING,
+                                hasReminder = hasReminder,
+                                reminderMinutesBefore = reminderMinutesBefore,
                             ),
                         )
                     } else {
@@ -116,6 +120,8 @@ class CalendarViewModel
                                 endDate = endDate,
                                 type = type,
                                 importance = importance,
+                                hasReminder = hasReminder,
+                                reminderMinutesBefore = reminderMinutesBefore,
                             ),
                         )
                     }

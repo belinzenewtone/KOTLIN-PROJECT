@@ -59,7 +59,7 @@ fun InsightsScreen(
 
     PageScaffold(
         title = "Insights",
-        subtitle = "Patterns across your tasks, spending, and habits",
+        subtitle = "Spending trends and habits",
         onBack = onBack,
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
         actions = {
@@ -137,7 +137,7 @@ private fun WeeklySpendStackedChart(
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(
                 text = "Weekly Spend by Category",
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
 
@@ -207,7 +207,7 @@ private fun InsightCardItem(card: InsightCard) {
             ) {
                 Text(
                     text = card.title,
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f),
                 )

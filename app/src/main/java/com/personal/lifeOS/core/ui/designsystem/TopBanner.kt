@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Info
@@ -76,15 +78,15 @@ fun TopBanner(
                 bg = Color(0xFFE8F5E9),
                 text = Color(0xFF1B5E20),
                 icon = Color(0xFF2E7D32),
-                imageVector = Icons.Filled.Info,
+                imageVector = Icons.Filled.CheckCircle,
             )
         }
 
         TopBannerTone.INFO -> {
             TopBannerColor(
-                bg = Color(0xFFE3F2FD),
-                text = Color(0xFF0D47A1),
-                icon = Color(0xFF1565C0),
+                bg = MaterialTheme.colorScheme.primaryContainer,
+                text = MaterialTheme.colorScheme.onPrimaryContainer,
+                icon = MaterialTheme.colorScheme.primary,
                 imageVector = Icons.Filled.Info,
             )
         }
@@ -93,7 +95,7 @@ fun TopBanner(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(backgroundColor)
+            .background(backgroundColor, RoundedCornerShape(bottomStart = 0.dp, bottomEnd = 0.dp))
             .padding(vertical = 12.dp, horizontal = 16.dp),
     ) {
         Row(
@@ -108,8 +110,7 @@ fun TopBanner(
                 contentDescription = tone.name,
                 tint = iconColor,
                 modifier = Modifier
-                    .padding(top = 2.dp)
-                    .then(if (title != null) Modifier else Modifier),
+                    .padding(top = 2.dp),
             )
 
             // Content
@@ -220,7 +221,7 @@ enum class TopBannerTone {
 
     /**
      * Information/neutral state.
-     * Blue background.
+     * Teal (primary) background — matches app brand.
      *
      * Use for:
      * - General info

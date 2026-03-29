@@ -410,7 +410,7 @@ private fun FinanceSummaryStrip(uiState: FinanceUiState) {
             FinanceCompactSummaryCard(
                 title = title,
                 amount = amount,
-                modifier = Modifier.width(160.dp),
+                modifier = Modifier.width(168.dp),
             )
         }
     }
@@ -436,7 +436,7 @@ private fun FinanceCompactSummaryCard(
             )
             Text(
                 text = DateUtils.formatCurrency(amount),
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
             )
@@ -626,7 +626,7 @@ private fun FinanceTransactionRow(
         ) {
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(1.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
                     text = transaction.merchant,

@@ -164,10 +164,12 @@ class SupabaseAuthClient
                             createdAt = user.createdAt ?: "",
                         )
                     } else {
-                        AuthResult.Error("Session expired")
+                        // HTTP error (e.g. 401 Unauthorized) — token genuinely expired/revoked
+                        AuthResult.Error("Session expired", isNetworkError = false)
                     }
                 } catch (e: Exception) {
-                    AuthResult.Error(e.message ?: "Network error")
+                    // Network-level failure — device is offline or server unreachable
+                    AuthResult.Error(e.message ?: "Network error", isNetworkError = true)
                 }
             }
 
@@ -245,5 +247,13 @@ sealed class AuthResult {
         val createdAt: String,
     ) : AuthResult()
 
-    data class Error(val message: String) : AuthResult()
+    /**
+     * @param message   Human-readable error description.
+     * @param isNetworkError  True when the failure was caused by a connectivity problem
+     *   (no internet, timeout, socket exception) rather than an actual auth rejection
+     *   (e.g. HTTP 401 / token expired).  The distinction is used in
+     *   [AuthViewModel.checkExistingSession] to decide whether to trust the locally
+     *   cached session while offline or to require a fresh sign-in.
+     */
+    data class Error(val message: String, val isNetworkError: Boolean = false) : AuthResult()
 }

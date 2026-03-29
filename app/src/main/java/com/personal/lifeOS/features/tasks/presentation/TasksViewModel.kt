@@ -143,6 +143,46 @@ class TasksViewModel
             }
         }
 
+        /**
+         * Convenience overload called by [SuperAddBottomSheet] which carries its own
+         * local form state and delivers the final values in one shot.
+         */
+        fun saveTaskWith(
+            title: String,
+            description: String,
+            priority: TaskPriority,
+            deadline: Long?,
+        ) {
+            if (title.isBlank()) return
+            viewModelScope.launch {
+                try {
+                    val editing = _uiState.value.editingTask
+                    if (editing != null) {
+                        repository.updateTask(
+                            editing.copy(
+                                title = title,
+                                description = description,
+                                priority = priority,
+                                deadline = deadline,
+                            ),
+                        )
+                    } else {
+                        repository.addTask(
+                            Task(
+                                title = title,
+                                description = description,
+                                priority = priority,
+                                deadline = deadline,
+                            ),
+                        )
+                    }
+                    hideDialog()
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(error = "Failed: ${e.message}") }
+                }
+            }
+        }
+
         fun completeTask(task: Task) {
             viewModelScope.launch {
                 try {

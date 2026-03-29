@@ -23,31 +23,28 @@ fun AppCard(
     content: @Composable () -> Unit,
 ) {
     val shape = RoundedCornerShape(AppDesignTokens.radius.lg)
-    // Surface hierarchy: surface < surfaceContainerLowest < surfaceContainerLow
-    // Non-elevated cards sit on bare surface; elevated cards step up to surfaceContainerLow
-    // so they visually "lift" off the page background in both light and dark themes.
+    // Surface hierarchy: surfaceContainerLowest < surface < surfaceContainerLow
+    // Flat cards sit on surfaceContainerLowest so they lift off the background in both themes.
+    // Elevated cards step up to surfaceContainerLow — tonal fill conveys elevation; no border needed.
+    // Glass cards keep a translucent white border for the frosted effect.
     val baseColor =
         when {
             glass -> MaterialTheme.colorScheme.surface.copy(alpha = 0.72f)
             elevated -> AppDesignTokens.colors.surfaceContainerLow
-            else -> MaterialTheme.colorScheme.surface
+            else -> AppDesignTokens.colors.surfaceContainerLowest
         }
+    val borderStroke: BorderStroke? =
+        when {
+            glass -> BorderStroke(1.dp, Color.White.copy(alpha = 0.30f))
+            elevated -> null  // tonal fill expresses elevation; border is redundant
+            else -> BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        }
+    val baseModifier = modifier
+        .fillMaxWidth()
+        .background(baseColor, shape)
     Box(
         modifier =
-            modifier
-                .fillMaxWidth()
-                .background(baseColor, shape)
-                .border(
-                    // Subtle border: glass gets white-alpha glow; solid cards use the
-                    // theme outlineVariant so the edge is visible in both light and dark.
-                    border =
-                        BorderStroke(
-                            1.dp,
-                            if (glass) Color.White.copy(alpha = 0.30f)
-                            else MaterialTheme.colorScheme.outlineVariant,
-                        ),
-                    shape = shape,
-                )
+            (if (borderStroke != null) baseModifier.border(borderStroke, shape) else baseModifier)
                 .padding(contentPadding),
     ) {
         content()

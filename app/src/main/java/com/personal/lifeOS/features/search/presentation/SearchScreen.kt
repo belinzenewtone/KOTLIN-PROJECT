@@ -51,7 +51,7 @@ fun SearchScreen(
 
     PageScaffold(
         title = "Search",
-        subtitle = "Instant cross-domain search — tasks, finance, calendar, and more.",
+        subtitle = "Tasks, events, finance and more",
         onBack = onBack,
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
     ) {

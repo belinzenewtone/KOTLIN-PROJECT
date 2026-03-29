@@ -2,15 +2,17 @@ package com.personal.lifeOS.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Stitch-inspired editorial palette.
-val Primary = Color(0xFF006A6A)
-val PrimaryVariant = Color(0xFF004F4F)
-val Accent = Color(0xFF00A8A8)
-val PrimaryLight = Color(0xFF59D9D9)
+// Stitch-inspired editorial palette — refreshed 2025.
+// Primary lifted slightly for more vibrancy; surfaces now carry a coherent
+// warm-teal tint instead of the previous cold blue-grey cast.
+val Primary = Color(0xFF007070)        // slightly fresher teal (was #006A6A)
+val PrimaryVariant = Color(0xFF004E4E)  // keeps same ratio (was #004F4F)
+val Accent = Color(0xFF009898)          // slightly deeper, more refined (was #00A8A8)
+val PrimaryLight = Color(0xFF52D5D5)    // keeps same ratio (was #59D9D9)
 
-// Light baseline surfaces.
-val BackgroundDark = Color(0xFFF7F9FC)
-val SurfaceDark = Color(0xFFF2F4F7)
+// Light baseline surfaces — teal-tinted for cohesion, removes cold blue cast.
+val BackgroundDark = Color(0xFFF3F7F7)  // warm teal-tinted page (was #F7F9FC)
+val SurfaceDark = Color(0xFFECF2F2)     // consistent teal-tinted variant (was #F2F4F7)
 val SurfaceElevated = Color(0xFFFFFFFF)
 
 // Glass behavior on light surfaces.

@@ -93,7 +93,7 @@ fun SettingsScreen(
 
     PageScaffold(
         title = "Settings",
-        subtitle = "Tailor your digital sanctuary to your specific needs.",
+        subtitle = "Preferences and customisation",
         onBack = onBack,
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
         topBanner = {

@@ -369,7 +369,7 @@ class AuthViewModel
                         dataStore.edit { it.remove(KEY_ACCESS_TOKEN) }
                     }
 
-                    // Verify token still valid
+                    // Verify token is still valid against the server
                     when (val result = authRepository.getUser(token)) {
                         is AuthResult.Success -> {
                             authSessionStore.saveSession(token, result.userId)
@@ -398,10 +398,31 @@ class AuthViewModel
                             }
                         }
                         is AuthResult.Error -> {
-                            // Token expired, show login
-                            authSessionStore.clearSession()
-                            dataStore.edit { it[KEY_LOGGED_IN] = false }
-                            _uiState.update { it.copy(isLoading = false, isLoggedIn = false) }
+                            if (result.isNetworkError) {
+                                // Device is offline or server unreachable — trust the locally
+                                // stored session so the user can keep working without internet.
+                                val onboardingCompleted = appSettingsStore.isOnboardingCompleted()
+                                val cachedUserId = authSessionStore.getUserId()
+                                    .ifBlank { prefs[KEY_USER_ID].orEmpty() }
+                                _uiState.update {
+                                    it.copy(
+                                        isLoading = false,
+                                        isLoggedIn = true,
+                                        userId = cachedUserId,
+                                        userEmail = prefs[KEY_USER_EMAIL].orEmpty(),
+                                        username = prefs[KEY_USERNAME].orEmpty(),
+                                        emailVerified = prefs[KEY_EMAIL_VERIFIED] ?: false,
+                                        accountCreatedAt = prefs[KEY_CREATED_AT].orEmpty(),
+                                        onboardingCompleted = onboardingCompleted,
+                                    )
+                                }
+                            } else {
+                                // HTTP auth error — token genuinely expired or revoked.
+                                // Clear the session and require a fresh sign-in.
+                                authSessionStore.clearSession()
+                                dataStore.edit { it[KEY_LOGGED_IN] = false }
+                                _uiState.update { it.copy(isLoading = false, isLoggedIn = false) }
+                            }
                         }
                     }
                 } else {

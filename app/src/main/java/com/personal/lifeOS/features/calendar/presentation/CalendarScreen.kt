@@ -31,8 +31,12 @@ import com.personal.lifeOS.core.ui.designsystem.InlineBanner
 import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
 import com.personal.lifeOS.core.ui.designsystem.SearchField
+import com.personal.lifeOS.core.ui.designsystem.SuperAddBottomSheet
+import com.personal.lifeOS.core.ui.designsystem.SuperKind
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.calendar.domain.model.CalendarEvent
+import com.personal.lifeOS.features.calendar.domain.model.EventImportance
+import com.personal.lifeOS.features.calendar.domain.model.EventType
 import com.personal.lifeOS.ui.theme.AppSpacing
 
 @Composable
@@ -95,12 +99,24 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
     }
 
     if (state.showAddDialog) {
-        AddEventDialog(
-            initialEvent = state.editingEvent,
+        SuperAddBottomSheet(
+            defaultKind = SuperKind.EVENT,
             selectedDate = state.selectedDate,
+            isEdit = state.editingEvent != null,
+            editTitle = state.editingEvent?.title.orEmpty(),
+            editDescription = state.editingEvent?.description.orEmpty(),
+            editEventType = state.editingEvent?.type ?: EventType.PERSONAL,
+            editImportance = state.editingEvent?.importance ?: EventImportance.NEUTRAL,
+            editStartAt = state.editingEvent?.date,
+            editEndAt = state.editingEvent?.endDate,
+            editHasReminder = state.editingEvent?.hasReminder ?: false,
+            editReminderMinutes = state.editingEvent?.reminderMinutesBefore ?: 15,
             onDismiss = { viewModel.hideAddDialog() },
-            onSave = { title, desc, type, importance, eventDate, endDate ->
-                viewModel.saveEvent(title, desc, type, importance, eventDate, endDate)
+            onSaveTask = { _, _, _, _ ->
+                // Calendar screen never saves tasks — no-op
+            },
+            onSaveEvent = { title, desc, type, importance, startAt, endAt, hasReminder, reminderMins ->
+                viewModel.saveEvent(title, desc, type, importance, startAt, endAt, hasReminder, reminderMins)
             },
         )
     }

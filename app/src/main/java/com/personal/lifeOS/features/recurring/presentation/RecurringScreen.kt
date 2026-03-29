@@ -36,7 +36,7 @@ fun RecurringScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         PageScaffold(
             title = "Recurring",
-            subtitle = "Track repeating tasks, subscriptions, and cashflow cycles",
+            subtitle = "Subscriptions and repeating items",
             contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
             onBack = onBack,
         ) {

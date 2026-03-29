@@ -1,8 +1,8 @@
-{
-  "version_code": 20,
-  "version_name": "1.2.9",
-  "download_url": "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.9/app-release-v1.2.9.apk",
-  "checksum_sha256": "cf5bce6da93770c4df01e3324a8462764fdf809cc46028ca5dfa95ab9f75207d",
-  "required": false,
-  "release_notes": "Home/Finance layout refinements, recurring navigation fix, search/spacing polish, and stability improvements."
+﻿{
+    "version_code":  21,
+    "version_name":  "1.2.10",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.10/app-release-v1.2.10.apk",
+    "checksum_sha256":  "3a03f7f08cb308037dfe4b336e120031f15b58d75cd51ecc959fd98dc4645896",
+    "required":  false,
+    "release_notes":  "UI/UX overhaul with new Super Add flow, auth/session reliability improvements, calendar and task polish, and theme refinements."
 }

@@ -76,5 +76,3 @@ fun InlineBanner(
         )
     }
 }
-
-enum class InlineBannerTone { INFO, SUCCESS, WARNING, ERROR }

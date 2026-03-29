@@ -1,8 +1,8 @@
 ﻿{
-    "version_code":  22,
-    "version_name":  "1.2.11",
-    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.11/app-release-v1.2.11.apk",
-    "checksum_sha256":  "626fa5ff6b0d86dc5c4569c9d4abc289e28a769e735eabe10be1a9c884eb1a30",
+    "version_code":  23,
+    "version_name":  "1.2.12",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.12/app-release-v1.2.12.apk",
+    "checksum_sha256":  "4d2b1bf81c5fd24d5392c13e9d43c81d99736fe2ae20688c04a14022bdc98788",
     "required":  false,
-    "release_notes":  "1.2.11 OTA rollout refreshed with the latest signed APK and full visual consistency overhaul across main, auth, and deep screens."
+    "release_notes":  "1.2.12 OTA patch: version bump for users already on 1.2.11 so update delivery can continue, with all latest UI/UX overhaul improvements."
 }

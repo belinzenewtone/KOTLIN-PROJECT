@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.features.assistant.domain.model.ChatMessage
 import com.personal.lifeOS.features.assistant.domain.model.MessageSender
 import com.personal.lifeOS.features.assistant.domain.model.suggestedPrompts
@@ -151,7 +152,14 @@ internal fun TypingIndicator() {
         Box(
             modifier =
                 Modifier
-                    .clip(RoundedCornerShape(20.dp, 20.dp, 20.dp, 4.dp))
+                    .clip(
+                        RoundedCornerShape(
+                            topStart = AppDesignTokens.radius.lg,
+                            topEnd = AppDesignTokens.radius.lg,
+                            bottomEnd = AppDesignTokens.radius.lg,
+                            bottomStart = 4.dp,
+                        ),
+                    )
                     .background(MaterialTheme.colorScheme.surfaceVariant)
                     .padding(horizontal = 20.dp, vertical = 12.dp),
         ) {
@@ -195,7 +203,7 @@ private fun SuggestedPromptsGrid(onSelect: (String) -> Unit) {
                         modifier =
                             Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(16.dp))
+                                .clip(RoundedCornerShape(AppDesignTokens.radius.md))
                                 .background(MaterialTheme.colorScheme.surfaceVariant)
                                 .clickable { onSelect(prompt) }
                                 .padding(horizontal = 14.dp, vertical = 10.dp),

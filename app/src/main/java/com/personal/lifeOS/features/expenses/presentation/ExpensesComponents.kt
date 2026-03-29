@@ -53,6 +53,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.expenses.domain.model.CategoryBreakdown
 import com.personal.lifeOS.features.expenses.domain.model.SpendingSummary
@@ -177,7 +178,7 @@ internal fun FilterChips(
             Box(
                 modifier =
                     Modifier
-                        .clip(RoundedCornerShape(20.dp))
+                        .clip(RoundedCornerShape(AppDesignTokens.radius.lg))
                         .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                         .clickable { onSelect(filter) }
                         .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -233,7 +234,7 @@ private fun CategoryRow(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(AppDesignTokens.radius.sm))
                 .clickable(onClick = onClick)
                 .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -456,7 +457,7 @@ internal fun AddTransactionDialog(
                         Box(
                             modifier =
                                 Modifier
-                                    .clip(RoundedCornerShape(16.dp))
+                                    .clip(RoundedCornerShape(AppDesignTokens.radius.md))
                                     .background(if (cat == category) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                                     .clickable { category = cat }
                                     .padding(horizontal = 12.dp, vertical = 6.dp),
@@ -508,7 +509,7 @@ internal fun CategoryPickerDialog(
                         modifier =
                             Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(RoundedCornerShape(AppDesignTokens.radius.sm))
                                 .background(
                                     if (category == currentCategory) {
                                         MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
@@ -553,7 +554,7 @@ internal fun SmsImportDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(AppDesignTokens.radius.lg),
         title = { Text("Import MPESA SMS", color = MaterialTheme.colorScheme.onSurface) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -567,7 +568,7 @@ internal fun SmsImportDialog(
                         modifier =
                             Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(14.dp))
+                                .clip(RoundedCornerShape(AppDesignTokens.radius.sm))
                                 .background(MaterialTheme.colorScheme.surfaceVariant)
                                 .clickable { onImportDays(days) }
                                 .padding(16.dp),

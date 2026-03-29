@@ -79,6 +79,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.personal.lifeOS.core.permissions.AppPermissionsOrchestrator
 import com.personal.lifeOS.core.security.BiometricAuthManager
+import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.core.update.presentation.OtaUpdatePromptHost
 import com.personal.lifeOS.feature.assistant.presentation.AssistantScreen
 import com.personal.lifeOS.feature.auth.presentation.AuthScreen
@@ -467,6 +468,7 @@ private fun LifeOSBottomBar(
     navController: NavHostController,
     currentDestination: NavDestination?,
 ) {
+    val navBarShape = RoundedCornerShape(AppDesignTokens.radius.lg)
     Box(
         modifier =
             Modifier
@@ -483,11 +485,11 @@ private fun LifeOSBottomBar(
                     .fillMaxWidth()
                     .shadow(
                         elevation = 16.dp,
-                        shape = RoundedCornerShape(24.dp),
+                        shape = navBarShape,
                         ambientColor = Color.Black.copy(alpha = 0.4f),
                         spotColor = Color.Black.copy(alpha = 0.4f),
                     )
-                    .clip(RoundedCornerShape(24.dp))
+                    .clip(navBarShape)
                     // Solid surface base — legible in both light and dark mode
                     .background(MaterialTheme.colorScheme.surface)
                     // Subtle glass sheen on top
@@ -511,7 +513,7 @@ private fun LifeOSBottomBar(
                                         Color.White.copy(alpha = 0.04f),
                                     ),
                             ),
-                        shape = RoundedCornerShape(24.dp),
+                        shape = navBarShape,
                     )
                     // Reduced vertical padding → slimmer bar height
                     .padding(horizontal = 6.dp, vertical = 2.dp),
@@ -609,7 +611,7 @@ private fun RowScope.BottomNavItem(
         Text(
             text = label,
             color = iconColor,
-            fontSize = 9.sp,
+            fontSize = 11.sp,
             maxLines = 1,
             modifier = Modifier.padding(top = 1.dp),
         )
@@ -622,6 +624,7 @@ private fun BiometricLockOverlay(
     onRetry: () -> Unit,
     onSignOut: () -> Unit,
 ) {
+    val lockCardShape = RoundedCornerShape(AppDesignTokens.radius.lg)
     Box(
         modifier =
             Modifier
@@ -633,12 +636,12 @@ private fun BiometricLockOverlay(
             modifier =
                 Modifier
                     .padding(32.dp)
-                    .clip(RoundedCornerShape(24.dp))
+                    .clip(lockCardShape)
                     .background(MaterialTheme.colorScheme.surface)
                     .border(
                         width = 1.dp,
                         color = MaterialTheme.colorScheme.outlineVariant,
-                        shape = RoundedCornerShape(24.dp),
+                        shape = lockCardShape,
                     )
                     .padding(28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,

@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.personal.lifeOS.ui.theme.Accent
 
 /**
  * Reusable Glass Morphism card component.
@@ -76,7 +77,7 @@ fun GlassCard(
 @Composable
 fun AccentGlassCard(
     modifier: Modifier = Modifier,
-    accentColor: Color = Color(0xFF2979FF),
+    accentColor: Color = Accent,
     cornerRadius: Dp = 20.dp,
     content: @Composable BoxScope.() -> Unit,
 ) {

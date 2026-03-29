@@ -42,11 +42,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.calendar.domain.model.CalendarEvent
 import com.personal.lifeOS.features.calendar.domain.model.EventImportance
 import com.personal.lifeOS.features.calendar.domain.model.EventType
 import com.personal.lifeOS.ui.theme.Error
+import com.personal.lifeOS.ui.theme.Info
+import com.personal.lifeOS.ui.theme.Warning
 import java.time.LocalDate
 import java.util.Calendar
 
@@ -75,7 +78,7 @@ internal fun AddEventDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(AppDesignTokens.radius.lg),
         title = { Text(if (isEdit) "Edit Event" else "New Event", color = MaterialTheme.colorScheme.onSurface) },
         text = {
             Column(
@@ -88,7 +91,7 @@ internal fun AddEventDialog(
                     label = { Text("Event Title") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(AppDesignTokens.radius.md),
                     colors =
                         OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -104,7 +107,7 @@ internal fun AddEventDialog(
                     label = { Text("Description (optional)") },
                     maxLines = 3,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(AppDesignTokens.radius.md),
                     colors =
                         OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -124,7 +127,7 @@ internal fun AddEventDialog(
                         Row(
                             modifier =
                                 Modifier
-                                    .clip(RoundedCornerShape(12.dp))
+                                    .clip(RoundedCornerShape(AppDesignTokens.radius.sm))
                                     .background(if (type == selectedType) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                                     .clickable { selectedType = type }
                                     .padding(horizontal = 10.dp, vertical = 6.dp),
@@ -146,7 +149,7 @@ internal fun AddEventDialog(
                             modifier =
                                 Modifier
                                     .weight(1f)
-                                    .clip(RoundedCornerShape(12.dp))
+                                    .clip(RoundedCornerShape(AppDesignTokens.radius.sm))
                                     .background(
                                         if (selected) {
                                             importanceColor(importance)
@@ -305,7 +308,7 @@ private fun DateTimePickerRow(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(AppDesignTokens.radius.md))
                 .background(MaterialTheme.colorScheme.surfaceVariant)
                 .clickable(onClick = onClick)
                 .padding(16.dp),
@@ -335,9 +338,9 @@ private fun DateTimePickerRow(
 
 private fun importanceColor(importance: EventImportance) =
     when (importance) {
-        EventImportance.URGENT -> androidx.compose.ui.graphics.Color(0xFFEF5350)
-        EventImportance.IMPORTANT -> androidx.compose.ui.graphics.Color(0xFFFFB74D)
-        EventImportance.NEUTRAL -> androidx.compose.ui.graphics.Color(0xFF42A5F5)
+        EventImportance.URGENT -> Error
+        EventImportance.IMPORTANT -> Warning
+        EventImportance.NEUTRAL -> Info
     }
 
 private fun defaultEventDateTime(selectedDate: LocalDate): Long {

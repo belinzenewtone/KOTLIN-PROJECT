@@ -301,7 +301,7 @@ private fun ProfileIdentityPill(
     Box(
         modifier =
             Modifier
-                .clip(RoundedCornerShape(50.dp))
+                .clip(RoundedCornerShape(AppDesignTokens.radius.pill))
                 .background(container)
                 .padding(horizontal = 12.dp, vertical = 6.dp),
     ) {
@@ -387,7 +387,7 @@ private fun ProfileTextField(
         onValueChange = onValueChange,
         label = { Text(label) },
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(AppDesignTokens.radius.sm),
         singleLine = true,
         colors =
             OutlinedTextFieldDefaults.colors(
@@ -443,7 +443,7 @@ private fun ThemeModeRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(AppDesignTokens.radius.sm))
             .background(MaterialTheme.colorScheme.surface)
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -459,7 +459,7 @@ private fun ThemeModeRow(
                 val isSelected = selected == mode
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(RoundedCornerShape(AppDesignTokens.radius.sm))
                         .background(
                             if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
                             else MaterialTheme.colorScheme.surfaceVariant,
@@ -550,7 +550,7 @@ private fun ActionRow(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(14.dp))
+                .clip(RoundedCornerShape(AppDesignTokens.radius.sm))
                 .background(MaterialTheme.colorScheme.surface)
                 .clickable(onClick = onClick)
                 .padding(12.dp),
@@ -577,7 +577,7 @@ private fun ToggleRow(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(14.dp))
+                .clip(RoundedCornerShape(AppDesignTokens.radius.sm))
                 .background(MaterialTheme.colorScheme.surface)
                 .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -609,7 +609,7 @@ internal fun ChangePasswordDialog(
                     Text(
                         text = it,
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFFB3261E),
+                        color = MaterialTheme.colorScheme.error,
                     )
                 }
             }

@@ -33,6 +33,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.personal.lifeOS.R
+import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.dashboard.domain.model.DailySpending
 import com.personal.lifeOS.features.dashboard.domain.model.DashboardInsight
@@ -57,7 +58,7 @@ internal fun DashboardHeader(greeting: String) {
             modifier =
                 Modifier
                     .size(44.dp)
-                    .clip(RoundedCornerShape(12.dp)),
+                    .clip(RoundedCornerShape(AppDesignTokens.radius.sm)),
             contentScale = ContentScale.Crop,
         )
         Spacer(Modifier.width(12.dp))

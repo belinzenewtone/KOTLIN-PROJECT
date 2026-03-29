@@ -17,7 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
@@ -27,38 +26,26 @@ fun InlineBanner(
     modifier: Modifier = Modifier,
     tone: InlineBannerTone = InlineBannerTone.INFO,
 ) {
-    val (bg, fg, icon) =
+    val semanticTone =
         when (tone) {
-            InlineBannerTone.INFO ->
-                Triple(
-                    MaterialTheme.colorScheme.primaryContainer,
-                    MaterialTheme.colorScheme.onPrimaryContainer,
-                    Icons.Filled.Info as ImageVector,
-                )
-            InlineBannerTone.SUCCESS ->
-                Triple(
-                    Color(0xFFE8F5E9),
-                    Color(0xFF2E7D32),
-                    Icons.Filled.CheckCircle as ImageVector,
-                )
-            InlineBannerTone.WARNING ->
-                Triple(
-                    Color(0xFFFFF8E1),
-                    Color(0xFFEF6C00),
-                    Icons.Filled.Warning as ImageVector,
-                )
-            InlineBannerTone.ERROR ->
-                Triple(
-                    Color(0xFFFFEBEE),
-                    Color(0xFFC62828),
-                    Icons.Filled.ErrorOutline as ImageVector,
-                )
+            InlineBannerTone.INFO -> AppSemanticTone.INFO
+            InlineBannerTone.SUCCESS -> AppSemanticTone.SUCCESS
+            InlineBannerTone.WARNING -> AppSemanticTone.WARNING
+            InlineBannerTone.ERROR -> AppSemanticTone.ERROR
+        }
+    val semanticColors = AppDesignTokens.semanticColors(semanticTone)
+    val icon =
+        when (tone) {
+            InlineBannerTone.INFO -> Icons.Filled.Info as ImageVector
+            InlineBannerTone.SUCCESS -> Icons.Filled.CheckCircle as ImageVector
+            InlineBannerTone.WARNING -> Icons.Filled.Warning as ImageVector
+            InlineBannerTone.ERROR -> Icons.Filled.ErrorOutline as ImageVector
         }
 
     Row(
         modifier =
             modifier
-                .background(bg, RoundedCornerShape(AppDesignTokens.radius.md))
+                .background(semanticColors.container, RoundedCornerShape(AppDesignTokens.radius.md))
                 .padding(horizontal = AppDesignTokens.spacing.md, vertical = AppDesignTokens.spacing.sm),
         horizontalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.xs),
         verticalAlignment = Alignment.CenterVertically,
@@ -66,13 +53,13 @@ fun InlineBanner(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = fg,
+            tint = semanticColors.icon,
             modifier = Modifier.size(16.dp),
         )
         Text(
             text = message,
             style = MaterialTheme.typography.bodyMedium,
-            color = fg,
+            color = semanticColors.onContainer,
         )
     }
 }

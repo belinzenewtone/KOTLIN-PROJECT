@@ -62,6 +62,9 @@ import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.calendar.domain.model.EventImportance
 import com.personal.lifeOS.features.calendar.domain.model.EventType
 import com.personal.lifeOS.features.tasks.domain.model.TaskPriority
+import com.personal.lifeOS.ui.theme.Error
+import com.personal.lifeOS.ui.theme.Info
+import com.personal.lifeOS.ui.theme.Warning
 import java.time.LocalDate
 import java.util.Calendar
 
@@ -180,7 +183,7 @@ fun SuperAddBottomSheet(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(14.dp))
+                            .clip(RoundedCornerShape(AppDesignTokens.radius.sm))
                             .background(
                                 if (selected) MaterialTheme.colorScheme.primary
                                 else MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -219,7 +222,7 @@ fun SuperAddBottomSheet(
                     null
                 },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(AppDesignTokens.radius.md),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
@@ -344,7 +347,7 @@ fun SuperAddBottomSheet(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(AppDesignTokens.radius.sm))
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     .clickable { showDetails = !showDetails }
                     .padding(horizontal = 16.dp, vertical = 12.dp),
@@ -379,7 +382,7 @@ fun SuperAddBottomSheet(
                         label = { Text("Description (optional)") },
                         maxLines = 3,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(AppDesignTokens.radius.md),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
                             unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
@@ -399,7 +402,7 @@ fun SuperAddBottomSheet(
                             Row(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clip(RoundedCornerShape(12.dp))
+                                    .clip(RoundedCornerShape(AppDesignTokens.radius.sm))
                                     .background(
                                         if (selected) superPriorityColor(p)
                                         else superPriorityColor(p).copy(alpha = 0.15f),
@@ -436,7 +439,7 @@ fun SuperAddBottomSheet(
                             EventType.entries.forEach { t ->
                                 Box(
                                     modifier = Modifier
-                                        .clip(RoundedCornerShape(16.dp))
+                                        .clip(RoundedCornerShape(AppDesignTokens.radius.md))
                                         .background(
                                             if (t == eventType) MaterialTheme.colorScheme.primary
                                             else MaterialTheme.colorScheme.surfaceVariant,
@@ -458,7 +461,7 @@ fun SuperAddBottomSheet(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(RoundedCornerShape(AppDesignTokens.radius.sm))
                                 .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                                 .padding(horizontal = 16.dp, vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -490,7 +493,7 @@ fun SuperAddBottomSheet(
                                 listOf(5, 10, 15, 30, 60).forEach { mins ->
                                     Box(
                                         modifier = Modifier
-                                            .clip(RoundedCornerShape(16.dp))
+                                            .clip(RoundedCornerShape(AppDesignTokens.radius.md))
                                             .background(
                                                 if (mins == reminderMinutes) MaterialTheme.colorScheme.primary
                                                 else MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -627,7 +630,7 @@ private fun DateTimeChip(
 ) {
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(AppDesignTokens.radius.sm))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 10.dp),
@@ -652,9 +655,9 @@ private fun DateTimeChip(
 
 private fun superPriorityColor(priority: TaskPriority): Color =
     when (priority) {
-        TaskPriority.URGENT -> Color(0xFFEF5350)
-        TaskPriority.IMPORTANT -> Color(0xFFFFB74D)
-        TaskPriority.NEUTRAL -> Color(0xFF42A5F5)
+        TaskPriority.URGENT -> Error
+        TaskPriority.IMPORTANT -> Warning
+        TaskPriority.NEUTRAL -> Info
     }
 
 /**

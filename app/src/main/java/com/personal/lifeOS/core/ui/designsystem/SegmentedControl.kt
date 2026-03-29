@@ -55,7 +55,7 @@ fun SegmentedControl(
             ) {
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.bodySmall,
                     color =
                         if (selected) {
                             MaterialTheme.colorScheme.primary

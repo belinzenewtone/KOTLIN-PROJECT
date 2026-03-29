@@ -226,7 +226,7 @@ internal fun BudgetCard(
                     // Usage percentage badge
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
+                            .clip(RoundedCornerShape(AppDesignTokens.radius.lg))
                             .background(statusColor.copy(alpha = 0.15f))
                             .padding(horizontal = 10.dp, vertical = 3.dp),
                     ) {

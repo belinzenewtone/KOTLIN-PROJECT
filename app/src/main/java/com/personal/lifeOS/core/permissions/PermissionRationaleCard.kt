@@ -28,10 +28,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 
 /**
  * A polished bottom-anchored permission rationale card that slides up from the
@@ -74,12 +74,12 @@ fun PermissionRationaleCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
+                    .clip(RoundedCornerShape(AppDesignTokens.radius.lg))
                     .background(MaterialTheme.colorScheme.surface)
                     .border(
                         width = 1.dp,
                         color = MaterialTheme.colorScheme.outlineVariant,
-                        shape = RoundedCornerShape(20.dp),
+                        shape = RoundedCornerShape(AppDesignTokens.radius.lg),
                     )
                     .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),

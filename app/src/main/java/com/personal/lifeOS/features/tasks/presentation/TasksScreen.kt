@@ -51,6 +51,7 @@ import com.personal.lifeOS.features.tasks.domain.model.Task
 import com.personal.lifeOS.features.tasks.domain.model.TaskPriority
 import com.personal.lifeOS.ui.components.StyledSnackbarHost
 import com.personal.lifeOS.ui.theme.AppSpacing
+import com.personal.lifeOS.ui.theme.Warning
 
 @Composable
 fun TasksScreen(viewModel: TasksViewModel = hiltViewModel()) {
@@ -164,7 +165,7 @@ private fun TasksBody(
                 .fillMaxSize()
                 .padding(padding),
         title = "Tasks",
-        subtitle = "${state.pendingTasks.size} pending • ${state.completedTasks.size} completed",
+        subtitle = "${state.pendingTasks.size} open • ${state.completedTasks.size} completed",
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFab),
     ) {
         SearchField(
@@ -175,7 +176,7 @@ private fun TasksBody(
 
         if (pendingTasks.isEmpty()) {
             EmptyState(
-                title = "No pending tasks",
+                title = "No open tasks",
                 description = "Create a task to start your daily focus list.",
             )
         } else {
@@ -236,7 +237,7 @@ private fun PrioritySection(
 
     val (label, labelColor) = when (priority) {
         TaskPriority.URGENT -> "Urgent" to MaterialTheme.colorScheme.error
-        TaskPriority.IMPORTANT -> "Important" to Color(0xFFF59E0B) // amber
+        TaskPriority.IMPORTANT -> "Important" to Warning
         TaskPriority.NEUTRAL -> "Neutral" to MaterialTheme.colorScheme.onSurfaceVariant
     }
 

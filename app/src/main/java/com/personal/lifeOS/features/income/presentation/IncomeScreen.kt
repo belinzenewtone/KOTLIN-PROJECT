@@ -30,7 +30,7 @@ fun IncomeScreen(
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
         actions = {
             TextButton(onClick = viewModel::showAddDialog) {
-                Text("Add")
+                Text("Add income")
             }
         },
     ) {

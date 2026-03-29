@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.core.update.OtaUpdateManifest
 import java.util.Locale
 import kotlin.math.log10
@@ -59,7 +60,7 @@ internal fun OtaUpdateDialog(
                 Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp),
-            shape = RoundedCornerShape(24.dp),
+            shape = RoundedCornerShape(AppDesignTokens.radius.lg),
         ) {
             Column(
                 modifier = Modifier.padding(20.dp),

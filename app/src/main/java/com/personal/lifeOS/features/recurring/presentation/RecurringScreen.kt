@@ -73,7 +73,7 @@ fun RecurringScreen(
                     contentDescription = "Add recurring rule",
                 )
             },
-            text = { Text("New Rule") },
+            text = { Text("Add rule") },
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary,
             elevation = FloatingActionButtonDefaults.elevation(

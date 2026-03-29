@@ -36,17 +36,19 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.tasks.domain.model.TaskPriority
 import com.personal.lifeOS.ui.theme.Error
+import com.personal.lifeOS.ui.theme.Info
+import com.personal.lifeOS.ui.theme.Warning
 import java.util.Calendar
 
 private fun priorityColor(priority: TaskPriority): Color =
     when (priority) {
-        TaskPriority.URGENT -> Color(0xFFEF5350)
-        TaskPriority.IMPORTANT -> Color(0xFFFFB74D)
-        TaskPriority.NEUTRAL -> Color(0xFF42A5F5)
+        TaskPriority.URGENT -> Error
+        TaskPriority.IMPORTANT -> Warning
+        TaskPriority.NEUTRAL -> Info
     }
 
 @Composable
@@ -61,7 +63,7 @@ internal fun TaskDialog(
     AlertDialog(
         onDismissRequest = { viewModel.hideDialog() },
         containerColor = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(AppDesignTokens.radius.lg),
         title = { Text(if (isEdit) "Edit Task" else "New Task", color = MaterialTheme.colorScheme.onSurface) },
         text = {
             Column(
@@ -74,7 +76,7 @@ internal fun TaskDialog(
                     label = { Text("Title") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(AppDesignTokens.radius.md),
                     colors =
                         OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -91,7 +93,7 @@ internal fun TaskDialog(
                     label = { Text("Description (optional)") },
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 3,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(AppDesignTokens.radius.md),
                     colors =
                         OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -110,7 +112,7 @@ internal fun TaskDialog(
                             modifier =
                                 Modifier
                                     .weight(1f)
-                                    .clip(RoundedCornerShape(12.dp))
+                                    .clip(RoundedCornerShape(AppDesignTokens.radius.sm))
                                     .background(
                                         if (isSelected) {
                                             priorityColor(priority)
@@ -124,7 +126,7 @@ internal fun TaskDialog(
                             Text(
                                 text = priority.label,
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp,
+                                style = MaterialTheme.typography.labelMedium,
                                 color = if (isSelected) MaterialTheme.colorScheme.onPrimary else priorityColor(priority),
                             )
                         }
@@ -247,7 +249,7 @@ private fun DeadlinePickerRow(
     Row(
         modifier =
             modifier
-                .clip(RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(AppDesignTokens.radius.md))
                 .background(MaterialTheme.colorScheme.surfaceVariant)
                 .clickable(onClick = onClick)
                 .padding(12.dp),

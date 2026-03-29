@@ -73,7 +73,7 @@ internal fun AuthLoadingState() {
                 modifier =
                     Modifier
                         .size(88.dp)
-                        .clip(RoundedCornerShape(22.dp)),
+                        .clip(RoundedCornerShape(AppDesignTokens.radius.lg)),
                 contentScale = ContentScale.Crop,
             )
             CircularProgressIndicator(
@@ -183,7 +183,7 @@ internal fun SignInCard(
                     Modifier
                         .fillMaxWidth()
                         .height(52.dp),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(AppDesignTokens.radius.md),
             ) {
                 if (state.isLoading) {
                     CircularProgressIndicator(
@@ -267,7 +267,7 @@ internal fun SignUpCard(
                     Modifier
                         .fillMaxWidth()
                         .height(52.dp),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(AppDesignTokens.radius.md),
             ) {
                 if (state.isLoading) {
                     CircularProgressIndicator(
@@ -384,7 +384,7 @@ private fun AuthTextField(
                     VisualTransformation.None
                 },
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(AppDesignTokens.radius.md),
             colors =
                 OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),

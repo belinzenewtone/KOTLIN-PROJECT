@@ -32,7 +32,7 @@ fun BudgetScreen(
         },
         actions = {
             androidx.compose.material3.TextButton(onClick = viewModel::showAddDialog) {
-                androidx.compose.material3.Text("+ Add")
+                androidx.compose.material3.Text("Add budget")
             }
         },
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),

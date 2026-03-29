@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.ui.theme.AppSpacing
 
 @Composable
@@ -72,7 +73,7 @@ internal fun InputBar(
             onValueChange = onTextChange,
             modifier = Modifier.weight(1f),
             placeholder = { Text("Message BELTECH...", color = MaterialTheme.colorScheme.onSurfaceVariant) },
-            shape = RoundedCornerShape(24.dp),
+            shape = RoundedCornerShape(AppDesignTokens.radius.lg),
             colors =
                 OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,

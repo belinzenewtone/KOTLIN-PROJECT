@@ -99,7 +99,7 @@ private fun ShimmerRow(brush: Brush) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(AppDesignTokens.radius.md))
             .background(MaterialTheme.colorScheme.surfaceContainerLow)
             .height(72.dp),
     ) {
@@ -120,7 +120,7 @@ private fun ShimmerRow(brush: Brush) {
                 modifier = Modifier
                     .height(40.dp)
                     .width(40.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(AppDesignTokens.radius.sm))
                     .background(brush),
             )
             // Text lines placeholder

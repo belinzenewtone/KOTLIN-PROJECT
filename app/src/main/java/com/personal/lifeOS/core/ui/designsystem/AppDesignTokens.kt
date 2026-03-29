@@ -13,6 +13,19 @@ import com.personal.lifeOS.ui.theme.Primary
 import com.personal.lifeOS.ui.theme.Success
 import com.personal.lifeOS.ui.theme.Warning
 
+enum class AppSemanticTone {
+    INFO,
+    SUCCESS,
+    WARNING,
+    ERROR,
+}
+
+data class AppSemanticColors(
+    val container: Color,
+    val onContainer: Color,
+    val icon: Color,
+)
+
 data class AppColorRoles(
     val primary: Color,
     val primaryContainer: Color,
@@ -45,9 +58,11 @@ data class AppSpacingScale(
 )
 
 data class AppRadiusScale(
+    val sm: Dp,
     val md: Dp,
     val lg: Dp,
     val xl: Dp,
+    val pill: Dp,
 )
 
 data class AppElevationSpec(
@@ -109,9 +124,11 @@ object AppDesignTokens {
 
     val radius =
         AppRadiusScale(
+            sm = 12.dp,
             md = 16.dp,
             lg = 24.dp,
             xl = 32.dp,
+            pill = 999.dp,
         )
 
     val elevation =
@@ -127,4 +144,36 @@ object AppDesignTokens {
             standardMs = 220,
             slowMs = 320,
         )
+
+    @Composable
+    @ReadOnlyComposable
+    fun semanticColors(tone: AppSemanticTone): AppSemanticColors {
+        val scheme = MaterialTheme.colorScheme
+        return when (tone) {
+            AppSemanticTone.INFO ->
+                AppSemanticColors(
+                    container = scheme.primaryContainer,
+                    onContainer = scheme.onPrimaryContainer,
+                    icon = scheme.primary,
+                )
+            AppSemanticTone.SUCCESS ->
+                AppSemanticColors(
+                    container = scheme.secondaryContainer,
+                    onContainer = scheme.onSecondaryContainer,
+                    icon = colors.success,
+                )
+            AppSemanticTone.WARNING ->
+                AppSemanticColors(
+                    container = scheme.tertiaryContainer,
+                    onContainer = scheme.onTertiaryContainer,
+                    icon = colors.warning,
+                )
+            AppSemanticTone.ERROR ->
+                AppSemanticColors(
+                    container = scheme.errorContainer,
+                    onContainer = scheme.onErrorContainer,
+                    icon = scheme.error,
+                )
+        }
+    }
 }

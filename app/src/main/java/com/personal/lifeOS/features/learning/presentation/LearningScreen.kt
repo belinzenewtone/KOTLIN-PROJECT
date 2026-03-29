@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.core.ui.designsystem.EmptyState
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
 import com.personal.lifeOS.features.learning.domain.model.LearningCategory
@@ -101,7 +102,7 @@ private fun LearningSessionCard(
     session: LearningSession,
     onTap: () -> Unit,
 ) {
-    val shape = RoundedCornerShape(16.dp)
+    val shape = RoundedCornerShape(AppDesignTokens.radius.md)
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -181,7 +182,7 @@ private fun LearningSessionCard(
         if (!session.isCompleted) {
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(AppDesignTokens.radius.sm))
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
                     .padding(horizontal = 12.dp, vertical = 4.dp),
             ) {

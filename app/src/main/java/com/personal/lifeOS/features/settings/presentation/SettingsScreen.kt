@@ -30,6 +30,7 @@ import com.personal.lifeOS.core.datastore.FeatureFlag
 import com.personal.lifeOS.core.update.OtaInstallResult
 import com.personal.lifeOS.core.update.OtaUpdateManager
 import com.personal.lifeOS.core.ui.designsystem.AppCard
+import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.core.ui.designsystem.InlineBanner
 import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
@@ -93,7 +94,7 @@ fun SettingsScreen(
 
     PageScaffold(
         title = "Settings",
-        subtitle = "Preferences and customisation",
+        subtitle = "Preferences and customization",
         onBack = onBack,
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
         topBanner = {
@@ -354,7 +355,7 @@ private fun ThemeModeToggle(
         Triple(com.personal.lifeOS.ui.theme.AppThemeMode.SYSTEM, Icons.Filled.SettingsBrightness, "Auto"),
         Triple(com.personal.lifeOS.ui.theme.AppThemeMode.DARK,   Icons.Filled.DarkMode,           "Dark"),
     )
-    val shape = RoundedCornerShape(12.dp)
+    val shape = RoundedCornerShape(AppDesignTokens.radius.sm)
     Row(
         modifier = Modifier
             .fillMaxWidth()

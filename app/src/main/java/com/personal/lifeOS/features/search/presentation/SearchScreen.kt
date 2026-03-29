@@ -51,7 +51,7 @@ fun SearchScreen(
 
     PageScaffold(
         title = "Search",
-        subtitle = "Tasks, events, finance and more",
+        subtitle = "Search across tasks, events, and finance",
         onBack = onBack,
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
     ) {
@@ -60,7 +60,7 @@ fun SearchScreen(
                 SearchField(
                     value = state.query,
                     onValueChange = viewModel::setQuery,
-                    placeholder = "Search by name, merchant, category, or date…",
+                    placeholder = "Search names, merchants, categories, or dates",
                     modifier = Modifier.fillMaxWidth(),
                 )
                 // Results update in real-time as you type — no search button needed.

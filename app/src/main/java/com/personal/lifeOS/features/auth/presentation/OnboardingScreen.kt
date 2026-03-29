@@ -151,7 +151,7 @@ fun OnboardingScreen(
                 Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-            shape = RoundedCornerShape(18.dp),
+            shape = RoundedCornerShape(AppDesignTokens.radius.md),
         ) {
             if (state.isSaving) {
                 CircularProgressIndicator(
@@ -185,7 +185,7 @@ private fun OnboardingWelcomeStep() {
             modifier =
                 Modifier
                     .size(108.dp)
-                    .clip(RoundedCornerShape(28.dp))
+                    .clip(RoundedCornerShape(AppDesignTokens.radius.lg))
                     .background(MaterialTheme.colorScheme.surface),
             contentAlignment = Alignment.Center,
         ) {
@@ -249,7 +249,7 @@ private fun OnboardingProfileSetupStep(
             label = { Text("Full name") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(AppDesignTokens.radius.md),
             colors =
                 OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -265,7 +265,7 @@ private fun OnboardingProfileSetupStep(
                 modifier =
                     Modifier
                         .clickable { onGoalSelect(goal) }
-                        .clip(RoundedCornerShape(18.dp)),
+                        .clip(RoundedCornerShape(AppDesignTokens.radius.md)),
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),

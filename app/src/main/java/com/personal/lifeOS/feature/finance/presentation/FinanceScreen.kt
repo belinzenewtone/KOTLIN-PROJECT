@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -106,7 +106,7 @@ fun FinanceScreen(
 
     PageScaffold(
         title = "Finance",
-        subtitle = "Ledger, imports, and spending health",
+        subtitle = "Track spending, imports, and ledger health",
         topBanner = {
             uiState.errorMessage?.let {
                 TopBanner(
@@ -242,7 +242,7 @@ fun FinanceScreen(
                 AppCard(elevated = false) {
                     LazyColumn(
                         state = txListState,
-                        modifier = Modifier.height(420.dp),
+                        modifier = Modifier.heightIn(min = 180.dp, max = 420.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp),
                         contentPadding = PaddingValues(top = 6.dp, bottom = 4.dp),
                     ) {

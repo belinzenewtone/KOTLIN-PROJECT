@@ -45,6 +45,7 @@ import com.patrykandpatrick.vico.core.component.shape.LineComponent
 import com.patrykandpatrick.vico.core.component.shape.Shapes
 import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
 import com.patrykandpatrick.vico.core.entry.entryOf
+import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.analytics.domain.model.AnalyticsData
 import com.personal.lifeOS.features.analytics.domain.model.AnalyticsPeriod
@@ -192,7 +193,7 @@ internal fun PeriodSelector(
             Box(
                 modifier =
                     Modifier
-                        .clip(RoundedCornerShape(20.dp))
+                        .clip(RoundedCornerShape(AppDesignTokens.radius.lg))
                         .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                         .clickable { onSelect(period) }
                         .padding(horizontal = 20.dp, vertical = 8.dp),

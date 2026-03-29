@@ -53,6 +53,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.ui.theme.CategoryBills
 import com.personal.lifeOS.ui.theme.CategoryEntertainment
 import com.personal.lifeOS.ui.theme.CategoryFood
@@ -134,7 +135,7 @@ internal fun AddTransactionDialog(
                         Box(
                             modifier =
                                 Modifier
-                                    .clip(RoundedCornerShape(16.dp))
+                                    .clip(RoundedCornerShape(AppDesignTokens.radius.md))
                                     .background(if (cat == category) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                                     .clickable { category = cat }
                                     .padding(horizontal = 12.dp, vertical = 6.dp),
@@ -282,7 +283,7 @@ internal fun SmsImportBottomSheet(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
+                            .clip(RoundedCornerShape(AppDesignTokens.radius.sm))
                             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                             .padding(horizontal = 18.dp, vertical = 14.dp),
                     ) {

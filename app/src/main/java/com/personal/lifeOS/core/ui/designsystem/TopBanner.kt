@@ -22,8 +22,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -54,49 +52,36 @@ fun TopBanner(
     onAction: (() -> Unit)? = null,
     onDismiss: (() -> Unit)? = null,
 ) {
-    val (backgroundColor, textColor, iconColor, icon) = when (tone) {
-        TopBannerTone.ERROR -> {
-            TopBannerColor(
-                bg = Color(0xFFFFEBEE),
-                text = Color(0xFFB71C1C),
-                icon = Color(0xFFC62828),
-                imageVector = Icons.Filled.ErrorOutline,
-            )
+    val semanticTone =
+        when (tone) {
+            TopBannerTone.INFO -> AppSemanticTone.INFO
+            TopBannerTone.SUCCESS -> AppSemanticTone.SUCCESS
+            TopBannerTone.WARNING -> AppSemanticTone.WARNING
+            TopBannerTone.ERROR -> AppSemanticTone.ERROR
         }
-
-        TopBannerTone.WARNING -> {
-            TopBannerColor(
-                bg = Color(0xFFFFF3E0),
-                text = Color(0xFFE65100),
-                icon = Color(0xFFEF6C00),
-                imageVector = Icons.Filled.Warning,
-            )
+    val semanticColors = AppDesignTokens.semanticColors(semanticTone)
+    val icon =
+        when (tone) {
+            TopBannerTone.ERROR -> Icons.Filled.ErrorOutline
+            TopBannerTone.WARNING -> Icons.Filled.Warning
+            TopBannerTone.SUCCESS -> Icons.Filled.CheckCircle
+            TopBannerTone.INFO -> Icons.Filled.Info
         }
-
-        TopBannerTone.SUCCESS -> {
-            TopBannerColor(
-                bg = Color(0xFFE8F5E9),
-                text = Color(0xFF1B5E20),
-                icon = Color(0xFF2E7D32),
-                imageVector = Icons.Filled.CheckCircle,
-            )
-        }
-
-        TopBannerTone.INFO -> {
-            TopBannerColor(
-                bg = MaterialTheme.colorScheme.primaryContainer,
-                text = MaterialTheme.colorScheme.onPrimaryContainer,
-                icon = MaterialTheme.colorScheme.primary,
-                imageVector = Icons.Filled.Info,
-            )
-        }
-    }
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(backgroundColor, RoundedCornerShape(bottomStart = 0.dp, bottomEnd = 0.dp))
-            .padding(vertical = 12.dp, horizontal = 16.dp),
+            .background(
+                semanticColors.container,
+                RoundedCornerShape(
+                    bottomStart = AppDesignTokens.radius.md,
+                    bottomEnd = AppDesignTokens.radius.md,
+                ),
+            )
+            .padding(
+                vertical = AppDesignTokens.spacing.sm,
+                horizontal = AppDesignTokens.spacing.md,
+            ),
     ) {
         Row(
             modifier = Modifier
@@ -108,7 +93,7 @@ fun TopBanner(
             Icon(
                 imageVector = icon,
                 contentDescription = tone.name,
-                tint = iconColor,
+                tint = semanticColors.icon,
                 modifier = Modifier
                     .padding(top = 2.dp),
             )
@@ -123,8 +108,8 @@ fun TopBanner(
                 if (title != null) {
                     Text(
                         text = title,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = textColor,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = semanticColors.onContainer,
                         fontWeight = FontWeight.SemiBold,
                     )
                 }
@@ -133,7 +118,7 @@ fun TopBanner(
                 Text(
                     text = message,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = textColor,
+                    color = semanticColors.onContainer,
                 )
 
                 // Action (optional)
@@ -148,7 +133,7 @@ fun TopBanner(
                         Text(
                             text = actionLabel,
                             style = MaterialTheme.typography.labelMedium,
-                            color = textColor,
+                            color = semanticColors.onContainer,
                             fontWeight = FontWeight.SemiBold,
                         )
                     }
@@ -164,23 +149,13 @@ fun TopBanner(
                     Icon(
                         imageVector = Icons.Filled.Close,
                         contentDescription = "Dismiss",
-                        tint = textColor,
+                        tint = semanticColors.onContainer,
                     )
                 }
             }
         }
     }
 }
-
-/**
- * Internal color configuration for TopBanner.
- */
-private data class TopBannerColor(
-    val bg: Color,
-    val text: Color,
-    val icon: Color,
-    val imageVector: ImageVector,
-)
 
 /**
  * TopBanner tone/severity levels.

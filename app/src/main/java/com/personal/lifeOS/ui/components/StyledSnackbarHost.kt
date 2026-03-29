@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.MaterialTheme
+import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 
 @Composable
 fun StyledSnackbarHost(
@@ -25,7 +26,7 @@ fun StyledSnackbarHost(
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = MaterialTheme.colorScheme.onSurface,
                 actionColor = MaterialTheme.colorScheme.primary,
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(AppDesignTokens.radius.md),
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
         },

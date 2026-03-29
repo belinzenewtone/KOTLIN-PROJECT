@@ -40,6 +40,11 @@ import androidx.compose.ui.unit.dp
 import com.personal.lifeOS.core.ui.designsystem.AppCard
 import com.personal.lifeOS.features.calendar.domain.model.CalendarEvent
 import com.personal.lifeOS.features.calendar.domain.model.EventType
+import com.personal.lifeOS.ui.theme.CategoryOther
+import com.personal.lifeOS.ui.theme.Info
+import com.personal.lifeOS.ui.theme.Primary
+import com.personal.lifeOS.ui.theme.Success
+import com.personal.lifeOS.ui.theme.Warning
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -51,11 +56,11 @@ import java.util.Locale
 // ── Event type colour palette ────────────────────────────────────────────────
 private val EventType.dotColor: Color
     get() = when (this) {
-        EventType.WORK -> Color(0xFF0D9488)      // teal
-        EventType.FINANCE -> Color(0xFFF59E0B)   // amber
-        EventType.HEALTH -> Color(0xFF16A34A)    // green
-        EventType.PERSONAL -> Color(0xFF94A3B8)  // slate
-        EventType.OTHER -> Color(0xFF64748B)     // muted slate
+        EventType.WORK -> Info
+        EventType.FINANCE -> Warning
+        EventType.HEALTH -> Success
+        EventType.PERSONAL -> Primary
+        EventType.OTHER -> CategoryOther
     }
 
 @Composable

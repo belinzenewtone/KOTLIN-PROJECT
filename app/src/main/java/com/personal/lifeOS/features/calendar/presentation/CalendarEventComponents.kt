@@ -37,6 +37,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.personal.lifeOS.core.ui.designsystem.AppCard
+import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.calendar.domain.model.CalendarEvent
 import com.personal.lifeOS.features.calendar.domain.model.EventImportance
@@ -120,7 +121,7 @@ internal fun CalendarEventCard(
                     Modifier
                         .fillMaxWidth()
                         .height(88.dp)
-                        .clip(RoundedCornerShape(20.dp))
+                        .clip(RoundedCornerShape(AppDesignTokens.radius.lg))
                         .background(backgroundColor)
                         .padding(horizontal = 20.dp),
                 contentAlignment = iconAlignment,
@@ -212,7 +213,7 @@ private fun EventBadge(
     Box(
         modifier =
             Modifier
-                .clip(RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(AppDesignTokens.radius.sm))
                 .background(color.copy(alpha = 0.18f))
                 .padding(horizontal = 8.dp, vertical = 2.dp),
     ) {
@@ -227,7 +228,7 @@ private fun EventBadge(
 
 private fun importanceColor(importance: EventImportance): Color =
     when (importance) {
-        EventImportance.URGENT -> Color(0xFFEF5350)
-        EventImportance.IMPORTANT -> Color(0xFFFFB74D)
-        EventImportance.NEUTRAL -> Color(0xFF42A5F5)
+        EventImportance.URGENT -> Error
+        EventImportance.IMPORTANT -> Warning
+        EventImportance.NEUTRAL -> Info
     }

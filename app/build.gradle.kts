@@ -245,6 +245,7 @@ dependencies {
     implementation(libs.vico.compose)
 
     // Security
+    implementation(libs.sqlcipher)
     implementation(libs.biometric)
     implementation(libs.androidx.security.crypto)
 

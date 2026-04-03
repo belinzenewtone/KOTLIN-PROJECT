@@ -119,6 +119,7 @@ fun LifeOSNavHost(
     biometricEnabled: Boolean,
     startDestination: String = AppRoute.Auth,
     shouldCheckForUpdates: Boolean = true,
+    onSensitiveScreenChanged: (Boolean) -> Unit = {},
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -151,6 +152,10 @@ fun LifeOSNavHost(
                     }
                 }
         }
+    }
+
+    LaunchedEffect(currentRoute, authState.isLoggedIn) {
+        onSensitiveScreenChanged(authState.isLoggedIn && isSensitiveRoute(currentRoute))
     }
 
     Box(

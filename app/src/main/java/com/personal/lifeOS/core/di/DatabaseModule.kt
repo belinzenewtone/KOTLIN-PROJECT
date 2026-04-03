@@ -23,6 +23,8 @@ import com.personal.lifeOS.core.database.dao.ReviewSnapshotDao
 import com.personal.lifeOS.core.database.dao.SyncJobDao
 import com.personal.lifeOS.core.database.dao.TaskDao
 import com.personal.lifeOS.core.database.dao.TransactionDao
+import com.personal.lifeOS.core.observability.AppTelemetry
+import com.personal.lifeOS.core.security.DatabaseEncryptionManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -34,6 +36,8 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 @Suppress("TooManyFunctions")
 object DatabaseModule {
+    private const val DATABASE_NAME = "beltech_db"
+
     @Provides
     @Singleton
     fun provideDatabase(
@@ -45,11 +49,17 @@ object DatabaseModule {
             context.deleteDatabase("lifeos_db")
         }
 
-        return Room.databaseBuilder(
-            context,
-            LifeOSDatabase::class.java,
-            "beltech_db",
-        )
+        val useEncryptedDb =
+            DatabaseEncryptionManager.shouldUseEncryption(
+                context = context,
+                dbName = DATABASE_NAME,
+            )
+        val builder =
+            Room.databaseBuilder(
+                context,
+                LifeOSDatabase::class.java,
+                DATABASE_NAME,
+            )
             .addMigrations(
                 DatabaseMigrations.MIGRATION_1_2,
                 DatabaseMigrations.MIGRATION_2_3,
@@ -65,7 +75,17 @@ object DatabaseModule {
                 DatabaseMigrations.MIGRATION_12_13,
                 DatabaseMigrations.MIGRATION_13_14,
             )
-            .build()
+
+        if (useEncryptedDb) {
+            builder.openHelperFactory(DatabaseEncryptionManager.createSupportFactory(context))
+        } else {
+            AppTelemetry.trackEvent(
+                name = "db_encryption_not_applied",
+                attributes = mapOf("db_name" to DATABASE_NAME, "reason" to "legacy_plaintext_install"),
+            )
+        }
+
+        return builder.build()
     }
 
     @Provides

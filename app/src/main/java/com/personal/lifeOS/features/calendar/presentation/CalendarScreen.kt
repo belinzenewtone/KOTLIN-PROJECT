@@ -206,14 +206,14 @@ private fun CalendarBody(
 
         androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             FilterChip(
-                selected = section == CalendarSection.EVENTS,
-                onClick = { onSectionChange(CalendarSection.EVENTS) },
-                label = { Text("Events (${events.size})") },
-            )
-            FilterChip(
                 selected = section == CalendarSection.TASKS,
                 onClick = { onSectionChange(CalendarSection.TASKS) },
                 label = { Text("Tasks (${tasks.size})") },
+            )
+            FilterChip(
+                selected = section == CalendarSection.EVENTS,
+                onClick = { onSectionChange(CalendarSection.EVENTS) },
+                label = { Text("Events (${events.size})") },
             )
         }
 

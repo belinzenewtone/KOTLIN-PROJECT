@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -22,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.personal.lifeOS.core.ui.designsystem.AssistantActionCard
-import com.personal.lifeOS.core.ui.designsystem.EmptyState
 import com.personal.lifeOS.core.ui.designsystem.InlineBanner
 import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
 import com.personal.lifeOS.ui.theme.AppSpacing
@@ -44,12 +42,6 @@ fun AssistantScreen(viewModel: AssistantViewModel = hiltViewModel()) {
             listState.animateScrollToItem(state.messages.size - 1)
         }
     }
-
-    val showGuidedEmptyState =
-        state.messages.size <= 1 &&
-            state.pendingProposal == null &&
-            !state.isProcessing &&
-            state.proposalResultMessage == null
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -85,27 +77,6 @@ fun AssistantScreen(viewModel: AssistantViewModel = hiltViewModel()) {
                 )
             }
 
-            if (showGuidedEmptyState) {
-                Column(
-                    modifier =
-                        Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                            .padding(horizontal = AppSpacing.ScreenHorizontal),
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.Section),
-                ) {
-                    EmptyState(
-                        title = "Assistant is ready",
-                        description = "Type a question below or use a prompt to start.",
-                    )
-                    AssistantSuggestedPrompts(
-                        onSelect = { viewModel.sendSuggestedPrompt(it) },
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-                return@Scaffold
-            }
-
             LazyColumn(
                 state = listState,
                 modifier =
@@ -126,7 +97,7 @@ fun AssistantScreen(viewModel: AssistantViewModel = hiltViewModel()) {
                     }
                 }
 
-                items(state.messages, key = { it.id }) { message ->
+                items(state.messages) { message ->
                     ChatBubble(message = message)
                 }
 

@@ -40,7 +40,7 @@ internal fun InputBar(
     isProcessing: Boolean,
 ) {
     val isImeVisible = WindowInsets.isImeVisible
-    val bottomClearance = if (isImeVisible) 8.dp else AppSpacing.BottomSafeWithFloatingNav
+    val bottomClearance = if (isImeVisible) 8.dp else 72.dp
 
     Row(
         modifier =

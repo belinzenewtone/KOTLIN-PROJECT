@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
@@ -24,6 +25,7 @@ fun HeroSurface(
     modifier: Modifier = Modifier,
     eyebrow: String? = null,
     subtitle: String? = null,
+    leading: (@Composable () -> Unit)? = null,
     action: (@Composable RowScope.() -> Unit)? = null,
     footer: (@Composable () -> Unit)? = null,
 ) {
@@ -35,8 +37,17 @@ fun HeroSurface(
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.Top,
             ) {
+                if (leading != null) {
+                    Row(
+                        modifier = Modifier.padding(top = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        leading()
+                    }
+                }
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(4.dp),

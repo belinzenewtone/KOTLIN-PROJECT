@@ -1,8 +1,8 @@
 ﻿{
-    "version_code":  24,
-    "version_name":  "1.2.13",
-    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.13/app-release-v1.2.13.apk",
-    "checksum_sha256":  "3292f4e70c13d40ac374d28788a41e677ca2420337fd1e13987c5bfd20b9420d",
+    "version_code":  25,
+    "version_name":  "1.2.14",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.14/app-release-v1.2.14.apk",
+    "checksum_sha256":  "2ada695f39a45aa43f902eb7e3ed16b57241d581805534f8525ac3060c31e53d",
     "required":  false,
-    "release_notes":  "UI/UX consistency polish, migration reliability improvements, and OTA rollout refresh for 1.2.13."
+    "release_notes":  "Hotfix: startup crash fallback on existing installs, removed status/context chips, fixed assistant input visibility, corrected back button placement, and improved spending value alignment."
 }

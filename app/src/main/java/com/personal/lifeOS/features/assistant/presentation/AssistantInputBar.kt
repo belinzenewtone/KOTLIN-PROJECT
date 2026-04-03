@@ -1,8 +1,5 @@
 package com.personal.lifeOS.features.assistant.presentation
 
-import androidx.compose.animation.core.EaseInOut
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -11,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.isImeVisible
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -27,7 +23,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,29 +38,15 @@ internal fun InputBar(
     onSend: () -> Unit,
     isProcessing: Boolean,
 ) {
-    // When the keyboard is visible, the parent Column's imePadding() has already pushed
-    // this bar up above the keyboard — no extra clearance is needed.
-    // When the keyboard is hidden, we add clearance for the floating nav bar overlay
-    // (~64dp bar + 8dp gap = 72dp). Animate the transition so the bar glides smoothly.
     val isImeVisible = WindowInsets.isImeVisible
-    val floatingBarClearance by animateDpAsState(
-        targetValue = if (isImeVisible) 0.dp else 72.dp,
-        animationSpec = tween(durationMillis = 220, easing = EaseInOut),
-        label = "floatingBarClearance",
-    )
+    val bottomClearance = if (isImeVisible) 8.dp else AppSpacing.BottomSafe
 
     Row(
         modifier =
             Modifier
                 .fillMaxWidth()
-                // navigationBarsPadding handles both gesture-swipe bar AND button-nav bar.
-                // This is the ONLY inset that should be applied here — the keyboard inset
-                // is handled by the parent Column's imePadding().
-                .navigationBarsPadding()
-                // Slide in extra clearance for the floating bottom nav only when
-                // the keyboard is not visible.
-                .padding(bottom = floatingBarClearance)
                 .padding(horizontal = AppSpacing.ScreenHorizontal, vertical = 10.dp)
+                .padding(bottom = bottomClearance)
                 .clip(RoundedCornerShape(AppDesignTokens.radius.lg))
                 .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.92f))
                 .border(

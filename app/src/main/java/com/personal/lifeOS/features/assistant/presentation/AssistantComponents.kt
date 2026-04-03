@@ -32,7 +32,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.personal.lifeOS.core.ui.designsystem.AppCard
 import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
-import com.personal.lifeOS.core.ui.designsystem.HeroStatChip
 import com.personal.lifeOS.core.ui.designsystem.HeroSurface
 import com.personal.lifeOS.features.assistant.domain.model.ChatMessage
 import com.personal.lifeOS.features.assistant.domain.model.MessageSender
@@ -75,23 +74,6 @@ internal fun AssistantHeader(isProcessing: Boolean, onClearChat: () -> Unit) {
                     contentDescription = "Clear chat",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(20.dp),
-                )
-            }
-        },
-        footer = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                HeroStatChip(
-                    label = "Status",
-                    value = if (isProcessing) "Thinking" else "Ready",
-                    modifier = Modifier.weight(1f),
-                )
-                HeroStatChip(
-                    label = "Context",
-                    value = "All modules",
-                    modifier = Modifier.weight(1f),
                 )
             }
         },

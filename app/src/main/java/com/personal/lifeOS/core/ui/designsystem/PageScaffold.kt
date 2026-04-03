@@ -83,23 +83,28 @@ fun PageScaffold(
                         eyebrow = headerEyebrow,
                         title = title,
                         subtitle = subtitle,
-                        action = {
+                        leading =
                             if (onBack != null) {
-                                IconButton(
-                                    onClick = onBack,
-                                    modifier =
-                                        Modifier
-                                            .size(36.dp)
-                                            .clip(RoundedCornerShape(AppDesignTokens.radius.pill)),
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = "Go back",
-                                        tint = MaterialTheme.colorScheme.onSurface,
-                                        modifier = Modifier.size(20.dp),
-                                    )
+                                {
+                                    IconButton(
+                                        onClick = onBack,
+                                        modifier =
+                                            Modifier
+                                                .size(36.dp)
+                                                .clip(RoundedCornerShape(AppDesignTokens.radius.pill)),
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                            contentDescription = "Go back",
+                                            tint = MaterialTheme.colorScheme.onSurface,
+                                            modifier = Modifier.size(20.dp),
+                                        )
+                                    }
                                 }
-                            }
+                            } else {
+                                null
+                            },
+                        action = {
                             actions()
                         }
                     )

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -206,7 +205,6 @@ private fun ReviewStatRow(label: String, value: String) {
             Modifier
                 .fillMaxWidth()
                 .padding(vertical = 2.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.Top,
     ) {
         Text(
@@ -223,8 +221,8 @@ private fun ReviewStatRow(label: String, value: String) {
             textAlign = TextAlign.End,
             modifier =
                 Modifier
-                    .widthIn(min = 72.dp)
-                    .weight(0.7f, fill = false),
+                    .padding(start = 12.dp)
+                    .weight(1f),
         )
     }
 }

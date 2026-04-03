@@ -53,7 +53,6 @@ import androidx.compose.ui.unit.dp
 import com.personal.lifeOS.R
 import com.personal.lifeOS.core.ui.designsystem.AppCard
 import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
-import com.personal.lifeOS.core.ui.designsystem.HeroStatChip
 import com.personal.lifeOS.core.ui.designsystem.HeroSurface
 
 @Composable
@@ -118,23 +117,6 @@ internal fun AuthBrandingHeader(isSignUpMode: Boolean) {
                     painter = painterResource(id = R.drawable.logo_personalos_mark),
                     contentDescription = "PersonalOS mark",
                     modifier = Modifier.size(24.dp),
-                )
-            }
-        },
-        footer = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                HeroStatChip(
-                    label = "Security",
-                    value = "Biometric-ready",
-                    modifier = Modifier.weight(1f),
-                )
-                HeroStatChip(
-                    label = "Sync",
-                    value = "Cloud-safe",
-                    modifier = Modifier.weight(1f),
                 )
             }
         },

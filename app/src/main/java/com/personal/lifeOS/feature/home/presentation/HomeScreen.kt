@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.personal.lifeOS.core.ui.designsystem.AppCard
 import com.personal.lifeOS.core.ui.designsystem.FinanceSummaryCard
-import com.personal.lifeOS.core.ui.designsystem.HeroStatChip
 import com.personal.lifeOS.core.ui.designsystem.HeroSurface
 import com.personal.lifeOS.core.ui.designsystem.LoadingState
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
@@ -86,28 +85,6 @@ fun HomeScreen(
             eyebrow = "Daily focus",
             title = uiState.greeting,
             subtitle = "Review priorities, schedule, and your spend trend.",
-            footer = {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    HeroStatChip(
-                        label = "Tasks",
-                        value =
-                            if (uiState.pendingTaskCount == 0) {
-                                "All clear"
-                            } else {
-                                "${uiState.pendingTaskCount} open"
-                            },
-                        modifier = Modifier.weight(1f),
-                    )
-                    HeroStatChip(
-                        label = "Net",
-                        value = DateUtils.formatCurrency(uiState.monthNet),
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-            },
         )
 
         HomeSummaryStrip(uiState = uiState)

@@ -86,7 +86,7 @@ fun OnboardingScreen(
             eyebrow = "Step ${state.currentStep} of 4",
             title = "PersonalOS setup",
             subtitle = onboardingStepSubtitle(state.currentStep),
-            action = {
+            leading = {
                 IconButton(
                     onClick = {
                         if (state.currentStep == 1) onBackToAuth() else viewModel.onEvent(OnboardingUiEvent.GoBack)

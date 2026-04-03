@@ -33,46 +33,49 @@ object DatabaseEncryptionManager {
         context: Context,
         dbName: String,
     ): Boolean {
-        SQLiteDatabase.loadLibs(context)
-        val prefs = prefs(context)
-        val mode = prefs.getString(KEY_DB_MODE, null)
-        if (mode == MODE_ENCRYPTED) return true
-        if (mode == MODE_PLAINTEXT) {
-            Log.w(TAG, "Database encryption disabled for this install; staying on plaintext mode.")
-            return false
-        }
-        if (mode == MODE_MIGRATION_FAILED) {
-            Log.w(TAG, "Database migration previously failed; staying on plaintext mode.")
-            return false
-        } else {
-            val dbFile = context.getDatabasePath(dbName)
-            if (!dbFile.exists()) {
-                prefs.edit().putString(KEY_DB_MODE, MODE_ENCRYPTED).apply()
-                AppTelemetry.trackEvent(
-                    name = "db_encryption_enabled",
-                    attributes = mapOf("db_name" to dbName, "reason" to "new_install"),
-                )
-                return true
+        return runCatching {
+            SQLiteDatabase.loadLibs(context)
+            val prefs = prefs(context)
+            when (prefs.getString(KEY_DB_MODE, null)) {
+                MODE_ENCRYPTED -> true
+                MODE_PLAINTEXT,
+                MODE_MIGRATION_FAILED,
+                -> {
+                    Log.w(TAG, "Database encryption disabled for this install; staying on plaintext mode.")
+                    false
+                }
+                else -> {
+                    val dbFile = context.getDatabasePath(dbName)
+                    if (!dbFile.exists()) {
+                        prefs.edit().putString(KEY_DB_MODE, MODE_ENCRYPTED).apply()
+                        AppTelemetry.trackEvent(
+                            name = "db_encryption_enabled",
+                            attributes = mapOf("db_name" to dbName, "reason" to "new_install"),
+                        )
+                        true
+                    } else {
+                        // Safety-first hotfix: do not attempt in-place migration during app start.
+                        // Existing installs continue on plaintext mode until explicit migration rollout.
+                        prefs.edit().putString(KEY_DB_MODE, MODE_PLAINTEXT).apply()
+                        AppTelemetry.trackEvent(
+                            name = "db_encryption_not_applied",
+                            attributes = mapOf("db_name" to dbName, "reason" to "existing_install_fallback"),
+                            captureAsMessage = true,
+                        )
+                        false
+                    }
+                }
             }
-
-            val passphrase = getOrCreatePassphrase(context)
-            return if (migratePlaintextToEncrypted(context, dbName, passphrase)) {
-                prefs.edit().putString(KEY_DB_MODE, MODE_ENCRYPTED).apply()
-                AppTelemetry.trackEvent(
-                    name = "db_encryption_enabled",
-                    attributes = mapOf("db_name" to dbName, "reason" to "migrated_existing"),
-                    captureAsMessage = true,
-                )
-                true
-            } else {
-                prefs.edit().putString(KEY_DB_MODE, MODE_PLAINTEXT).apply()
-                AppTelemetry.trackEvent(
-                    name = "db_encryption_not_applied",
-                    attributes = mapOf("db_name" to dbName, "reason" to "migration_failed"),
-                    captureAsMessage = true,
-                )
-                false
+        }.getOrElse { error ->
+            Log.e(TAG, "Failed to resolve database encryption mode. Falling back to plaintext.", error)
+            AppTelemetry.captureError(
+                throwable = error,
+                context = mapOf("event" to "db_encryption_mode_resolve", "db_name" to dbName),
+            )
+            runCatching {
+                prefs(context).edit().putString(KEY_DB_MODE, MODE_PLAINTEXT).apply()
             }
+            false
         }
     }
 

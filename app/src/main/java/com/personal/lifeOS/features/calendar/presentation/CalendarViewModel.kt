@@ -8,6 +8,7 @@ import com.personal.lifeOS.features.calendar.domain.model.EventStatus
 import com.personal.lifeOS.features.calendar.domain.model.EventType
 import com.personal.lifeOS.features.calendar.domain.repository.CalendarRepository
 import com.personal.lifeOS.features.tasks.domain.model.Task
+import com.personal.lifeOS.features.tasks.domain.model.TaskPriority
 import com.personal.lifeOS.features.tasks.domain.model.TaskStatus
 import com.personal.lifeOS.features.tasks.domain.repository.TaskRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -181,6 +182,30 @@ class CalendarViewModel
             viewModelScope.launch {
                 try {
                     taskRepository.updateTask(task.copy(status = TaskStatus.PENDING, completedAt = null))
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(error = e.message) }
+                }
+            }
+        }
+
+        fun saveTask(
+            title: String,
+            description: String,
+            priority: TaskPriority,
+            deadline: Long?,
+        ) {
+            if (title.isBlank()) return
+            viewModelScope.launch {
+                try {
+                    taskRepository.addTask(
+                        Task(
+                            title = title.trim(),
+                            description = description.trim(),
+                            priority = priority,
+                            deadline = deadline,
+                        ),
+                    )
+                    _uiState.update { it.copy(showAddDialog = false) }
                 } catch (e: Exception) {
                     _uiState.update { it.copy(error = e.message) }
                 }

@@ -177,7 +177,6 @@ fun LifeOSNavHost(
             currentRoute != null &&
                 !isOnPublicFlow &&
                 lockState.appContentUnlocked &&
-                currentRoute != AppRoute.Assistant &&
                 !isImeVisible
         AnimatedVisibility(
             modifier =

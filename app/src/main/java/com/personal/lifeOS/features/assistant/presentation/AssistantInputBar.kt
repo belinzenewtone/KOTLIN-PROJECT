@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -39,7 +40,7 @@ internal fun InputBar(
     isProcessing: Boolean,
 ) {
     val isImeVisible = WindowInsets.isImeVisible
-    val bottomClearance = if (isImeVisible) 8.dp else AppSpacing.BottomSafe
+    val bottomClearance = if (isImeVisible) 8.dp else AppSpacing.BottomSafeWithFloatingNav
 
     Row(
         modifier =
@@ -47,6 +48,7 @@ internal fun InputBar(
                 .fillMaxWidth()
                 .padding(horizontal = AppSpacing.ScreenHorizontal, vertical = 10.dp)
                 .padding(bottom = bottomClearance)
+                .imePadding()
                 .clip(RoundedCornerShape(AppDesignTokens.radius.lg))
                 .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.92f))
                 .border(

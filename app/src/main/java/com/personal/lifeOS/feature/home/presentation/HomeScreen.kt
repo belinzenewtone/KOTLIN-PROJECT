@@ -136,7 +136,7 @@ private fun HomeAgendaCard(
                     } else {
                         "${uiState.pendingTaskCount} pending"
                     },
-                onClick = { onOpenRoute(AppRoute.Tasks) },
+                onClick = { onOpenRoute(AppRoute.Calendar) },
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
             HomeAgendaRow(

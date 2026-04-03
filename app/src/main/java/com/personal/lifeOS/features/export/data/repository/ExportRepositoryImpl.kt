@@ -100,8 +100,7 @@ class ExportRepositoryImpl
         }
 
         override fun observeHistory(limit: Int): Flow<List<ExportHistoryItem>> {
-            val userId = authSessionStore.getUserId()
-            if (userId.isBlank()) return flowOf(emptyList())
+            val userId = activeUserId()
 
             return database.exportHistoryDao().observeRecent(userId = userId, limit = limit).map { entities ->
                 entities.map { entity -> entity.toDomain() }
@@ -185,9 +184,10 @@ class ExportRepositoryImpl
         }
 
         private fun activeUserId(): String {
-            val userId = authSessionStore.getUserId()
-            require(userId.isNotBlank()) { "Sign in required before export." }
-            return userId
+            // Local workspace mode is fully offline-capable. We keep using the
+            // current session owner key (which may be blank on legacy local installs)
+            // instead of forcing cloud sign-in.
+            return authSessionStore.getUserId()
         }
 
         private fun validateRequest(request: ExportRequest) {

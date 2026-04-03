@@ -7,6 +7,9 @@ import com.personal.lifeOS.features.calendar.domain.model.EventImportance
 import com.personal.lifeOS.features.calendar.domain.model.EventStatus
 import com.personal.lifeOS.features.calendar.domain.model.EventType
 import com.personal.lifeOS.features.calendar.domain.repository.CalendarRepository
+import com.personal.lifeOS.features.tasks.domain.model.Task
+import com.personal.lifeOS.features.tasks.domain.model.TaskStatus
+import com.personal.lifeOS.features.tasks.domain.repository.TaskRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +28,9 @@ data class CalendarUiState(
     val currentMonth: YearMonth = YearMonth.now(),
     val selectedDate: LocalDate = LocalDate.now(),
     val events: List<CalendarEvent> = emptyList(),
+    val tasks: List<Task> = emptyList(),
     val selectedDayEvents: List<CalendarEvent> = emptyList(),
+    val selectedDayTasks: List<Task> = emptyList(),
     val isLoading: Boolean = true,
     val error: String? = null,
     val showAddDialog: Boolean = false,
@@ -39,12 +44,14 @@ class CalendarViewModel
     @Inject
     constructor(
         private val repository: CalendarRepository,
+        private val taskRepository: TaskRepository,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(CalendarUiState())
         val uiState: StateFlow<CalendarUiState> = _uiState.asStateFlow()
 
         init {
             loadMonthEvents()
+            observeTasks()
         }
 
         fun navigateMonth(offset: Int) {
@@ -158,6 +165,28 @@ class CalendarViewModel
             }
         }
 
+        fun completeTask(task: Task) {
+            if (task.status == TaskStatus.COMPLETED) return
+            viewModelScope.launch {
+                try {
+                    taskRepository.completeTask(task)
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(error = e.message) }
+                }
+            }
+        }
+
+        fun undoCompleteTask(task: Task) {
+            if (task.status != TaskStatus.COMPLETED) return
+            viewModelScope.launch {
+                try {
+                    taskRepository.updateTask(task.copy(status = TaskStatus.PENDING, completedAt = null))
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(error = e.message) }
+                }
+            }
+        }
+
         private fun loadMonthEvents() {
             val month = _uiState.value.currentMonth
             val zone = ZoneId.systemDefault()
@@ -175,6 +204,18 @@ class CalendarViewModel
                 .launchIn(viewModelScope)
         }
 
+        private fun observeTasks() {
+            taskRepository.getAllTasks()
+                .onEach { tasks ->
+                    _uiState.update { it.copy(tasks = tasks) }
+                    filterSelectedDayEvents()
+                }
+                .catch { e ->
+                    _uiState.update { it.copy(error = e.message) }
+                }
+                .launchIn(viewModelScope)
+        }
+
         private fun filterSelectedDayEvents() {
             val state = _uiState.value
             val zone = ZoneId.systemDefault()
@@ -185,6 +226,18 @@ class CalendarViewModel
                 state.events
                     .filter { it.date in dayStart..dayEnd }
                     .sortedBy { it.date }
-            _uiState.update { it.copy(selectedDayEvents = dayEvents) }
+            val dayTasks =
+                state.tasks
+                    .filter { task ->
+                        val deadline = task.deadline
+                        deadline != null && deadline in dayStart..dayEnd
+                    }.sortedWith(
+                        compareBy<Task>(
+                            { it.status == TaskStatus.COMPLETED },
+                            { it.deadline ?: Long.MAX_VALUE },
+                            { it.createdAt },
+                        ),
+                    )
+            _uiState.update { it.copy(selectedDayEvents = dayEvents, selectedDayTasks = dayTasks) }
         }
     }

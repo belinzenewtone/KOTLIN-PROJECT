@@ -4,13 +4,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SmartToy
-import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Payments
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.SmartToy
-import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.ui.graphics.vector.ImageVector
 
 object AppRoute {
@@ -62,13 +62,6 @@ val primaryTabs =
             routeAliases = setOf(AppRoute.Home, AppRoute.LegacyDashboard),
         ),
         AppPrimaryTab(
-            route = AppRoute.Tasks,
-            label = "Tasks",
-            selectedIcon = Icons.Filled.TaskAlt,
-            unselectedIcon = Icons.Outlined.TaskAlt,
-            routeAliases = setOf(AppRoute.Tasks),
-        ),
-        AppPrimaryTab(
             route = AppRoute.Finance,
             label = "Finance",
             selectedIcon = Icons.Filled.Payments,
@@ -88,5 +81,12 @@ val primaryTabs =
             selectedIcon = Icons.Filled.SmartToy,
             unselectedIcon = Icons.Outlined.SmartToy,
             routeAliases = setOf(AppRoute.Assistant),
+        ),
+        AppPrimaryTab(
+            route = AppRoute.Profile,
+            label = "Profile",
+            selectedIcon = Icons.Filled.Person,
+            unselectedIcon = Icons.Outlined.Person,
+            routeAliases = setOf(AppRoute.Profile),
         ),
     )

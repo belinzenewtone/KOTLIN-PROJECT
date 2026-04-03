@@ -18,17 +18,17 @@ internal fun resolveGuardNavigationTarget(
     onboardingCompleted: Boolean,
     currentRoute: String?,
 ): String? {
-    val shouldRouteToOnboarding = isLoggedIn && !onboardingCompleted
+    val shouldRouteToOnboarding = !onboardingCompleted
     return when {
-        !isLoggedIn && currentRoute != AppRoute.Auth ->
-            AppRoute.Auth
-
-        shouldRouteToOnboarding && currentRoute != AppRoute.Onboarding ->
+        shouldRouteToOnboarding &&
+            currentRoute != AppRoute.Onboarding &&
+            currentRoute != AppRoute.Auth ->
             AppRoute.Onboarding
 
-        isLoggedIn &&
-            !shouldRouteToOnboarding &&
-            (currentRoute == AppRoute.Auth || currentRoute == AppRoute.Onboarding) ->
+        !shouldRouteToOnboarding && currentRoute == AppRoute.Onboarding ->
+            AppRoute.Home
+
+        isLoggedIn && currentRoute == AppRoute.Auth ->
             AppRoute.Home
 
         else -> null

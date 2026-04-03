@@ -31,12 +31,11 @@ class AppBootstrapCoordinator
             if (shouldCheckForUpdates) {
                 runCatching { updateCheckUseCase() }
             }
-            val onboardingCompleted = if (hasSession) appSettingsStore.isOnboardingCompleted() else false
+            val onboardingCompleted = appSettingsStore.isOnboardingCompleted()
             val startDestination =
                 when {
-                    !hasSession -> StartDestination.AUTH
-                    onboardingCompleted -> StartDestination.HOME
-                    else -> StartDestination.ONBOARDING
+                    !onboardingCompleted -> StartDestination.ONBOARDING
+                    else -> StartDestination.HOME
                 }
             return BootstrapResult(
                 startDestination = startDestination,

@@ -33,10 +33,13 @@ import com.personal.lifeOS.core.ui.designsystem.PageScaffold
 import com.personal.lifeOS.core.ui.designsystem.SearchField
 import com.personal.lifeOS.core.ui.designsystem.SuperAddBottomSheet
 import com.personal.lifeOS.core.ui.designsystem.SuperKind
+import com.personal.lifeOS.core.ui.designsystem.TaskRow
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.calendar.domain.model.CalendarEvent
 import com.personal.lifeOS.features.calendar.domain.model.EventImportance
 import com.personal.lifeOS.features.calendar.domain.model.EventType
+import com.personal.lifeOS.features.tasks.domain.model.Task
+import com.personal.lifeOS.features.tasks.domain.model.TaskStatus
 import com.personal.lifeOS.ui.theme.AppSpacing
 
 @Composable
@@ -44,7 +47,8 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
     var query by rememberSaveable { mutableStateOf("") }
     var deleteTarget by remember { mutableStateOf<com.personal.lifeOS.features.calendar.domain.model.CalendarEvent?>(null) }
-    val events = remember(state.selectedDayEvents, query) { state.selectedDayEvents.filterByQuery(query) }
+    val events = remember(state.selectedDayEvents, query) { state.selectedDayEvents.filterEventsByQuery(query) }
+    val tasks = remember(state.selectedDayTasks, query) { state.selectedDayTasks.filterTasksByQuery(query) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -66,6 +70,7 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
         CalendarBody(
             state = state,
             events = events,
+            tasks = tasks,
             query = query,
             padding = padding,
             onQueryChange = { query = it },
@@ -75,6 +80,8 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
             onComplete = { event -> viewModel.markEventCompleted(event) },
             onEdit = { event -> viewModel.showEditDialog(event) },
             onDelete = { event -> deleteTarget = event },
+            onCompleteTask = { task -> viewModel.completeTask(task) },
+            onUndoTask = { task -> viewModel.undoCompleteTask(task) },
         )
     }
 
@@ -127,6 +134,7 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
 private fun CalendarBody(
     state: CalendarUiState,
     events: List<CalendarEvent>,
+    tasks: List<Task>,
     query: String,
     padding: PaddingValues,
     onQueryChange: (String) -> Unit,
@@ -136,6 +144,8 @@ private fun CalendarBody(
     onComplete: (CalendarEvent) -> Unit,
     onEdit: (CalendarEvent) -> Unit,
     onDelete: (CalendarEvent) -> Unit,
+    onCompleteTask: (Task) -> Unit,
+    onUndoTask: (Task) -> Unit,
 ) {
     PageScaffold(
         modifier =
@@ -173,9 +183,14 @@ private fun CalendarBody(
         SearchField(
             value = query,
             onValueChange = onQueryChange,
-            placeholder = "Search events for selected day",
+            placeholder = "Search tasks and events for selected day",
         )
 
+        Text(
+            text = "Events",
+            style = androidx.compose.material3.MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         if (events.isEmpty()) {
             EmptyState(
                 title = "No events on this day",
@@ -199,14 +214,60 @@ private fun CalendarBody(
                 }
             }
         }
+
+        Text(
+            text = "Tasks",
+            style = androidx.compose.material3.MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        if (tasks.isEmpty()) {
+            EmptyState(
+                title = "No tasks due on this day",
+                description = "Add a deadline to a task and it will appear here.",
+            )
+        } else {
+            androidx.compose.foundation.layout.Column(
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                tasks.forEach { task ->
+                    val completed = task.status == TaskStatus.COMPLETED
+                    TaskRow(
+                        title = task.title,
+                        subtitle = task.calendarSubtitle(),
+                        isCompleted = completed,
+                        priority = if (completed) "" else task.priority.name,
+                        onToggleComplete = {
+                            if (completed) onUndoTask(task) else onCompleteTask(task)
+                        },
+                    )
+                }
+            }
+        }
     }
 }
 
-private fun List<CalendarEvent>.filterByQuery(query: String): List<CalendarEvent> {
+private fun List<CalendarEvent>.filterEventsByQuery(query: String): List<CalendarEvent> {
     if (query.isBlank()) return this
     val search = query.trim()
     return filter { event ->
         event.title.contains(search, ignoreCase = true) ||
             event.description.contains(search, ignoreCase = true)
+    }
+}
+
+private fun List<Task>.filterTasksByQuery(query: String): List<Task> {
+    if (query.isBlank()) return this
+    val search = query.trim()
+    return filter { task ->
+        task.title.contains(search, ignoreCase = true) ||
+            task.description.contains(search, ignoreCase = true)
+    }
+}
+
+private fun Task.calendarSubtitle(): String {
+    return when {
+        description.isNotBlank() -> description
+        deadline != null -> "Due ${DateUtils.formatDate(deadline, "h:mm a")}"
+        else -> "No description"
     }
 }

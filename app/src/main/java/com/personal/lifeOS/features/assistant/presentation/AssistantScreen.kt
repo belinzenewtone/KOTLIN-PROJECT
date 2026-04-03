@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.personal.lifeOS.core.ui.designsystem.AssistantActionCard
+import com.personal.lifeOS.core.ui.designsystem.EmptyState
 import com.personal.lifeOS.core.ui.designsystem.InlineBanner
 import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
 import com.personal.lifeOS.ui.theme.AppSpacing
@@ -80,6 +81,15 @@ fun AssistantScreen(viewModel: AssistantViewModel = hiltViewModel()) {
             // Small bottom padding so the last message doesn't sit flush against InputBar
             contentPadding = PaddingValues(bottom = 8.dp),
         ) {
+            if (state.messages.isEmpty() && !state.isProcessing) {
+                item {
+                    EmptyState(
+                        title = "Assistant is ready",
+                        description = "Type a question below to start the conversation.",
+                    )
+                }
+            }
+
             state.proposalResultMessage?.let { banner ->
                 item {
                     InlineBanner(

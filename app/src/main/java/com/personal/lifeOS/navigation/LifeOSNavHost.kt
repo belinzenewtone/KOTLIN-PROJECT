@@ -155,7 +155,7 @@ fun LifeOSNavHost(
     }
 
     LaunchedEffect(currentRoute, authState.isLoggedIn) {
-        onSensitiveScreenChanged(authState.isLoggedIn && isSensitiveRoute(currentRoute))
+        onSensitiveScreenChanged(!isOnPublicFlow && isSensitiveRoute(currentRoute))
     }
 
     Box(
@@ -176,8 +176,8 @@ fun LifeOSNavHost(
         val showBottomBar =
             currentRoute != null &&
                 !isOnPublicFlow &&
-                authState.isLoggedIn &&
                 lockState.appContentUnlocked &&
+                currentRoute != AppRoute.Assistant &&
                 !isImeVisible
         AnimatedVisibility(
             modifier =
@@ -197,7 +197,7 @@ fun LifeOSNavHost(
             shouldCheckForUpdates &&
                 (
                     isOnPublicFlow ||
-                        (authState.isLoggedIn && lockState.appContentUnlocked)
+                        lockState.appContentUnlocked
                 )
         if (shouldShowOtaPrompt) {
             OtaUpdatePromptHost(shouldCheckForUpdates = shouldCheckForUpdates)
@@ -205,7 +205,7 @@ fun LifeOSNavHost(
 
         // Contextual, one-time permission rationale cards — appear at natural
         // moments (Home → notifications, Finance → SMS/M-Pesa). Never nag.
-        if (!isOnPublicFlow && authState.isLoggedIn && lockState.appContentUnlocked) {
+        if (!isOnPublicFlow && lockState.appContentUnlocked) {
             AppPermissionsOrchestrator(currentRoute = currentRoute)
         }
 
@@ -372,8 +372,10 @@ private fun LifeOSNavigationGraph(
                     }
                 },
                 onBackToAuth = {
-                    authViewModel.onEvent(AuthUiEvent.SignOut)
-                    navController.navigateToAuth()
+                    navController.navigate(AppRoute.Home) {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
                 },
             )
         }

@@ -1,8 +1,8 @@
 ﻿{
-    "version_code":  27,
-    "version_name":  "1.2.16",
-    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.16/app-release-v1.2.16.apk",
-    "checksum_sha256":  "55c15618cce670949ae2489478d77678eeef68a6590ee05cd1484aacad0260ec",
+    "version_code":  28,
+    "version_name":  "1.2.17",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.17/app-release-v1.2.17.apk",
+    "checksum_sha256":  "d5332ce1e0f6e7c8dbaf569827635e8afcd3ee2f3e011c8117ae8fba44aa1719",
     "required":  false,
-    "release_notes":  "Critical hotfix: disable Sentry auto-init providers that caused launch crash when DSN is unset; app startup and login restored."
+    "release_notes":  "UI/UX overhaul follow-up: unified calendar sections for events and tasks, local workspace without forced sign-in, assistant layout/input stability fixes, and export no longer blocked by sign-in in local mode."
 }

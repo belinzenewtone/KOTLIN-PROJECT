@@ -1,8 +1,8 @@
 ﻿{
-    "version_code":  30,
-    "version_name":  "1.2.19",
-    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.19/app-release-v1.2.19.apk",
-    "checksum_sha256":  "877c4b974c309dfa280623c65b7dcc646d14c8444b718a2668dffc6c552c7431",
+    "version_code":  31,
+    "version_name":  "1.2.20",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.20/app-release-v1.2.20.apk",
+    "checksum_sha256":  "cbf9676de357da9a61b64aa5ae10c5f357c64dc0ee1960edf3c2dcb1cc929d29",
     "required":  false,
-    "release_notes":  "Calendar toggle order updated (Tasks left, Events right). Assistant composer now sits just above floating bar, and chat timeline remains visible so sent messages persist and can be cleared."
+    "release_notes":  "User code updates shipped with OTA bump to 1.2.20."
 }

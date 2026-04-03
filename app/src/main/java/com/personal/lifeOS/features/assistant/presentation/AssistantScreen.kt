@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -43,86 +42,86 @@ fun AssistantScreen(viewModel: AssistantViewModel = hiltViewModel()) {
         }
     }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = {
-            InputBar(
-                text = state.inputText,
-                onTextChange = { viewModel.updateInput(it) },
-                onSend = { viewModel.sendMessage() },
-                isProcessing = state.isProcessing,
-            )
-        },
-    ) { scaffoldPadding ->
+    // No Scaffold — InputBar manages its own bottom clearance via imePadding() and
+    // a 72 dp transparent gap that lets the floating bottom nav bar show through.
+    // Using Scaffold's bottomBar slot would double-count the clearance as scaffoldPadding,
+    // which collapses the message list area and breaks keyboard handling.
+    Column(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .statusBarsPadding(),
+    ) {
         Column(
             modifier =
                 Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
-                    .statusBarsPadding()
-                    .padding(scaffoldPadding),
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = AppSpacing.ScreenHorizontal,
+                        vertical = AppSpacing.Section,
+                    ),
         ) {
-            Column(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            horizontal = AppSpacing.ScreenHorizontal,
-                            vertical = AppSpacing.Section,
-                        ),
-            ) {
-                AssistantHeader(
-                    isProcessing = state.isProcessing,
-                    onClearChat = viewModel::clearChat,
-                )
+            AssistantHeader(
+                isProcessing = state.isProcessing,
+                onClearChat = viewModel::clearChat,
+            )
+        }
+
+        LazyColumn(
+            state = listState,
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(horizontal = AppSpacing.ScreenHorizontal),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.Section),
+            // Small bottom padding so the last message doesn't sit flush against InputBar
+            contentPadding = PaddingValues(bottom = 8.dp),
+        ) {
+            state.proposalResultMessage?.let { banner ->
+                item {
+                    InlineBanner(
+                        message = banner,
+                        tone = InlineBannerTone.INFO,
+                    )
+                }
             }
 
-            LazyColumn(
-                state = listState,
-                modifier =
-                    Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(horizontal = AppSpacing.ScreenHorizontal),
-                verticalArrangement = Arrangement.spacedBy(AppSpacing.Section),
-                // Small bottom padding so the last message doesn't sit flush against InputBar
-                contentPadding = PaddingValues(bottom = 8.dp),
-            ) {
-                state.proposalResultMessage?.let { banner ->
-                    item {
-                        InlineBanner(
-                            message = banner,
-                            tone = InlineBannerTone.INFO,
-                        )
-                    }
-                }
+            items(state.messages) { message ->
+                ChatBubble(message = message)
+            }
 
-                items(state.messages) { message ->
-                    ChatBubble(message = message)
+            state.pendingProposal?.let { proposal ->
+                item {
+                    AssistantActionCard(
+                        proposal = proposal.toUiModel(),
+                        onApprove = viewModel::approvePendingProposal,
+                        onReject = viewModel::rejectPendingProposal,
+                    )
                 }
+            }
 
-                state.pendingProposal?.let { proposal ->
-                    item {
-                        AssistantActionCard(
-                            proposal = proposal.toUiModel(),
-                            onApprove = viewModel::approvePendingProposal,
-                            onReject = viewModel::rejectPendingProposal,
-                        )
-                    }
-                }
+            if (state.isProcessing) {
+                item { TypingIndicator() }
+            }
 
-                if (state.isProcessing) {
-                    item { TypingIndicator() }
-                }
-
-                if (state.messages.size <= 1) {
-                    item {
-                        AssistantSuggestedPrompts(
-                            onSelect = { viewModel.sendSuggestedPrompt(it) },
-                        )
-                    }
+            if (state.messages.size <= 1) {
+                item {
+                    AssistantSuggestedPrompts(
+                        onSelect = { viewModel.sendSuggestedPrompt(it) },
+                    )
                 }
             }
         }
+
+        // InputBar placed directly in the Column — it owns its own imePadding() and
+        // the 72 dp bottom clearance, so no Scaffold wrapper is needed.
+        InputBar(
+            text = state.inputText,
+            onTextChange = { viewModel.updateInput(it) },
+            onSend = { viewModel.sendMessage() },
+            isProcessing = state.isProcessing,
+        )
     }
 }

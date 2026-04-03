@@ -10,6 +10,7 @@ import android.net.Uri
 import android.os.Environment
 import android.provider.Settings
 import androidx.core.content.pm.PackageInfoCompat
+import com.personal.lifeOS.core.observability.AppTelemetry
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
 import com.google.gson.annotations.SerializedName
@@ -98,7 +99,8 @@ object OtaUpdateManager {
         withContext(Dispatchers.IO) {
             if (manifestUrl.isBlank()) return@withContext OtaCheckResult.NotConfigured
 
-            runCatching {
+            val result =
+                runCatching {
                 val request = Request.Builder().url(manifestUrl).get().build()
                 val body =
                     httpClient.newCall(request).execute().use { response ->
@@ -118,6 +120,9 @@ object OtaUpdateManager {
                 val currentVersionCode = getCurrentVersionCode(context)
                 evaluateManifest(manifest, currentVersionCode)
             }.getOrElse { OtaCheckResult.Error(it.message ?: "Failed to check for updates.") }
+
+            trackOtaCheckResult(result)
+            result
         }
 
     suspend fun downloadUpdate(
@@ -151,7 +156,8 @@ object OtaUpdateManager {
                     .getOrElse { return@withContext OtaDownloadResult.Error(it.message ?: "Failed to start download.") }
             onEnqueued(downloadId)
 
-            try {
+            val result =
+                try {
                 waitForDownloadCompletion(
                     context = context,
                     manager = manager,
@@ -164,18 +170,41 @@ object OtaUpdateManager {
                 manager.remove(downloadId)
                 OtaDownloadResult.Cancelled
             }
+            AppTelemetry.trackEvent(
+                name = "ota_download_result",
+                attributes =
+                    mapOf(
+                        "status" to
+                            when (result) {
+                                is OtaDownloadResult.Success -> "success"
+                                OtaDownloadResult.Cancelled -> "cancelled"
+                                is OtaDownloadResult.Error -> "error"
+                            },
+                        "target_version" to manifest.versionCode.toString(),
+                    ),
+            )
+            result
         }
 
     fun launchInstaller(
         activity: Activity,
         apkUri: Uri,
     ): OtaInstallResult {
+        AppTelemetry.trackEvent(
+            name = "ota_install_start",
+            attributes = mapOf("uri_scheme" to apkUri.scheme.orEmpty()),
+            captureAsMessage = true,
+        )
         if (!activity.packageManager.canRequestPackageInstalls()) {
             val settingsIntent =
                 Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
                     data = Uri.parse("package:${activity.packageName}")
                 }
             activity.startActivity(settingsIntent)
+            AppTelemetry.trackEvent(
+                name = "ota_install_permission_required",
+                attributes = mapOf("package" to activity.packageName),
+            )
             return OtaInstallResult.RequiresUnknownSourcesPermission
         }
 
@@ -188,10 +217,23 @@ object OtaUpdateManager {
 
         return try {
             activity.startActivity(installIntent)
+            AppTelemetry.trackEvent(
+                name = "ota_install_complete",
+                attributes = mapOf("status" to "installer_opened"),
+                captureAsMessage = true,
+            )
             OtaInstallResult.Started
         } catch (e: ActivityNotFoundException) {
+            AppTelemetry.captureError(
+                throwable = e,
+                context = mapOf("event" to "ota_install", "error_type" to "activity_not_found"),
+            )
             OtaInstallResult.Error(e.message ?: "No installer available on device.")
         } catch (e: SecurityException) {
+            AppTelemetry.captureError(
+                throwable = e,
+                context = mapOf("event" to "ota_install", "error_type" to "security"),
+            )
             OtaInstallResult.Error(e.message ?: "Installer launch denied.")
         }
     }
@@ -230,6 +272,25 @@ object OtaUpdateManager {
         val packageInfo =
             context.packageManager.getPackageInfo(context.packageName, 0)
         return PackageInfoCompat.getLongVersionCode(packageInfo)
+    }
+
+    private fun trackOtaCheckResult(result: OtaCheckResult) {
+        val (status, versionCode) =
+            when (result) {
+                is OtaCheckResult.UpdateAvailable -> "update_available" to result.manifest.versionCode.toString()
+                OtaCheckResult.UpToDate -> "up_to_date" to ""
+                OtaCheckResult.NotConfigured -> "not_configured" to ""
+                is OtaCheckResult.Error -> "error" to ""
+            }
+        val attrs = mutableMapOf("status" to status)
+        if (versionCode.isNotBlank()) {
+            attrs["target_version"] = versionCode
+        }
+        AppTelemetry.trackEvent(
+            name = "ota_check",
+            attributes = attrs,
+            captureAsMessage = status == "error",
+        )
     }
 
     private suspend fun waitForDownloadCompletion(

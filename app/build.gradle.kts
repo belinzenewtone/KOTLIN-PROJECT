@@ -32,6 +32,9 @@ val hasConfiguredRuntimeEnv =
         localProperties.getProperty("SUPABASE_ANON_KEY", "").isNotBlank() &&
         localProperties.getProperty("ASSISTANT_PROXY_URL", "").isNotBlank() &&
         localProperties.getProperty("OTA_MANIFEST_URL", "").isNotBlank()
+val sentryDsn = localProperties.getProperty("SENTRY_DSN", "").trim()
+val sentryEnvironment = localProperties.getProperty("SENTRY_ENVIRONMENT", "production").trim()
+val sentryTracesSampleRate = localProperties.getProperty("SENTRY_TRACES_SAMPLE_RATE", "0.05").trim()
 val requireReleaseSigning =
     providers.gradleProperty("requireReleaseSigning").orNull?.toBooleanStrictOrNull() ?: false
 val requireReleaseRuntimeConfig =
@@ -63,6 +66,9 @@ android {
             "\"${localProperties.getProperty("ASSISTANT_PROXY_URL", "")}\"",
         )
         buildConfigField("String", "OTA_MANIFEST_URL", "\"${localProperties.getProperty("OTA_MANIFEST_URL", "")}\"")
+        buildConfigField("String", "SENTRY_DSN", "\"$sentryDsn\"")
+        buildConfigField("String", "SENTRY_ENVIRONMENT", "\"$sentryEnvironment\"")
+        buildConfigField("double", "SENTRY_TRACES_SAMPLE_RATE", sentryTracesSampleRate)
     }
 
     signingConfigs {
@@ -253,6 +259,7 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.gson)
     implementation(libs.androidx.work.runtime)
+    implementation(libs.sentry.android)
 
     // Unit tests
     testImplementation(libs.junit4)

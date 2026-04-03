@@ -28,11 +28,21 @@ object DatabaseEncryptionManager {
     private const val MODE_ENCRYPTED = "encrypted"
     private const val MODE_PLAINTEXT = "plaintext"
     private const val MODE_MIGRATION_FAILED = "migration_failed"
+    private const val EMERGENCY_DISABLE_ENCRYPTION = true
 
     fun shouldUseEncryption(
         context: Context,
         dbName: String,
     ): Boolean {
+        if (EMERGENCY_DISABLE_ENCRYPTION) {
+            runCatching { prefs(context).edit().putString(KEY_DB_MODE, MODE_PLAINTEXT).apply() }
+            AppTelemetry.trackEvent(
+                name = "db_encryption_not_applied",
+                attributes = mapOf("db_name" to dbName, "reason" to "emergency_disable_encryption"),
+                captureAsMessage = true,
+            )
+            return false
+        }
         return runCatching {
             SQLiteDatabase.loadLibs(context)
             val prefs = prefs(context)

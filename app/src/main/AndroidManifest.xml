@@ -65,6 +65,18 @@
             android:exported="false"
             tools:node="remove" />
 
+        <!-- Disable Sentry auto-init providers to prevent startup crash when DSN is unset.
+             Telemetry is initialized manually in AppTelemetry only when DSN is configured. -->
+        <provider
+            android:name="io.sentry.android.core.SentryInitProvider"
+            android:authorities="${applicationId}.SentryInitProvider"
+            tools:node="remove" />
+
+        <provider
+            android:name="io.sentry.android.core.SentryPerformanceProvider"
+            android:authorities="${applicationId}.SentryPerformanceProvider"
+            tools:node="remove" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

@@ -1,8 +1,8 @@
 ﻿{
-    "version_code":  26,
-    "version_name":  "1.2.15",
-    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.15/app-release-v1.2.15.apk",
-    "checksum_sha256":  "a174c2d11225e38069abde33528adc237d137eae7bb54f6b0b6f5e8d96a1e276",
+    "version_code":  27,
+    "version_name":  "1.2.16",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.16/app-release-v1.2.16.apk",
+    "checksum_sha256":  "55c15618cce670949ae2489478d77678eeef68a6590ee05cd1484aacad0260ec",
     "required":  false,
-    "release_notes":  "Emergency startup recovery: safe database boot with plaintext-first open, encrypted fallback, and corruption recovery to stop launch crashes and restore login access."
+    "release_notes":  "Critical hotfix: disable Sentry auto-init providers that caused launch crash when DSN is unset; app startup and login restored."
 }

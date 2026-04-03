@@ -1,8 +1,8 @@
 ﻿{
-    "version_code":  31,
-    "version_name":  "1.2.20",
-    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.20/app-release-v1.2.20.apk",
-    "checksum_sha256":  "cbf9676de357da9a61b64aa5ae10c5f357c64dc0ee1960edf3c2dcb1cc929d29",
+    "version_code":  32,
+    "version_name":  "1.2.21",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.21/app-release-v1.2.21.apk",
+    "checksum_sha256":  "52ceea68da9bb1e9e630d6e68dbf1e8bd47a61c46fba29c2831598cc7ffcd6e9",
     "required":  false,
-    "release_notes":  "User code updates shipped with OTA bump to 1.2.20."
+    "release_notes":  "Latest user code changes shipped with OTA bump to 1.2.21."
 }

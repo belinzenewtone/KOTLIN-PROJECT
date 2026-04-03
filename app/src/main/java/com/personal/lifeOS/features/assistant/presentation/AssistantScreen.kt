@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -51,7 +52,11 @@ fun AssistantScreen(viewModel: AssistantViewModel = hiltViewModel()) {
             Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .statusBarsPadding(),
+                .statusBarsPadding()
+                // imePadding here (not inside InputBar's Row chain) so the Column
+                // shrinks cleanly when the keyboard opens, and the LazyColumn
+                // keeps its weight-based height correctly.
+                .imePadding(),
     ) {
         Column(
             modifier =

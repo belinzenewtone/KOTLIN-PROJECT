@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -48,7 +47,9 @@ internal fun InputBar(
                 .fillMaxWidth()
                 .padding(horizontal = AppSpacing.ScreenHorizontal, vertical = 10.dp)
                 .padding(bottom = bottomClearance)
-                .imePadding()
+                // imePadding removed — the parent Column in AssistantScreen owns it.
+                // Keeping it here (before clip/background) caused the background surface
+                // to expand into the keyboard region, making the box stretch infinitely.
                 .clip(RoundedCornerShape(AppDesignTokens.radius.lg))
                 .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.92f))
                 .border(

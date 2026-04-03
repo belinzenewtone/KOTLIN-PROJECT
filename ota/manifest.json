@@ -2,7 +2,7 @@
     "version_code":  23,
     "version_name":  "1.2.12",
     "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.12/app-release-v1.2.12.apk",
-    "checksum_sha256":  "4d2b1bf81c5fd24d5392c13e9d43c81d99736fe2ae20688c04a14022bdc98788",
+    "checksum_sha256":  "e9a88b4ede473d210e84221546774ad72941d11bf91fee6e4b8dca7de6a2f57e",
     "required":  false,
-    "release_notes":  "1.2.12 OTA patch: version bump for users already on 1.2.11 so update delivery can continue, with all latest UI/UX overhaul improvements."
+    "release_notes":  "Full UI/UX consistency overhaul, SQLCipher migration hardening, route-based screenshot protection, and observability improvements."
 }

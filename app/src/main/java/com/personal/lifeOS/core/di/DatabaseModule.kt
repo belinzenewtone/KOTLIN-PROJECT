@@ -135,6 +135,7 @@ object DatabaseModule {
                     DatabaseMigrations.MIGRATION_11_12,
                     DatabaseMigrations.MIGRATION_12_13,
                     DatabaseMigrations.MIGRATION_13_14,
+                    DatabaseMigrations.MIGRATION_14_15,
                 )
         if (openHelperFactory != null) {
             builder.openHelperFactory(openHelperFactory)

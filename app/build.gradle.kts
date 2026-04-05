@@ -1,4 +1,4 @@
-import org.gradle.api.GradleException
+﻿import org.gradle.api.GradleException
 import org.gradle.internal.os.OperatingSystem
 import java.util.Properties
 
@@ -48,8 +48,8 @@ android {
         applicationId = "com.personal.lifeOS"
         minSdk = 26
         targetSdk = 35
-        versionCode = 32
-        versionName = "1.2.21"
+        versionCode = 33
+        versionName = "1.2.22"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

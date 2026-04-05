@@ -736,4 +736,20 @@ object DatabaseMigrations {
                 )
             }
         }
+
+    // Restrict spending views to outflow transaction types only.
+    val MIGRATION_14_15: Migration =
+        object : Migration(14, 15) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("DROP VIEW IF EXISTS `daily_spend`")
+                database.execSQL("DROP VIEW IF EXISTS `monthly_spend`")
+                // SQL must be IDENTICAL (character-for-character) to the value in @DatabaseView.
+                database.execSQL(
+                    "CREATE VIEW `daily_spend` AS SELECT user_id, strftime('%Y-%m-%d', date / 1000, 'unixepoch', 'localtime') AS spend_date, SUM(amount) AS total_amount, COUNT(*) AS tx_count FROM transactions WHERE deleted_at IS NULL AND UPPER(transaction_type) IN ('SENT', 'AIRTIME', 'PAYBILL', 'BUY_GOODS', 'WITHDRAW', 'PAID', 'WITHDRAWN') GROUP BY user_id, strftime('%Y-%m-%d', date / 1000, 'unixepoch', 'localtime')",
+                )
+                database.execSQL(
+                    "CREATE VIEW `monthly_spend` AS SELECT user_id, strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime') AS spend_month, SUM(amount) AS total_amount, COUNT(*) AS tx_count FROM transactions WHERE deleted_at IS NULL AND UPPER(transaction_type) IN ('SENT', 'AIRTIME', 'PAYBILL', 'BUY_GOODS', 'WITHDRAW', 'PAID', 'WITHDRAWN') GROUP BY user_id, strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime')",
+                )
+            }
+        }
 }

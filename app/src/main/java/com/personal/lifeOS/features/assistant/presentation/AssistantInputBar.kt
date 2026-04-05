@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -39,13 +40,14 @@ internal fun InputBar(
     isProcessing: Boolean,
 ) {
     val isImeVisible = WindowInsets.isImeVisible
-    val bottomClearance = if (isImeVisible) 8.dp else 72.dp
+    val bottomClearance = if (isImeVisible) 8.dp else AppSpacing.BottomSafe
 
     Row(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .padding(horizontal = AppSpacing.ScreenHorizontal, vertical = 10.dp)
+                .navigationBarsPadding()
                 .padding(bottom = bottomClearance)
                 // imePadding removed — the parent Column in AssistantScreen owns it.
                 // Keeping it here (before clip/background) caused the background surface

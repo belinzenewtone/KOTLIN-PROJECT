@@ -27,6 +27,7 @@ object AppSettingsKeys {
     // We never nag the user; if they dismiss, we respect that forever.
     val NOTIFICATION_PERMISSION_ASKED = booleanPreferencesKey("notification_permission_asked")
     val SMS_PERMISSION_ASKED = booleanPreferencesKey("sms_permission_asked")
+    val FULIZA_LIMIT_KES = longPreferencesKey("fuliza_limit_kes")
 }
 
 @Singleton
@@ -161,6 +162,28 @@ class AppSettingsStore
         suspend fun markSmsPermissionAsked() {
             dataStore.edit { prefs ->
                 prefs[AppSettingsKeys.SMS_PERMISSION_ASKED] = true
+            }
+        }
+
+        fun fulizaLimitKesFlow(): Flow<Double?> {
+            return dataStore.data.map { prefs ->
+                prefs[AppSettingsKeys.FULIZA_LIMIT_KES]?.toDouble()
+            }
+        }
+
+        suspend fun getFulizaLimitKes(): Double? =
+            dataStore.data.first()[AppSettingsKeys.FULIZA_LIMIT_KES]?.toDouble()
+
+        suspend fun setFulizaLimitKes(limitKes: Double) {
+            val normalized = limitKes.coerceAtLeast(0.0).toLong()
+            dataStore.edit { prefs ->
+                prefs[AppSettingsKeys.FULIZA_LIMIT_KES] = normalized
+            }
+        }
+
+        suspend fun clearFulizaLimitKes() {
+            dataStore.edit { prefs ->
+                prefs.remove(AppSettingsKeys.FULIZA_LIMIT_KES)
             }
         }
 

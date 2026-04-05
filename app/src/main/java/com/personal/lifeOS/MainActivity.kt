@@ -3,7 +3,6 @@
 package com.personal.lifeOS
 
 import android.os.Bundle
-import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.Crossfade
@@ -35,7 +34,6 @@ class MainActivity : FragmentActivity() {
 
     @Inject
     lateinit var appSettingsStore: AppSettingsStore
-    private var isSecureFlagEnabled: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,7 +65,7 @@ class MainActivity : FragmentActivity() {
                                 biometricEnabled = biometricEnabled && bootstrapState.result!!.requiresBiometricRelock,
                                 startDestination = bootstrapState.result!!.startDestination.route,
                                 shouldCheckForUpdates = bootstrapState.result!!.shouldCheckForUpdates,
-                                onSensitiveScreenChanged = ::setSecureScreenEnabled,
+                                onSensitiveScreenChanged = ::onSensitiveScreenChanged,
                             )
                         }
                     }
@@ -76,13 +74,7 @@ class MainActivity : FragmentActivity() {
         }
     }
 
-    private fun setSecureScreenEnabled(enabled: Boolean) {
-        if (enabled == isSecureFlagEnabled) return
-        isSecureFlagEnabled = enabled
-        if (enabled) {
-            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        } else {
-            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        }
+    private fun onSensitiveScreenChanged(@Suppress("UNUSED_PARAMETER") enabled: Boolean) {
+        // Intentionally no-op: screenshots/recording are allowed for troubleshooting.
     }
 }

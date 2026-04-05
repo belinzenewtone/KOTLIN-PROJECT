@@ -28,6 +28,8 @@ data class FinanceUiState(
     val importResultMessage: String? = null,
     val showAddDialog: Boolean = false,
     val showImportDialog: Boolean = false,
+    val showFulizaLimitDialog: Boolean = false,
+    val fulizaLimitKes: Double? = null,
     val showCategoryPicker: FinanceTransaction? = null,
     val fulizaNetOutstandingKes: Double? = null,
     val showFulizaBanner: Boolean = false,
@@ -77,6 +79,10 @@ sealed interface FinanceUiEvent {
     data object HideImportDialog : FinanceUiEvent
 
     data class ImportSmsMessages(val daysBack: Int) : FinanceUiEvent
+
+    data object DismissFulizaLimitDialog : FinanceUiEvent
+
+    data class SaveFulizaLimit(val limitKes: Double) : FinanceUiEvent
 
     data object ClearError : FinanceUiEvent
 

@@ -323,6 +323,59 @@ internal fun SmsImportDialog(
     onImportDays = onImportDays,
 )
 
+@Composable
+internal fun FulizaLimitDialog(
+    initialLimitKes: Double?,
+    onDismiss: () -> Unit,
+    onSave: (Double) -> Unit,
+) {
+    var limitInput by remember(initialLimitKes) {
+        mutableStateOf(initialLimitKes?.toLong()?.toString().orEmpty())
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = { Text("Set Fuliza Limit", color = MaterialTheme.colorScheme.onSurface) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "We detected Fuliza activity. Enter your personal Fuliza limit in KES to improve debt tracking accuracy.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                OutlinedTextField(
+                    value = limitInput,
+                    onValueChange = { limitInput = it.filter(Char::isDigit) },
+                    label = { Text("Fuliza limit (KES)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    colors =
+                        OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                        ),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val limit = limitInput.toDoubleOrNull()
+                    if (limit != null && limit >= 0.0) onSave(limit)
+                },
+            ) {
+                Text("Save", color = MaterialTheme.colorScheme.primary)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Later", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        },
+    )
+}
+
 private fun categoryColor(category: String): Color {
     return when (category.lowercase()) {
         "food" -> CategoryFood

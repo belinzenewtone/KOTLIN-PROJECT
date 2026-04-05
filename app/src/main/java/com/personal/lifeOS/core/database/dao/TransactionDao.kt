@@ -64,7 +64,15 @@ interface TransactionDao {
         userId: String,
     ): Flow<List<TransactionEntity>>
 
-    @Query("SELECT SUM(amount) FROM transactions WHERE user_id = :userId AND date BETWEEN :start AND :end")
+    @Query(
+        """
+        SELECT SUM(amount) FROM transactions
+        WHERE user_id = :userId
+          AND deleted_at IS NULL
+          AND date BETWEEN :start AND :end
+          AND UPPER(transaction_type) IN ('SENT', 'AIRTIME', 'PAYBILL', 'BUY_GOODS', 'WITHDRAW', 'PAID', 'WITHDRAWN')
+        """,
+    )
     fun getTotalSpendingBetween(
         start: Long,
         end: Long,
@@ -73,10 +81,13 @@ interface TransactionDao {
 
     @Query(
         """
-        SELECT category, SUM(amount) as total 
-        FROM transactions 
-        WHERE user_id = :userId AND date BETWEEN :start AND :end 
-        GROUP BY category 
+        SELECT category, SUM(amount) as total
+        FROM transactions
+        WHERE user_id = :userId
+          AND deleted_at IS NULL
+          AND date BETWEEN :start AND :end
+          AND UPPER(transaction_type) IN ('SENT', 'AIRTIME', 'PAYBILL', 'BUY_GOODS', 'WITHDRAW', 'PAID', 'WITHDRAWN')
+        GROUP BY category
         ORDER BY total DESC
     """,
     )

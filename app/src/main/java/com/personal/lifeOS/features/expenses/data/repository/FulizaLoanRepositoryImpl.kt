@@ -54,20 +54,53 @@ class FulizaLoanRepositoryImpl
             repaidAmountKes: Double,
             repaymentDate: Long,
         ) {
-            val existing = fulizaLoanDao.getByDrawCode(drawCode, userId()) ?: return
-            val newRepaid = existing.totalRepaidKes + repaidAmountKes
-            val newStatus = when {
-                newRepaid >= existing.drawAmountKes -> FulizaLoanStatus.CLOSED
-                newRepaid > 0                       -> FulizaLoanStatus.PARTIALLY_REPAID
-                else                                -> FulizaLoanStatus.OPEN
+            if (repaidAmountKes <= 0.0) return
+
+            val existing = fulizaLoanDao.getByDrawCode(drawCode, userId())
+            if (existing != null) {
+                val newRepaid = existing.totalRepaidKes + repaidAmountKes
+                val newStatus = when {
+                    newRepaid >= existing.drawAmountKes -> FulizaLoanStatus.CLOSED
+                    newRepaid > 0 -> FulizaLoanStatus.PARTIALLY_REPAID
+                    else -> FulizaLoanStatus.OPEN
+                }
+                fulizaLoanDao.update(
+                    existing.copy(
+                        totalRepaidKes = newRepaid.coerceAtMost(existing.drawAmountKes),
+                        status = newStatus.name,
+                        lastRepaymentDate = repaymentDate,
+                        updatedAt = System.currentTimeMillis(),
+                    ),
+                )
+                return
             }
-            fulizaLoanDao.update(
-                existing.copy(
-                    totalRepaidKes = newRepaid.coerceAtMost(existing.drawAmountKes),
-                    status = newStatus.name,
-                    lastRepaymentDate = repaymentDate,
-                    updatedAt = System.currentTimeMillis(),
-                ),
-            )
+
+            // Safaricom repayment SMS codes are often different from the original draw code.
+            // Fall back to reducing oldest open draws first (FIFO).
+            var remaining = repaidAmountKes
+            val now = System.currentTimeMillis()
+            val openLoans = fulizaLoanDao.getOpenLoansOldestFirst(userId())
+            for (loan in openLoans) {
+                if (remaining <= 0.0) break
+                val outstanding = (loan.drawAmountKes - loan.totalRepaidKes).coerceAtLeast(0.0)
+                if (outstanding <= 0.0) continue
+
+                val applied = minOf(outstanding, remaining)
+                val updatedRepaid = loan.totalRepaidKes + applied
+                val updatedStatus = when {
+                    updatedRepaid >= loan.drawAmountKes -> FulizaLoanStatus.CLOSED
+                    updatedRepaid > 0.0 -> FulizaLoanStatus.PARTIALLY_REPAID
+                    else -> FulizaLoanStatus.OPEN
+                }
+                fulizaLoanDao.update(
+                    loan.copy(
+                        totalRepaidKes = updatedRepaid.coerceAtMost(loan.drawAmountKes),
+                        status = updatedStatus.name,
+                        lastRepaymentDate = repaymentDate,
+                        updatedAt = now,
+                    ),
+                )
+                remaining -= applied
+            }
         }
     }

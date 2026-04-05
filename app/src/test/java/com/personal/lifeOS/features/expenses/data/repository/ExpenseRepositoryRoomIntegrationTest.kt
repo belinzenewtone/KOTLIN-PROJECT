@@ -144,6 +144,45 @@ class ExpenseRepositoryRoomIntegrationTest {
             assertTrue(observedAfterSwitch.isEmpty())
             assertEquals(1, db.transactionDao().getAllForSync(userId).size)
         }
+
+    @Test
+    fun `spending totals exclude inflows and Fuliza repayments`() =
+        runTest {
+            val baseTime = 1_710_000_000_000L
+            repository.addTransaction(
+                Transaction(
+                    amount = 500.0,
+                    merchant = "Shop",
+                    category = "Shopping",
+                    date = baseTime,
+                    source = "MPESA",
+                    transactionType = "BUY_GOODS",
+                ),
+            )
+            repository.addTransaction(
+                Transaction(
+                    amount = 1_800.0,
+                    merchant = "Salary",
+                    category = "Income",
+                    date = baseTime + 1_000L,
+                    source = "MPESA",
+                    transactionType = "RECEIVED",
+                ),
+            )
+            repository.addTransaction(
+                Transaction(
+                    amount = 120.0,
+                    merchant = "Fuliza M-PESA",
+                    category = "Loans & Credit",
+                    date = baseTime + 2_000L,
+                    source = "MPESA",
+                    transactionType = "LOAN",
+                ),
+            )
+
+            val total = repository.getTotalSpendingBetween(baseTime - 1_000L, baseTime + 10_000L).first()
+            assertEquals(500.0, total, 0.0)
+        }
 }
 
 private data class EnqueueEntry(

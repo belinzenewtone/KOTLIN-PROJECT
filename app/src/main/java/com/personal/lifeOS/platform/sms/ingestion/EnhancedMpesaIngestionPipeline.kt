@@ -3,7 +3,6 @@ package com.personal.lifeOS.platform.sms.ingestion
 import com.personal.lifeOS.features.expenses.domain.repository.ExpenseRepository
 import com.personal.lifeOS.features.expenses.domain.repository.FulizaLoanRepository
 import com.personal.lifeOS.platform.sms.audit.ImportAuditLogger
-import com.personal.lifeOS.platform.sms.category.CategoryInferenceEngine
 import com.personal.lifeOS.platform.sms.dedupe.MpesaDedupeEngineEnhanced
 import com.personal.lifeOS.platform.sms.filter.ConfidenceBasedImportFilter
 import com.personal.lifeOS.platform.sms.parser.MpesaParserEnhanced
@@ -58,7 +57,8 @@ class EnhancedMpesaIngestionPipeline
             }
 
             // Dual-key deduplication check
-            if (dedupeEngine.isDuplicate(
+            if (
+                dedupeEngine.isDuplicate(
                     mpesaCode = parsed.mpesaCode,
                     rawMessage = rawMessage,
                     amount = parsed.amount,
@@ -102,17 +102,22 @@ class EnhancedMpesaIngestionPipeline
                 merchant = parsed.counterparty,
             )
 
-            // Track Fuliza loan lifecycle
-            when (parsed.category) {
-                TransactionCategory.LOAN -> {
-                    // LOAN = Fuliza repayment deducted from wallet → record as repayment
+            val hasFulizaContext = rawMessage.contains("fuliza", ignoreCase = true)
+            when {
+                parsed.category == TransactionCategory.LOAN -> {
                     fulizaLoanRepository.recordRepayment(
                         drawCode = parsed.mpesaCode,
                         repaidAmountKes = parsed.amount,
                         repaymentDate = parsed.date,
                     )
                 }
-                else -> { /* not a Fuliza event */ }
+                hasFulizaContext && parsed.category in FULIZA_DRAW_CATEGORIES -> {
+                    fulizaLoanRepository.recordDraw(
+                        drawCode = parsed.mpesaCode,
+                        amountKes = parsed.amount,
+                        drawDate = parsed.date,
+                    )
+                }
             }
 
             // Return outcome that indicates confidence level
@@ -128,17 +133,15 @@ class EnhancedMpesaIngestionPipeline
             }
         }
 
-        /**
-         * Compute SHA-256 hash of raw message for deduplication.
-         */
-        private fun computeSourceHash(rawMessage: String): String {
-            return try {
-                val digest = java.security.MessageDigest.getInstance("SHA-256")
-                val hashBytes = digest.digest(rawMessage.toByteArray(Charsets.UTF_8))
-                hashBytes.joinToString("") { "%02x".format(it) }
-            } catch (e: Exception) {
-                rawMessage.hashCode().toString()
-            }
+        private companion object {
+            val FULIZA_DRAW_CATEGORIES =
+                setOf(
+                    TransactionCategory.SENT,
+                    TransactionCategory.AIRTIME,
+                    TransactionCategory.PAYBILL,
+                    TransactionCategory.BUY_GOODS,
+                    TransactionCategory.WITHDRAW,
+                )
         }
     }
 
@@ -159,7 +162,7 @@ enum class EnhancedMpesaIngestionOutcome {
     IMPORT_FAILED,
 
     // Successful imports with confidence levels
-    IMPORTED_REALTIME,        // HIGH confidence → shown immediately
-    IMPORTED_BATCH_PENDING,   // MEDIUM confidence → deferred to batch
-    IMPORTED_QUARANTINE,      // LOW confidence → requires manual review
+    IMPORTED_REALTIME,
+    IMPORTED_BATCH_PENDING,
+    IMPORTED_QUARANTINE,
 }

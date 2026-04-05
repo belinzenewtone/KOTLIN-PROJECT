@@ -33,13 +33,13 @@ fun AppCard(
     // Glass cards keep a translucent white border for the frosted effect.
     val baseColor =
         when {
-            glass -> MaterialTheme.colorScheme.surface.copy(alpha = 0.72f)
+            glass -> MaterialTheme.colorScheme.surface.copy(alpha = 0.78f)
             elevated -> AppDesignTokens.colors.surfaceContainerLow
             else -> AppDesignTokens.colors.surfaceContainerLowest
         }
     val borderStroke: BorderStroke? =
         when {
-            glass -> BorderStroke(1.dp, Color.White.copy(alpha = 0.30f))
+            glass -> BorderStroke(1.dp, Color.White.copy(alpha = 0.18f))
             elevated -> null  // tonal fill expresses elevation; border is redundant
             else -> BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
         }
@@ -77,7 +77,7 @@ fun AppCard(
         modifier =
             cardModifier,
     ) {
-        if (glass || elevated) {
+        if (glass) {
             Box(
                 modifier =
                     Modifier
@@ -86,8 +86,8 @@ fun AppCard(
                             Brush.verticalGradient(
                                 colors =
                                     listOf(
-                                        Color.White.copy(alpha = 0.14f),
-                                        Color.White.copy(alpha = 0.05f),
+                                        Color.White.copy(alpha = 0.08f),
+                                        Color.White.copy(alpha = 0.02f),
                                         Color.Transparent,
                                     ),
                             ),

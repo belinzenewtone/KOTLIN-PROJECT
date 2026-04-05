@@ -18,11 +18,12 @@ class BuildFinanceSummaryUseCase
             snapshot: FinanceSnapshot,
             referenceTimeMillis: Long = System.currentTimeMillis(),
         ): FinanceSpendingSummary {
+            val spendingTransactions = snapshot.transactions.filter(FinanceTransaction::isSpendingOutflow)
             val todayRange = DateRange.forFilter(FinanceTransactionFilter.TODAY, referenceTimeMillis)
             val weekRange = DateRange.forFilter(FinanceTransactionFilter.THIS_WEEK, referenceTimeMillis)
             val monthRange = DateRange.forFilter(FinanceTransactionFilter.THIS_MONTH, referenceTimeMillis)
             val monthTransactions =
-                snapshot.transactions.filter { tx ->
+                spendingTransactions.filter { tx ->
                     tx.date in monthRange.startMillis..monthRange.endMillis
                 }
             val monthTotal = monthTransactions.sumOf(FinanceTransaction::amount)
@@ -35,10 +36,10 @@ class BuildFinanceSummaryUseCase
                     }?.key
 
             return FinanceSpendingSummary(
-                todayTotal = snapshot.transactions.sumOfInRange(todayRange),
-                weekTotal = snapshot.transactions.sumOfInRange(weekRange),
+                todayTotal = spendingTransactions.sumOfInRange(todayRange),
+                weekTotal = spendingTransactions.sumOfInRange(weekRange),
                 monthTotal = monthTotal,
-                transactionCount = snapshot.transactions.size,
+                transactionCount = spendingTransactions.size,
                 categoryBreakdown = categoryBreakdown,
                 topMerchant = topMerchant,
             )
@@ -69,6 +70,13 @@ private fun List<FinanceTransaction>.sumOfInRange(range: DateRange): Double {
     return asSequence()
         .filter { tx -> tx.date in range.startMillis..range.endMillis }
         .sumOf(FinanceTransaction::amount)
+}
+
+private fun FinanceTransaction.isSpendingOutflow(): Boolean {
+    return when (transactionType.uppercase()) {
+        "SENT", "AIRTIME", "PAYBILL", "BUY_GOODS", "WITHDRAW", "PAID", "WITHDRAWN" -> true
+        else -> false
+    }
 }
 
 private fun List<FinanceTransaction>.toCategoryBreakdown(monthTotal: Double): List<FinanceCategoryBreakdown> {

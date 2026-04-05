@@ -20,6 +20,7 @@ data class MpesaHistoricalImportSummary(
     val parseFailed: Int = 0,
     val pendingReview: Int = 0,
     val ignoredIrrelevant: Int = 0,
+    val fulizaSignalsDetected: Int = 0,
     val permissionGranted: Boolean = true,
 )
 
@@ -55,6 +56,7 @@ class MpesaHistoricalImportScanner
                 var parseFailed = 0
                 var pendingReview = 0
                 var ignoredIrrelevant = 0
+                var fulizaSignalsDetected = 0
 
                 cursor?.use { inbox ->
                     val bodyIndex = inbox.getColumnIndexOrThrow("body")
@@ -66,6 +68,9 @@ class MpesaHistoricalImportScanner
                             ignoredIrrelevant += 1
                         } else {
                             scannedMessages += 1
+                            if (rawBody.contains("fuliza", ignoreCase = true)) {
+                                fulizaSignalsDetected += 1
+                            }
 
                             when (ingestionPipeline.ingestRealtime(rawBody, MpesaIngestionSource.BACKFILL)) {
                                 MpesaIngestionOutcome.IMPORTED -> imported += 1
@@ -85,6 +90,7 @@ class MpesaHistoricalImportScanner
                     parseFailed = parseFailed,
                     pendingReview = pendingReview,
                     ignoredIrrelevant = ignoredIrrelevant,
+                    fulizaSignalsDetected = fulizaSignalsDetected,
                     permissionGranted = true,
                 )
             }

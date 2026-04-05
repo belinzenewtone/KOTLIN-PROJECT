@@ -14,6 +14,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.personal.lifeOS.ui.theme.Accent
@@ -34,14 +35,17 @@ import com.personal.lifeOS.ui.theme.Accent
 fun GlassCard(
     modifier: Modifier = Modifier,
     cornerRadius: Dp = 20.dp,
-    glassAlpha: Float = 0.08f,
+    glassAlpha: Float = 0.04f,
     @Suppress("UNUSED_PARAMETER") borderAlpha: Float = 0.10f, // kept for API compat
     elevation: Dp = 4.dp,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val shape = remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
     val surfaceColor = MaterialTheme.colorScheme.surface
+    val primaryColor = MaterialTheme.colorScheme.primary
     val outlineVariant = MaterialTheme.colorScheme.outlineVariant
+    val isLightSurface = surfaceColor.luminance() > 0.5f
+    val sheenColor = if (isLightSurface) Color.White else primaryColor
 
     Box(
         modifier =
@@ -56,8 +60,9 @@ fun GlassCard(
                         Brush.verticalGradient(
                             colors =
                                 listOf(
-                                    Color.White.copy(alpha = glassAlpha * 1.2f),
-                                    Color.White.copy(alpha = glassAlpha * 0.4f),
+                                    sheenColor.copy(alpha = glassAlpha * if (isLightSurface) 1.0f else 0.55f),
+                                    sheenColor.copy(alpha = glassAlpha * if (isLightSurface) 0.2f else 0.12f),
+                                    Color.Transparent,
                                 ),
                         ),
                 )
@@ -101,8 +106,9 @@ fun AccentGlassCard(
                         Brush.verticalGradient(
                             colors =
                                 listOf(
-                                    accentColor.copy(alpha = 0.10f),
-                                    accentColor.copy(alpha = 0.02f),
+                                    accentColor.copy(alpha = 0.07f),
+                                    accentColor.copy(alpha = 0.01f),
+                                    Color.Transparent,
                                 ),
                         ),
                 )
@@ -112,8 +118,8 @@ fun AccentGlassCard(
                         Brush.verticalGradient(
                             colors =
                                 listOf(
-                                    accentColor.copy(alpha = 0.3f),
-                                    accentColor.copy(alpha = 0.05f),
+                                    accentColor.copy(alpha = 0.2f),
+                                    accentColor.copy(alpha = 0.03f),
                                 ),
                         ),
                     shape = shape,

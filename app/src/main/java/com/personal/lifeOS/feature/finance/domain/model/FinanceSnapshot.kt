@@ -12,7 +12,7 @@ data class FinanceSnapshot(
         get() = incomes.sumOf { it.amount }
 
     val totalExpenses: Double
-        get() = transactions.sumOf { it.amount }
+        get() = transactions.filter { it.transactionType.uppercase() in SPENDING_OUTFLOW_TYPES }.sumOf { it.amount }
 
     val netBalance: Double
         get() = totalIncome - totalExpenses
@@ -23,3 +23,6 @@ data class FinanceSnapshot(
     val budgetPressurePercent: Float
         get() = if (totalBudgetLimit <= 0.0) 0f else ((totalExpenses / totalBudgetLimit) * 100f).toFloat()
 }
+
+private val SPENDING_OUTFLOW_TYPES =
+    setOf("SENT", "AIRTIME", "PAYBILL", "BUY_GOODS", "WITHDRAW", "PAID", "WITHDRAWN")

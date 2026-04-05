@@ -26,6 +26,11 @@ interface FulizaLoanDao {
     )
     fun observeOpenLoans(userId: String): Flow<List<FulizaLoanEntity>>
 
+    @Query(
+        "SELECT * FROM fuliza_loans WHERE user_id = :userId AND status != 'CLOSED' ORDER BY draw_date ASC",
+    )
+    suspend fun getOpenLoansOldestFirst(userId: String): List<FulizaLoanEntity>
+
     /** Net outstanding Fuliza balance across all open / partially-repaid loans. */
     @Query(
         "SELECT COALESCE(SUM(draw_amount_kes - total_repaid_kes), 0.0) " +

@@ -6,6 +6,7 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.personal.lifeOS.core.datastore.FeatureFlag
 import com.personal.lifeOS.core.datastore.FeatureFlagStore
+import com.personal.lifeOS.core.preferences.AppSettingsStore
 import com.personal.lifeOS.core.telemetry.HealthDiagnosticsRepository
 import com.personal.lifeOS.core.telemetry.ImportHealthSummary
 import com.personal.lifeOS.core.ui.model.SyncStatusUiModel
@@ -54,6 +55,7 @@ class FinanceViewModel
         private val fulizaLoanRepository: FulizaLoanRepository,
         private val healthDiagnosticsRepository: HealthDiagnosticsRepository,
         private val featureFlagStore: FeatureFlagStore,
+        private val appSettingsStore: AppSettingsStore,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(FinanceUiState())
         val uiState: StateFlow<FinanceUiState> = _uiState.asStateFlow()
@@ -72,11 +74,13 @@ class FinanceViewModel
         private var latestSnapshot = FinanceSnapshot()
         private var latestImportHealth = ImportHealthSummary()
         private var latestSyncUpdatedAt: Long? = null
+        private var latestFulizaLimitKes: Double? = null
 
         init {
             loadFeatureFlags()
             observeFinanceSnapshot()
             observeImportHealth()
+            observeFulizaLimit()
             observeFulizaDebt()
             observeSyncHealth()
         }
@@ -99,6 +103,9 @@ class FinanceViewModel
                 FinanceUiEvent.HideImportDialog ->
                     _uiState.update { it.copy(showImportDialog = false, importResultMessage = null) }
                 is FinanceUiEvent.ImportSmsMessages -> importSmsMessages(event.daysBack)
+                FinanceUiEvent.DismissFulizaLimitDialog ->
+                    _uiState.update { it.copy(showFulizaLimitDialog = false) }
+                is FinanceUiEvent.SaveFulizaLimit -> saveFulizaLimit(event.limitKes)
                 FinanceUiEvent.ClearError -> _uiState.update { it.copy(errorMessage = null) }
                 is FinanceUiEvent.UpdateSearchQuery ->
                     _uiState.update { it.copy(searchQuery = event.query) }
@@ -265,6 +272,7 @@ class FinanceViewModel
                             showFulizaBanner = outstanding > 0.0,
                         )
                     }
+                    maybeShowFulizaLimitDialog(hasFulizaSignal = outstanding > 0.0)
                 }
                 .catch { /* non-fatal: Fuliza tracking is additive */ }
                 .launchIn(viewModelScope)
@@ -273,9 +281,33 @@ class FinanceViewModel
                 .onEach { loans ->
                     val openCount = loans.count { it.status == "OPEN" || it.status == "PARTIALLY_REPAID" }
                     _uiState.update { it.copy(fulizaOpenCount = openCount) }
+                    maybeShowFulizaLimitDialog(hasFulizaSignal = openCount > 0)
                 }
                 .catch { /* non-fatal: Fuliza tracking is additive */ }
                 .launchIn(viewModelScope)
+        }
+
+        private fun observeFulizaLimit() {
+            appSettingsStore.fulizaLimitKesFlow()
+                .onEach { limit ->
+                    latestFulizaLimitKes = limit
+                    _uiState.update {
+                        it.copy(
+                            fulizaLimitKes = limit,
+                            showFulizaLimitDialog = if (limit != null) false else it.showFulizaLimitDialog,
+                        )
+                    }
+                }
+                .catch { /* non-fatal */ }
+                .launchIn(viewModelScope)
+        }
+
+        private fun maybeShowFulizaLimitDialog(hasFulizaSignal: Boolean) {
+            if (!hasFulizaSignal) return
+            if (latestFulizaLimitKes != null) return
+            _uiState.update { state ->
+                if (state.showFulizaLimitDialog) state else state.copy(showFulizaLimitDialog = true)
+            }
         }
 
         private fun importSmsMessages(daysBack: Int) {
@@ -291,6 +323,7 @@ class FinanceViewModel
                                 errorMessage = null,
                             )
                         }
+                        maybeShowFulizaLimitDialog(hasFulizaSignal = summary.fulizaSignalsDetected > 0)
                         refreshDerivedState()
                     }.onFailure { throwable ->
                         _uiState.update {
@@ -300,6 +333,24 @@ class FinanceViewModel
                             )
                         }
                         refreshDerivedState()
+                    }
+            }
+        }
+
+        private fun saveFulizaLimit(limitKes: Double) {
+            viewModelScope.launch {
+                val normalized = limitKes.coerceAtLeast(0.0)
+                runCatching { appSettingsStore.setFulizaLimitKes(normalized) }
+                    .onSuccess {
+                        _uiState.update { it.copy(showFulizaLimitDialog = false, fulizaLimitKes = normalized) }
+                    }
+                    .onFailure { throwable ->
+                        _uiState.update {
+                            it.copy(
+                                errorMessage = "Failed to save Fuliza limit: ${throwable.message}",
+                                syncStatus = SyncStatusUiModel.FAILED,
+                            )
+                        }
                     }
             }
         }

@@ -216,7 +216,7 @@ object MpesaParsingConfig {
         DetectionRule(
             id = "fuliza_repayment",
             category = TransactionCategory.LOAN,
-            description = "Fuliza loan or repayment",
+            description = "Fuliza repayment from wallet balance",
             patterns = listOf(
                 // Exact Safaricom repayment template → HIGH confidence
                 Regex("(?:Ksh|KES)\\s?[\\d,.]+\\s+from your M-PESA has been used to (?:partially|fully)\\s+pay your outstanding Fuliza M-PESA", RegexOption.IGNORE_CASE),
@@ -226,8 +226,6 @@ object MpesaParsingConfig {
                 // Looser Fuliza keyword match → MEDIUM confidence
                 Regex("from your M-PESA has been used to .*Fuliza", RegexOption.IGNORE_CASE),
                 Regex("outstanding Fuliza M-PESA", RegexOption.IGNORE_CASE),
-                Regex("from your M-PESA.*Fuliza", RegexOption.IGNORE_CASE),
-                Regex("M-PESA.*Fuliza", RegexOption.IGNORE_CASE),
             ),
             counterpartyPatterns = listOf(
                 Regex("(Fuliza M-PESA)", RegexOption.IGNORE_CASE),
@@ -268,6 +266,10 @@ object MpesaParsingConfig {
         "query charges",
         "select query charges",
         "interest accrual",
+        "interest charged",
+        "interest accrued",
+        "maintenance fee",
+        "overdraft balance",
         "overdraft notice",
         "fuliza service charge",
     )
@@ -321,3 +323,4 @@ data class DetectionRule(
     val counterpartyPatterns: List<Regex> = emptyList(),
     val confidence: MpesaParsingConfig.Confidence,
 )
+

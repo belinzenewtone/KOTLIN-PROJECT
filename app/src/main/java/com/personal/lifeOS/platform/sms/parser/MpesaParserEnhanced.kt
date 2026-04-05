@@ -75,7 +75,6 @@ object MpesaParserEnhanced {
          *  PAYBILL   — utility/subscription payment via Paybill
          *  BUY_GOODS — merchant till (Lipa na M-Pesa)
          *  WITHDRAW  — cash withdrawal from agent or ATM
-         *  LOAN      — Fuliza loan repayment deducted automatically
          *
          * REVERSED and UNKNOWN are excluded — their monetary impact is ambiguous.
          */
@@ -86,7 +85,6 @@ object MpesaParserEnhanced {
                 MpesaParsingConfig.TransactionCategory.PAYBILL,
                 MpesaParsingConfig.TransactionCategory.BUY_GOODS,
                 MpesaParsingConfig.TransactionCategory.WITHDRAW,
-                MpesaParsingConfig.TransactionCategory.LOAN,
                 -> true
                 else -> false
             }
@@ -168,8 +166,8 @@ object MpesaParserEnhanced {
                 (text.contains(" account ") || text.contains("for account")) -> "paybill"
             text.contains("paid to")                                         -> "buy_goods"
             text.contains("withdrawn from agent") || text.contains("cash withdrawal") -> "withdrawal"
-            (text.contains("from your m-pesa") && text.contains("fuliza")) ||
-                text.contains("fuliza")                                      -> "fuliza_repayment"
+            text.contains("from your m-pesa has been used to") &&
+                text.contains("outstanding fuliza")                         -> "fuliza_repayment"
             text.contains("received from") || text.contains("you have received") -> "received"
             text.contains("sent to") || text.contains("customer transfer")  -> "sent_p2p"
             else -> null
@@ -332,3 +330,4 @@ object MpesaParserEnhanced {
         }
     }
 }
+

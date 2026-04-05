@@ -166,10 +166,11 @@ class MpesaParserEnhancedTest {
     }
 
     @Test
-    fun testStage5_MediumConfidenceForFuliza() {
-        val sms = "ABC1234567 Confirmed. Ksh1,000 from your M-PESA Fuliza on 1/1/26."
+    fun testStage5_HighConfidenceForCanonicalFulizaRepayment() {
+        val sms =
+            "ABC1234567 Confirmed. Ksh1,000 from your M-PESA has been used to fully pay your outstanding Fuliza M-PESA on 1/1/26."
         val parsed = MpesaParserEnhanced.parse(sms)
-        assertEquals(Confidence.MEDIUM, parsed?.confidence)
+        assertEquals(Confidence.HIGH, parsed?.confidence)
     }
 
     // ── Stage 6: Description Generation ───────────────────────────────────────
@@ -200,27 +201,28 @@ class MpesaParserEnhancedTest {
 
     @Test
     fun testFulizaTransactionVsFulizaNotice() {
-        // Actual Fuliza loan transaction (should be parsed)
-        val smsFulizaTx = "ABC1234567 Confirmed. Ksh5,000 from your M-PESA Fuliza on 1/1/26."
+        // Actual Fuliza repayment transaction (should be parsed)
+        val smsFulizaTx =
+            "ABC1234567 Confirmed. Ksh5,000 from your M-PESA has been used to partially pay your outstanding Fuliza M-PESA on 1/1/26."
         val parsed = MpesaParserEnhanced.parse(smsFulizaTx)
         assertNotNull(parsed)
         assertEquals(TransactionCategory.LOAN, parsed?.category)
     }
 
     @Test
-    fun testFulizaDuplicateScenario_BothMessagesShouldParse() {
-        // Original Fuliza loan
-        val smsFulizaLoan = "ABC1234567 Confirmed. Ksh5,000 from your M-PESA Fuliza on 1/1/26."
+    fun testFulizaNoticeDoesNotParseAsTransaction() {
+        // Canonical Fuliza repayment
+        val smsFulizaLoan =
+            "ABC1234567 Confirmed. Ksh5,000 from your M-PESA has been used to fully pay your outstanding Fuliza M-PESA on 1/1/26."
         val loan = MpesaParserEnhanced.parse(smsFulizaLoan)
         assertNotNull(loan)
         assertEquals("ABC1234567", loan?.mpesaCode)
         assertEquals(5000.0, requireNotNull(loan).amount, 0.01)
 
-        // Fuliza interest notice (different amount, same code)
+        // Fuliza interest notice should be ignored
         val smsFulizaInterest = "ABC1234567 Fuliza interest Ksh150 accrued on 2/1/26."
         val interest = MpesaParserEnhanced.parse(smsFulizaInterest)
-        // This would parse as LOAN but deduplication should catch the code match
-        assertNotNull(interest)  // Parser succeeds, dedup engine catches duplicate
+        assertNull(interest)
     }
 
     // ── Edge Cases: Regional/Legacy Variants ──────────────────────────────────

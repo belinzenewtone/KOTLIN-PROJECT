@@ -343,6 +343,14 @@ fun FinanceScreen(
             },
         )
     }
+
+    if (uiState.showFulizaLimitDialog) {
+        FulizaLimitDialog(
+            initialLimitKes = uiState.fulizaLimitKes,
+            onDismiss = { viewModel.onEvent(FinanceUiEvent.DismissFulizaLimitDialog) },
+            onSave = { limit -> viewModel.onEvent(FinanceUiEvent.SaveFulizaLimit(limit)) },
+        )
+    }
 }
 
 @Composable
@@ -464,6 +472,7 @@ private fun FinanceCompactInsightsRow(uiState: FinanceUiState) {
                 FulizaSummaryCard(
                     outstanding = uiState.fulizaNetOutstandingKes ?: 0.0,
                     openCount = uiState.fulizaOpenCount,
+                    limitKes = uiState.fulizaLimitKes,
                     modifier = Modifier.width(236.dp),
                 )
             }
@@ -679,6 +688,7 @@ private fun FinanceTransactionRow(
 private fun FulizaSummaryCard(
     outstanding: Double,
     openCount: Int,
+    limitKes: Double?,
     modifier: Modifier = Modifier,
 ) {
     AppCard(
@@ -710,6 +720,13 @@ private fun FulizaSummaryCard(
                     style = MaterialTheme.typography.titleMedium,
                     color = Warning,
                     fontWeight = FontWeight.Bold,
+                )
+            }
+            if (limitKes != null && limitKes > 0.0) {
+                Text(
+                    text = "Limit ${DateUtils.formatCurrency(limitKes)}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Text(

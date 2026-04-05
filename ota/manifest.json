@@ -1,8 +1,8 @@
 ﻿{
-    "version_code":  36,
-    "version_name":  "1.2.25",
-    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.25/app-release-v1.2.25.apk",
-    "checksum_sha256":  "a77219314c59fc15d96a3c2a4c65e60035e90b79a94a875f99b42844b563db98",
+    "version_code":  37,
+    "version_name":  "1.2.26",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.26/app-release-v1.2.26.apk",
+    "checksum_sha256":  "42406f1b310bad6c754d07528f8611ca46c7c0c6063bf995fdb12e8f3860b016",
     "required":  false,
-    "release_notes":  "UI refresh, AI input alignment fix, and simpler, more accurate import health."
+    "release_notes":  "Floating nav tap reliability fixes, aligned Budget/Income add buttons, and refreshed OTA dialog design."
 }

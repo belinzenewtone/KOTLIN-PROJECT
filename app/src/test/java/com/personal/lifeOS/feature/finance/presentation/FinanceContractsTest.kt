@@ -110,15 +110,19 @@ class FinanceContractsTest {
     fun `import health summary maps to cross-feature ui model`() {
         val model: ImportHealthUiModel =
             ImportHealthSummary(
+                imported = 9,
                 duplicate = 2,
                 parseFailed = 1,
                 pending = 4,
+                recovered = 3,
                 latestImportAt = 1_700_000_000_000L,
-            ).toUiModel(importResultMessage = null)
+            ).toUiModel(lastImportRunSummary = null)
 
+        assertEquals(9, model.importedCount)
         assertEquals(4, model.pendingReviewCount)
         assertEquals(2, model.duplicateCount)
         assertEquals(1, model.parseFailureCount)
+        assertEquals(3, model.recoveredCount)
         assertTrue(model.lastImportSummary?.contains("Last import") == true)
         assertEquals(1_700_000_000_000L, model.latestImportAt)
     }

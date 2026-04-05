@@ -26,6 +26,7 @@ data class FinanceUiState(
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val importResultMessage: String? = null,
+    val lastImportRunSummary: String? = null,
     val showAddDialog: Boolean = false,
     val showImportDialog: Boolean = false,
     val showFulizaLimitDialog: Boolean = false,
@@ -89,13 +90,15 @@ sealed interface FinanceUiEvent {
     data class UpdateSearchQuery(val query: String) : FinanceUiEvent
 }
 
-internal fun ImportHealthSummary.toUiModel(importResultMessage: String?): ImportHealthUiModel {
+internal fun ImportHealthSummary.toUiModel(lastImportRunSummary: String?): ImportHealthUiModel {
     return ImportHealthUiModel(
+        importedCount = imported,
         pendingReviewCount = pending,
         duplicateCount = duplicate,
         parseFailureCount = parseFailed,
+        recoveredCount = recovered,
         lastImportSummary =
-            importResultMessage
+            lastImportRunSummary
                 ?: latestImportAt?.let { lastImportTime ->
                     val formatted =
                         DateTimeFormatter.ofPattern("MMM dd, HH:mm")

@@ -78,17 +78,20 @@ internal fun CalendarMonthCard(
             .fillMaxWidth()
             // Swipe left → next month, swipe right → previous month
             .pointerInput(Unit) {
-                var accumulated = 0f
+                var dragTotal = 0f
                 detectHorizontalDragGestures(
-                    onDragStart = { accumulated = 0f },
-                    onDragEnd = { accumulated = 0f },
-                    onHorizontalDrag = { change, dragAmount ->
-                        accumulated += dragAmount
-                        change.consume()
+                    onDragStart = { dragTotal = 0f },
+                    onDragCancel = { dragTotal = 0f },
+                    onDragEnd = {
                         when {
-                            accumulated > 80f -> { accumulated = 0f; onPreviousMonth() }
-                            accumulated < -80f -> { accumulated = 0f; onNextMonth() }
+                            dragTotal > 72f -> onPreviousMonth()
+                            dragTotal < -72f -> onNextMonth()
                         }
+                        dragTotal = 0f
+                    },
+                    onHorizontalDrag = { change, dragAmount ->
+                        dragTotal += dragAmount
+                        change.consume()
                     },
                 )
             },

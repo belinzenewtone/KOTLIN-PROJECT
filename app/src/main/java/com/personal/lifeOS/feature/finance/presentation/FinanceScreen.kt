@@ -158,7 +158,7 @@ fun FinanceScreen(
         FinanceSummaryStrip(uiState = uiState)
         uiState.budgetGuardrail?.let { guardrail ->
             InlineBanner(
-                message = "${guardrail.title} · ${guardrail.message}",
+                message = "${guardrail.title} \u00B7 ${guardrail.message}",
                 tone = InlineBannerTone.WARNING,
             )
         }
@@ -359,8 +359,9 @@ private fun FinanceImportBanner(
     onReview: () -> Unit,
 ) {
     val importSummary =
-        "${uiState.importHealth.pendingReviewCount} pending · " +
-            "${uiState.importHealth.duplicateCount} duplicates · " +
+        "${uiState.importHealth.importedCount} imported | " +
+            "${uiState.importHealth.pendingReviewCount} pending | " +
+            "${uiState.importHealth.duplicateCount} duplicates | " +
             "${uiState.importHealth.parseFailureCount} issues"
     AppCard(elevated = true) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -392,6 +393,13 @@ private fun FinanceImportBanner(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            uiState.importHealth.lastImportSummary?.let { lastRunSummary ->
+                Text(
+                    text = lastRunSummary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             uiState.freshness?.supportingLabel?.let { supportingLabel ->
                 Text(
                     text = supportingLabel,
@@ -646,7 +654,7 @@ private fun FinanceTransactionRow(
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = "${transaction.category} · ${DateUtils.formatDate(transaction.date, "MMM d, h:mm a")}",
+                    text = "${transaction.category} \u00B7 ${DateUtils.formatDate(transaction.date, "MMM d, h:mm a")}",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,

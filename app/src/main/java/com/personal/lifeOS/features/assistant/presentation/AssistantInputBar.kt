@@ -40,13 +40,13 @@ internal fun InputBar(
     isProcessing: Boolean,
 ) {
     val isImeVisible = WindowInsets.isImeVisible
-    val bottomClearance = if (isImeVisible) 8.dp else AppSpacing.BottomSafe
+    val bottomClearance = if (isImeVisible) 8.dp else 48.dp
 
     Row(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = AppSpacing.ScreenHorizontal, vertical = 10.dp)
+                .padding(start = AppSpacing.ScreenHorizontal, end = AppSpacing.ScreenHorizontal, top = 10.dp)
                 .navigationBarsPadding()
                 .padding(bottom = bottomClearance)
                 // imePadding removed — the parent Column in AssistantScreen owns it.

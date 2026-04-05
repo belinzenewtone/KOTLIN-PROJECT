@@ -19,9 +19,11 @@ enum class SyncStatusUiModel {
 }
 
 data class ImportHealthUiModel(
+    val importedCount: Int = 0,
     val pendingReviewCount: Int = 0,
     val duplicateCount: Int = 0,
     val parseFailureCount: Int = 0,
+    val recoveredCount: Int = 0,
     val lastImportSummary: String? = null,
     val latestImportAt: Long? = null,
 )

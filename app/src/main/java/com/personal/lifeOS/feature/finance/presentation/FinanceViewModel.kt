@@ -22,8 +22,11 @@ import com.personal.lifeOS.features.expenses.domain.usecase.DeleteTransactionUse
 import com.personal.lifeOS.features.expenses.domain.usecase.ImportMpesaMessagesUseCase
 import com.personal.lifeOS.features.expenses.domain.usecase.ObserveImportHealthUseCase
 import com.personal.lifeOS.features.expenses.domain.usecase.UpdateMerchantCategoryUseCase
+import com.personal.lifeOS.platform.sms.background.MpesaHistoricalImportSummary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -75,6 +78,7 @@ class FinanceViewModel
         private var latestImportHealth = ImportHealthSummary()
         private var latestSyncUpdatedAt: Long? = null
         private var latestFulizaLimitKes: Double? = null
+        private var importResultAutoClearJob: Job? = null
 
         init {
             loadFeatureFlags()
@@ -159,7 +163,7 @@ class FinanceViewModel
                     }
                 current.copy(
                     summary = summary,
-                    importHealth = latestImportHealth.toUiModel(current.importResultMessage),
+                    importHealth = latestImportHealth.toUiModel(current.lastImportRunSummary),
                     syncStatus = syncStatus,
                     freshness = buildFinanceFreshness(latestSnapshot, latestImportHealth, latestSyncUpdatedAt),
                     reviewQueueSummary = buildReviewQueueSummary(latestImportHealth),
@@ -312,6 +316,7 @@ class FinanceViewModel
 
         private fun importSmsMessages(daysBack: Int) {
             viewModelScope.launch {
+                importResultAutoClearJob?.cancel()
                 _uiState.update { it.copy(importResultMessage = "Scanning SMS...") }
                 runCatching { importMpesaMessagesUseCase(daysBack) }
                     .onSuccess { summary ->
@@ -319,22 +324,41 @@ class FinanceViewModel
                         _uiState.update {
                             it.copy(
                                 importResultMessage = message,
+                                lastImportRunSummary = summary.toPersistentHealthSummary(),
                                 showImportDialog = false,
                                 errorMessage = null,
                             )
                         }
+                        scheduleImportResultAutoDismiss(message)
                         maybeShowFulizaLimitDialog(hasFulizaSignal = summary.fulizaSignalsDetected > 0)
                         refreshDerivedState()
                     }.onFailure { throwable ->
+                        val errorMessage = "Import failed: ${throwable.message}"
                         _uiState.update {
                             it.copy(
-                                importResultMessage = "Import failed: ${throwable.message}",
+                                importResultMessage = errorMessage,
                                 syncStatus = SyncStatusUiModel.FAILED,
                             )
                         }
+                        scheduleImportResultAutoDismiss(errorMessage)
                         refreshDerivedState()
                     }
             }
+        }
+
+        private fun scheduleImportResultAutoDismiss(message: String) {
+            importResultAutoClearJob?.cancel()
+            importResultAutoClearJob =
+                viewModelScope.launch {
+                    delay(7000L)
+                    _uiState.update { current ->
+                        if (current.importResultMessage == message) {
+                            current.copy(importResultMessage = null)
+                        } else {
+                            current
+                        }
+                    }
+                }
         }
 
         private fun saveFulizaLimit(limitKes: Double) {
@@ -357,12 +381,22 @@ class FinanceViewModel
 
     }
 
-private fun com.personal.lifeOS.platform.sms.background.MpesaHistoricalImportSummary.toResultMessage(): String {
+private fun MpesaHistoricalImportSummary.toResultMessage(): String {
     return when {
         !permissionGranted -> "SMS permission is required before importing MPESA messages"
         imported > 0 ->
-            "Imported $imported transactions • $duplicates duplicates • $pendingReview pending review"
+            "Imported $imported transactions | $duplicates duplicates | $pendingReview pending review"
         scannedMessages == 0 -> "No MPESA messages found in the selected period"
-        else -> "No new imports • $duplicates duplicates • $parseFailed parse failed"
+        else -> "No new imports | $duplicates duplicates | $parseFailed parse failed"
+    }
+}
+
+private fun MpesaHistoricalImportSummary.toPersistentHealthSummary(): String {
+    return when {
+        !permissionGranted -> "Last run: SMS permission denied"
+        scannedMessages == 0 -> "Last run: no MPESA messages found"
+        else ->
+            "Last run: imported $imported | duplicates $duplicates | " +
+                "pending $pendingReview | parse failed $parseFailed"
     }
 }

@@ -41,8 +41,9 @@ fun ImportHealthPanel(
             }
             Text(
                 text =
-                    "${model.pendingReviewCount} pending • " +
-                        "${model.duplicateCount} duplicates • " +
+                    "${model.importedCount} imported | " +
+                        "${model.pendingReviewCount} pending | " +
+                        "${model.duplicateCount} duplicates | " +
                         "${model.parseFailureCount} parse issues",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

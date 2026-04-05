@@ -1,8 +1,8 @@
-﻿{
-    "version_code":  32,
-    "version_name":  "1.2.21",
-    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.21/app-release-v1.2.21.apk",
-    "checksum_sha256":  "52ceea68da9bb1e9e630d6e68dbf1e8bd47a61c46fba29c2831598cc7ffcd6e9",
+{
+    "version_code":  33,
+    "version_name":  "1.2.22",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.22/app-release-v1.2.22.apk",
+    "checksum_sha256":  "e19e1084dbc4c49698e732b69de0424df1482536968ee9e9dffea5f6730c09a5",
     "required":  false,
-    "release_notes":  "Latest user code changes shipped with OTA bump to 1.2.21."
+    "release_notes":  "UI tuning and troubleshooting update. Screenshot protection removed to support support-driven diagnostics. IMPORTANT: this build is signed with a new certificate and requires uninstall/reinstall from previous OTA builds."
 }

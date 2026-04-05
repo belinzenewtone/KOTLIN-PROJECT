@@ -3,11 +3,8 @@ package com.personal.lifeOS.features.assistant.presentation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -32,30 +29,17 @@ import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.ui.theme.AppSpacing
 
 @Composable
-@OptIn(ExperimentalLayoutApi::class)
 internal fun InputBar(
     text: String,
     onTextChange: (String) -> Unit,
     onSend: () -> Unit,
     isProcessing: Boolean,
 ) {
-    val isImeVisible = WindowInsets.isImeVisible
-    val bottomClearance =
-        if (isImeVisible) {
-            8.dp
-        } else {
-            AppDesignTokens.floatingNavBarHeight +
-                AppDesignTokens.floatingNavBarBottomOffset +
-                AppDesignTokens.assistantInputHairlineGap
-        }
-
     Row(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .padding(start = AppSpacing.ScreenHorizontal, end = AppSpacing.ScreenHorizontal, top = 10.dp)
-                .navigationBarsPadding()
-                .padding(bottom = bottomClearance)
                 // imePadding removed — the parent Column in AssistantScreen owns it.
                 // Keeping it here (before clip/background) caused the background surface
                 // to expand into the keyboard region, making the box stretch infinitely.
@@ -66,7 +50,8 @@ internal fun InputBar(
                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f),
                     shape = RoundedCornerShape(AppDesignTokens.radius.lg),
                 )
-                .padding(horizontal = 10.dp, vertical = 10.dp),
+                .padding(horizontal = 10.dp, vertical = 10.dp)
+                .navigationBarsPadding(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {

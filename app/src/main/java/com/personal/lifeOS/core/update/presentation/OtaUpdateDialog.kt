@@ -14,6 +14,7 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.material3.Button
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -61,6 +63,15 @@ internal fun OtaUpdateDialog(
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp),
             shape = RoundedCornerShape(AppDesignTokens.radius.lg),
+            colors =
+                CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                ),
+            border =
+                androidx.compose.foundation.BorderStroke(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.72f),
+                ),
         ) {
             Column(
                 modifier = Modifier.padding(20.dp),
@@ -84,6 +95,7 @@ internal fun OtaUpdateDialog(
                 OutlinedButton(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = callbacks.onWebsite,
+                    shape = RoundedCornerShape(AppDesignTokens.radius.pill),
                 ) {
                     Text("Website")
                 }
@@ -108,21 +120,23 @@ private fun OtaDialogHeader(
             modifier =
                 Modifier
                     .background(
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
                         shape = CircleShape,
                     )
                     .padding(horizontal = 10.dp, vertical = 6.dp),
         ) {
             Text(
-                text = "S",
+                text = appName.trim().firstOrNull()?.uppercase() ?: "U",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold,
             )
         }
 
         Text(
             text = manifest.title ?: "Update $appName",
             style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f),
         )
 
@@ -144,11 +158,13 @@ private fun OtaDialogBody(manifest: OtaUpdateManifest) {
             manifest.message
                 ?: "A newer update is available. Please update now for the latest fixes and features.",
         style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurface,
     )
     manifest.changelog?.takeIf { it.isNotBlank() }?.let {
         Text(
             text = it.trim(),
             style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -216,6 +232,7 @@ private fun OtaDialogActions(
                 OutlinedButton(
                     modifier = Modifier.weight(1f),
                     onClick = callbacks.onCancelDownload,
+                    shape = RoundedCornerShape(AppDesignTokens.radius.pill),
                 ) {
                     Text("Cancel")
                 }
@@ -225,6 +242,7 @@ private fun OtaDialogActions(
                 OutlinedButton(
                     modifier = Modifier.weight(1f),
                     onClick = callbacks.onLater,
+                    shape = RoundedCornerShape(AppDesignTokens.radius.pill),
                 ) {
                     Text("Later")
                 }
@@ -234,6 +252,7 @@ private fun OtaDialogActions(
         Button(
             modifier = Modifier.weight(1f),
             onClick = callbacks.onPrimaryAction,
+            shape = RoundedCornerShape(AppDesignTokens.radius.pill),
         ) {
             Text(primaryButtonLabel(state = state, hasDownloadedApk = hasDownloadedApk))
         }

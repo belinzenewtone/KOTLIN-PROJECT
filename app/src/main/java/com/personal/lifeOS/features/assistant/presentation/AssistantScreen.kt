@@ -3,10 +3,15 @@ package com.personal.lifeOS.features.assistant.presentation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,12 +31,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.core.ui.designsystem.AssistantActionCard
 import com.personal.lifeOS.core.ui.designsystem.InlineBanner
 import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
 import com.personal.lifeOS.ui.theme.AppSpacing
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 fun AssistantScreen(viewModel: AssistantViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
@@ -49,6 +56,16 @@ fun AssistantScreen(viewModel: AssistantViewModel = hiltViewModel()) {
             listState.animateScrollToItem(state.messages.size - 1)
         }
     }
+
+    val isImeVisible = WindowInsets.isImeVisible
+    val inputBottomGap =
+        if (isImeVisible) {
+            8.dp
+        } else {
+            AppDesignTokens.floatingNavBarHeight +
+                AppDesignTokens.floatingNavBarBottomOffset +
+                AppDesignTokens.assistantInputHairlineGap
+        }
 
     // No Scaffold — InputBar manages its own bottom clearance via imePadding() and
     // a 72 dp transparent gap that lets the floating bottom nav bar show through.
@@ -135,6 +152,7 @@ fun AssistantScreen(viewModel: AssistantViewModel = hiltViewModel()) {
             onSend = { viewModel.sendMessage() },
             isProcessing = state.isProcessing,
         )
+        Spacer(modifier = Modifier.height(inputBottomGap))
     }
 
     if (showClearChatConfirm) {

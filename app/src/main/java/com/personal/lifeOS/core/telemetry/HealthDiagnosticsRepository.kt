@@ -55,12 +55,41 @@ class HealthDiagnosticsRepository
         fun observeImportHealth(): Flow<ImportHealthSummary> {
             val userId = authSessionStore.getUserId().ifBlank { "local" }
             return importAuditDao.observeByUser(userId).map { entries ->
+                val importedOutcomes =
+                    setOf(
+                        "imported",
+                        "import_realtime",
+                        "imported_realtime",
+                    )
+                val duplicateOutcomes =
+                    setOf(
+                        "duplicate",
+                        "duplicate_detected",
+                    )
+                val parseFailureOutcomes =
+                    setOf(
+                        "parse_failed",
+                        "import_failed",
+                    )
+                val pendingOutcomes =
+                    setOf(
+                        "candidate_pending",
+                        "defer_to_batch",
+                        "imported_batch_pending",
+                        "quarantine_for_review",
+                        "imported_quarantine",
+                    )
+                val ignoredOutcomes =
+                    setOf(
+                        "ignored_irrelevant",
+                        "ignored_not_mpesa",
+                    )
                 ImportHealthSummary(
-                    imported = entries.count { it.outcome.equals("imported", ignoreCase = true) },
-                    duplicate = entries.count { it.outcome.equals("duplicate", ignoreCase = true) },
-                    parseFailed = entries.count { it.outcome.equals("parse_failed", ignoreCase = true) },
-                    pending = entries.count { it.outcome.equals("candidate_pending", ignoreCase = true) },
-                    ignored = entries.count { it.outcome.equals("ignored_irrelevant", ignoreCase = true) },
+                    imported = entries.count { importedOutcomes.contains(it.outcome.lowercase()) },
+                    duplicate = entries.count { duplicateOutcomes.contains(it.outcome.lowercase()) },
+                    parseFailed = entries.count { parseFailureOutcomes.contains(it.outcome.lowercase()) },
+                    pending = entries.count { pendingOutcomes.contains(it.outcome.lowercase()) },
+                    ignored = entries.count { ignoredOutcomes.contains(it.outcome.lowercase()) },
                     recovered = entries.count { it.outcome.equals("recovered_from_backfill", ignoreCase = true) },
                     latestImportAt = entries.maxOfOrNull { it.importedAt },
                 )

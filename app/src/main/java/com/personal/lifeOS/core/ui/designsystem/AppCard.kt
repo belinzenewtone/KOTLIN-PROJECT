@@ -33,20 +33,20 @@ fun AppCard(
     // Glass cards keep a translucent white border for the frosted effect.
     val baseColor =
         when {
-            glass -> MaterialTheme.colorScheme.surface.copy(alpha = 0.78f)
+            glass -> MaterialTheme.colorScheme.surface.copy(alpha = 0.84f)
             elevated -> AppDesignTokens.colors.surfaceContainerLow
             else -> AppDesignTokens.colors.surfaceContainerLowest
         }
     val borderStroke: BorderStroke? =
         when {
-            glass -> BorderStroke(1.dp, Color.White.copy(alpha = 0.18f))
-            elevated -> null  // tonal fill expresses elevation; border is redundant
-            else -> BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            glass -> BorderStroke(0.85.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.70f))
+            elevated -> BorderStroke(0.85.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.54f))
+            else -> BorderStroke(0.85.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.64f))
         }
     val elevation =
         when {
             glass -> AppDesignTokens.elevation.floating
-            elevated -> AppDesignTokens.elevation.card * 2
+            elevated -> AppDesignTokens.elevation.card + 1.dp
             else -> 0.dp
         }
     val cardModifier =
@@ -57,8 +57,8 @@ fun AppCard(
                     Modifier.shadow(
                         elevation = elevation,
                         shape = shape,
-                        ambientColor = Color.Black.copy(alpha = 0.16f),
-                        spotColor = Color.Black.copy(alpha = 0.16f),
+                        ambientColor = Color.Black.copy(alpha = 0.11f),
+                        spotColor = Color.Black.copy(alpha = 0.11f),
                     )
                 } else {
                     Modifier
@@ -86,8 +86,8 @@ fun AppCard(
                             Brush.verticalGradient(
                                 colors =
                                     listOf(
-                                        Color.White.copy(alpha = 0.08f),
-                                        Color.White.copy(alpha = 0.02f),
+                                        Color.White.copy(alpha = 0.04f),
+                                        Color.White.copy(alpha = 0.01f),
                                         Color.Transparent,
                                     ),
                             ),

@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -58,7 +59,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -483,29 +483,30 @@ private fun LifeOSBottomBar(
                 .padding(horizontal = 16.dp)
                 .navigationBarsPadding()
                 // Sit just above the system nav keys / gesture bar — no extra gap
-                .padding(bottom = 4.dp),
+                .padding(bottom = AppDesignTokens.floatingNavBarBottomOffset),
     ) {
         Row(
             modifier =
                 Modifier
                     .fillMaxWidth()
+                    .height(AppDesignTokens.floatingNavBarHeight)
                     .shadow(
-                        elevation = 16.dp,
+                        elevation = 7.dp,
                         shape = navBarShape,
-                        ambientColor = Color.Black.copy(alpha = 0.4f),
-                        spotColor = Color.Black.copy(alpha = 0.4f),
+                        ambientColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.16f),
+                        spotColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.12f),
                     )
                     .clip(navBarShape)
                     // Solid surface base — legible in both light and dark mode
-                    .background(MaterialTheme.colorScheme.surface)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.94f))
                     // Subtle glass sheen on top
                     .background(
                         brush =
                             Brush.verticalGradient(
                                 colors =
                                     listOf(
-                                        Color.White.copy(alpha = 0.10f),
-                                        Color.White.copy(alpha = 0.04f),
+                                        MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.96f),
+                                        MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.90f),
                                     ),
                             ),
                     )
@@ -515,8 +516,8 @@ private fun LifeOSBottomBar(
                             Brush.verticalGradient(
                                 colors =
                                     listOf(
-                                        Color.White.copy(alpha = 0.15f),
-                                        Color.White.copy(alpha = 0.04f),
+                                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.76f),
+                                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.38f),
                                     ),
                             ),
                         shape = navBarShape,
@@ -566,7 +567,7 @@ private fun RowScope.BottomNavItem(
     onClick: () -> Unit,
 ) {
     val iconColor by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+        targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
         animationSpec = tween(durationMillis = 220, easing = EaseInOut),
         label = "iconColor",
     )
@@ -593,9 +594,9 @@ private fun RowScope.BottomNavItem(
                 Box(
                     modifier =
                         Modifier
-                            .size(30.dp)
+                            .size(28.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
                 )
             }
             // Animated icon crossfade between selected and unselected variants

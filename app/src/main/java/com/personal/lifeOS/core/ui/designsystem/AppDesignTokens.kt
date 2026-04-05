@@ -115,34 +115,40 @@ object AppDesignTokens {
 
     val spacing =
         AppSpacingScale(
-            xs = 6.dp,
-            sm = 10.dp,
-            md = 16.dp,
-            lg = 24.dp,
-            xl = 32.dp,
+            xs = 4.dp,
+            sm = 8.dp,
+            md = 14.dp,
+            lg = 20.dp,
+            xl = 28.dp,
         )
 
     val radius =
         AppRadiusScale(
-            sm = 12.dp,
-            md = 16.dp,
-            lg = 24.dp,
-            xl = 32.dp,
+            sm = 10.dp,
+            md = 14.dp,
+            lg = 18.dp,
+            xl = 24.dp,
             pill = 999.dp,
         )
 
+    // Shared floating bottom-nav geometry so overlays (assistant input, sheets)
+    // can align to it consistently without trial-and-error values.
+    val floatingNavBarHeight = 58.dp
+    val floatingNavBarBottomOffset = 4.dp
+    val assistantInputHairlineGap = 1.dp
+
     val elevation =
         AppElevationSpec(
-            card = 2.dp,
-            floating = 10.dp,
-            sheet = 16.dp,
+            card = 1.dp,
+            floating = 8.dp,
+            sheet = 12.dp,
         )
 
     val motion =
         AppMotionSpec(
-            fastMs = 120,
-            standardMs = 220,
-            slowMs = 320,
+            fastMs = 100,
+            standardMs = 180,
+            slowMs = 260,
         )
 
     @Composable
@@ -152,26 +158,26 @@ object AppDesignTokens {
         return when (tone) {
             AppSemanticTone.INFO ->
                 AppSemanticColors(
-                    container = scheme.primaryContainer,
-                    onContainer = scheme.onPrimaryContainer,
+                    container = scheme.primaryContainer.copy(alpha = 0.56f),
+                    onContainer = scheme.onSurface,
                     icon = scheme.primary,
                 )
             AppSemanticTone.SUCCESS ->
                 AppSemanticColors(
-                    container = scheme.secondaryContainer,
-                    onContainer = scheme.onSecondaryContainer,
+                    container = scheme.secondaryContainer.copy(alpha = 0.50f),
+                    onContainer = scheme.onSurface,
                     icon = colors.success,
                 )
             AppSemanticTone.WARNING ->
                 AppSemanticColors(
-                    container = scheme.tertiaryContainer,
-                    onContainer = scheme.onTertiaryContainer,
+                    container = scheme.tertiaryContainer.copy(alpha = 0.58f),
+                    onContainer = scheme.onSurface,
                     icon = colors.warning,
                 )
             AppSemanticTone.ERROR ->
                 AppSemanticColors(
-                    container = scheme.errorContainer,
-                    onContainer = scheme.onErrorContainer,
+                    container = scheme.errorContainer.copy(alpha = 0.62f),
+                    onContainer = scheme.onSurface,
                     icon = scheme.error,
                 )
         }

@@ -61,7 +61,16 @@ internal fun AuthLoadingState() {
         modifier =
             Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
+                .background(
+                    brush =
+                        Brush.verticalGradient(
+                            colors =
+                                listOf(
+                                    MaterialTheme.colorScheme.background,
+                                    MaterialTheme.colorScheme.surfaceContainerLowest,
+                                ),
+                        ),
+                ),
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -106,8 +115,8 @@ internal fun AuthBrandingHeader(isSignUpMode: Boolean) {
                             brush =
                                 Brush.linearGradient(
                                     listOf(
-                                        MaterialTheme.colorScheme.primary,
                                         AppDesignTokens.colors.primaryContainer,
+                                        MaterialTheme.colorScheme.surfaceContainerHighest,
                                     ),
                                 ),
                         ),
@@ -330,7 +339,13 @@ private fun AuthTextField(
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            leadingIcon = { Icon(leadingIcon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+            leadingIcon = {
+                Icon(
+                    leadingIcon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
+                )
+            },
             trailingIcon =
                 if (isPassword) {
                     {
@@ -338,7 +353,7 @@ private fun AuthTextField(
                             Icon(
                                 imageVector = if (showPassword) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
                                 contentDescription = "Toggle password",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
                             )
                         }
                     }
@@ -362,10 +377,10 @@ private fun AuthTextField(
             shape = RoundedCornerShape(AppDesignTokens.radius.md),
             colors =
                 OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f),
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f),
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
                     focusedTextColor = MaterialTheme.colorScheme.onSurface,
                     unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                 ),

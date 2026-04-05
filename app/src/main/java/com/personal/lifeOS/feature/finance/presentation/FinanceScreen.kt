@@ -358,11 +358,24 @@ private fun FinanceImportBanner(
     uiState: FinanceUiState,
     onReview: () -> Unit,
 ) {
-    val importSummary =
-        "${uiState.importHealth.importedCount} imported | " +
-            "${uiState.importHealth.pendingReviewCount} pending | " +
-            "${uiState.importHealth.duplicateCount} duplicates | " +
-            "${uiState.importHealth.parseFailureCount} issues"
+    val imported = uiState.importHealth.importedCount
+    val pending = uiState.importHealth.pendingReviewCount
+    val duplicates = uiState.importHealth.duplicateCount
+    val issues = uiState.importHealth.parseFailureCount
+    val statusLine =
+        when {
+            imported == 0 && pending == 0 && duplicates == 0 && issues == 0 ->
+                "No import activity yet"
+            pending > 0 ->
+                "$imported imported • $pending pending review"
+            issues > 0 ->
+                "$imported imported • $issues parse issues"
+            duplicates > 0 ->
+                "$imported imported • $duplicates duplicates filtered"
+            else ->
+                "$imported imported • All clear"
+        }
+
     AppCard(elevated = true) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(
@@ -389,17 +402,10 @@ private fun FinanceImportBanner(
                 }
             }
             Text(
-                text = importSummary,
+                text = statusLine,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            uiState.importHealth.lastImportSummary?.let { lastRunSummary ->
-                Text(
-                    text = lastRunSummary,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
             uiState.freshness?.supportingLabel?.let { supportingLabel ->
                 Text(
                     text = supportingLabel,

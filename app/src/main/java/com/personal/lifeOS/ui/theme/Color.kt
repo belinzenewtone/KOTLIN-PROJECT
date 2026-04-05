@@ -5,14 +5,14 @@ import androidx.compose.ui.graphics.Color
 // Stitch-inspired editorial palette — refreshed 2025.
 // Primary lifted slightly for more vibrancy; surfaces now carry a coherent
 // warm-teal tint instead of the previous cold blue-grey cast.
-val Primary = Color(0xFF007070)        // slightly fresher teal (was #006A6A)
-val PrimaryVariant = Color(0xFF004E4E)  // keeps same ratio (was #004F4F)
-val Accent = Color(0xFF009898)          // slightly deeper, more refined (was #00A8A8)
-val PrimaryLight = Color(0xFF52D5D5)    // keeps same ratio (was #59D9D9)
+val Primary = Color(0xFF2B9CFF)
+val PrimaryVariant = Color(0xFF0A74D1)
+val Accent = Color(0xFF39B0FF)
+val PrimaryLight = Color(0xFF8FD1FF)
 
 // Light baseline surfaces — teal-tinted for cohesion, removes cold blue cast.
-val BackgroundDark = Color(0xFFF3F7F7)  // warm teal-tinted page (was #F7F9FC)
-val SurfaceDark = Color(0xFFECF2F2)     // consistent teal-tinted variant (was #F2F4F7)
+val BackgroundDark = Color(0xFFF6F8FB)
+val SurfaceDark = Color(0xFFEEF2F7)
 val SurfaceElevated = Color(0xFFFFFFFF)
 
 // Glass behavior on light surfaces.
@@ -21,9 +21,9 @@ val GlassBorder = Color(0x4DFFFFFF)
 val GlassHighlight = Color(0x80FFFFFF)
 
 // Text hierarchy.
-val TextPrimary = Color(0xFF191C1E)
-val TextSecondary = Color(0xCC3C4949)
-val TextTertiary = Color(0x99606A6F)
+val TextPrimary = Color(0xFF161A1D)
+val TextSecondary = Color(0xCC3E4852)
+val TextTertiary = Color(0x99707A84)
 
 // Semantic
 val Success = Color(0xFF4CAF50)

@@ -353,7 +353,10 @@ class FinanceViewModel
                     delay(7000L)
                     _uiState.update { current ->
                         if (current.importResultMessage == message) {
-                            current.copy(importResultMessage = null)
+                            current.copy(
+                                importResultMessage = null,
+                                lastImportRunSummary = null,
+                            )
                         } else {
                             current
                         }

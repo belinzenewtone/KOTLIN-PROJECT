@@ -28,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.ui.components.StyledSnackbarHost
@@ -67,7 +68,16 @@ fun AuthScreen(
         modifier =
             Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
+                .background(
+                    brush =
+                        Brush.verticalGradient(
+                            colors =
+                                listOf(
+                                    MaterialTheme.colorScheme.background,
+                                    MaterialTheme.colorScheme.surfaceContainerLowest,
+                                ),
+                        ),
+                ),
     ) {
         Column(
             modifier =

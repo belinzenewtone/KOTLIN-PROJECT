@@ -31,12 +31,14 @@ fun SearchField(
             Text(
                 text = placeholder,
                 style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         },
         leadingIcon = {
             Icon(
                 imageVector = Icons.Filled.Search,
                 contentDescription = "Search",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
             )
         },
         trailingIcon = {
@@ -51,10 +53,12 @@ fun SearchField(
         },
         colors =
             OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
-                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f),
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.72f),
+                focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f),
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f),
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
             ),
     )
 }

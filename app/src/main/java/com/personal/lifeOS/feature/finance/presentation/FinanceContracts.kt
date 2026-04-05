@@ -91,8 +91,9 @@ sealed interface FinanceUiEvent {
 }
 
 internal fun ImportHealthSummary.toUiModel(lastImportRunSummary: String?): ImportHealthUiModel {
+    val totalImported = imported + recovered
     return ImportHealthUiModel(
-        importedCount = imported,
+        importedCount = totalImported,
         pendingReviewCount = pending,
         duplicateCount = duplicate,
         parseFailureCount = parseFailed,

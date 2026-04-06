@@ -89,11 +89,6 @@ private fun ReviewRitualCard(ritual: ReviewRitualUiModel) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(
-                text = ritual.nextStepLabel,
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-            )
         }
     }
 }

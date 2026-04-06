@@ -33,7 +33,6 @@ data class ReviewPeriodSummary(
 data class ReviewRitualUiModel(
     val title: String,
     val summary: String,
-    val nextStepLabel: String,
 )
 
 data class ReviewUiState(
@@ -196,6 +195,5 @@ internal fun buildReviewRitual(
     return ReviewRitualUiModel(
         title = "One thing to do before the week closes",
         summary = summary,
-        nextStepLabel = "Close the ritual",
     )
 }

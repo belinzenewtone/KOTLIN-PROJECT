@@ -54,7 +54,10 @@ import com.personal.lifeOS.ui.theme.AppSpacing
 import com.personal.lifeOS.ui.theme.Warning
 
 @Composable
-fun TasksScreen(viewModel: TasksViewModel = hiltViewModel()) {
+fun TasksScreen(
+    onBack: (() -> Unit)? = null,
+    viewModel: TasksViewModel = hiltViewModel(),
+) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var query by rememberSaveable { mutableStateOf("") }
@@ -98,6 +101,7 @@ fun TasksScreen(viewModel: TasksViewModel = hiltViewModel()) {
             completedTasks = completedTasks,
             query = query,
             padding = padding,
+            onBack = onBack,
             onQueryChange = { query = it },
             onEditTask = { task -> viewModel.showEditDialog(task) },
             onCompleteTask = { task -> viewModel.completeTask(task) },
@@ -153,6 +157,7 @@ private fun TasksBody(
     completedTasks: List<Task>,
     query: String,
     padding: PaddingValues,
+    onBack: (() -> Unit)?,
     onQueryChange: (String) -> Unit,
     onEditTask: (Task) -> Unit,
     onCompleteTask: (Task) -> Unit,
@@ -167,6 +172,7 @@ private fun TasksBody(
         headerEyebrow = "Execution",
         title = "Tasks",
         subtitle = "${state.pendingTasks.size} open • ${state.completedTasks.size} completed",
+        onBack = onBack,
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFab),
     ) {
         SearchField(

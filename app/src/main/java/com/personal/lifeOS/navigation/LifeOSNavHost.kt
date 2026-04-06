@@ -394,7 +394,7 @@ private fun LifeOSNavigationGraph(
                 onOpenProfile = { navController.navigate(AppRoute.Profile) },
             )
         }
-        composable(AppRoute.Tasks) { TasksScreen() }
+        composable(AppRoute.Tasks) { TasksScreen(onBack = { navController.popBackStack() }) }
         composable(AppRoute.Finance) {
             FinanceScreen(
                 onOpenTools = { navController.navigate(AppRoute.Planner) },
@@ -532,7 +532,6 @@ private fun LifeOSBottomBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             val activeRoutes = currentDestination?.hierarchy?.mapNotNull { it.route }?.toSet().orEmpty()
-            val primaryTabRoutes = primaryTabs.map { it.route }.toSet()
             primaryTabs.forEach { item ->
                 val selected = isPrimaryTabSelected(item, activeRoutes)
                 BottomNavItem(
@@ -545,39 +544,27 @@ private fun LifeOSBottomBar(
                         // Exact-route guard — already on this tab's root, do nothing.
                         if (currentRoute == item.route) return@BottomNavItem
 
-                        val isOnPrimaryTab = currentRoute in primaryTabRoutes
-
-                        if (isOnPrimaryTab) {
-                            // ── Primary-tab → primary-tab transition ─────────────────────────
-                            // Standard Material tab switching: pop back to the Home root,
-                            // save the leaving tab's state, restore the arriving tab's state.
+                        // ── Unified navigation strategy ───────────────────────────────────
+                        // Always try popBackStack first.  This reliably handles every scenario
+                        // where the target already exists somewhere below the current screen:
+                        //
+                        //  • Deep pages (Tasks, Events, Insights, Search, Review, …) pushed on
+                        //    top of a primary tab from Home.
+                        //  • Primary-tab screens opened via in-app buttons rather than the nav
+                        //    bar (e.g. the Profile icon in HomeScreen) — these are pushed as a
+                        //    normal back-stack entry on top of Home, so Home can still be below
+                        //    the current destination in the live stack.
+                        //
+                        // If the target is NOT in the live back stack (true tab-to-tab switch or
+                        // first visit), popBackStack returns false and we fall through to the
+                        // standard Material saveState / restoreState navigate so scroll positions
+                        // and other per-tab state survive across tab switches.
+                        val popped = navController.popBackStack(item.route, inclusive = false)
+                        if (!popped) {
                             navController.navigate(item.route) {
                                 popUpTo(AppRoute.Home) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
-                            }
-                        } else {
-                            // ── Deep-page → primary-tab transition ───────────────────────────
-                            // We are inside a sub-flow (Review, Search, Insights, Tasks, etc.)
-                            // that was pushed on top of a primary tab.
-                            //
-                            // Using popUpTo + launchSingleTop here is unreliable: after popUpTo
-                            // reveals the target tab, launchSingleTop detects it is already at
-                            // the top and suppresses the navigate call, which in some Android
-                            // Navigation versions produces a visible no-op.
-                            //
-                            // Instead use popBackStack directly — it pops entries until the
-                            // target route is at the top, then returns true.  If the target is
-                            // not in the back stack at all (e.g. user is deep inside Finance but
-                            // clicks Calendar which was never visited), fall back to a fresh
-                            // navigate that clears any sub-flow debris above Home.
-                            val popped = navController.popBackStack(item.route, inclusive = false)
-                            if (!popped) {
-                                navController.navigate(item.route) {
-                                    popUpTo(AppRoute.Home) { inclusive = false }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
                             }
                         }
                     },

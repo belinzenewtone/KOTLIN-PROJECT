@@ -1,8 +1,8 @@
 ﻿{
-    "version_code":  40,
-    "version_name":  "1.2.29",
-    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.29/app-release-v1.2.29.apk",
-    "checksum_sha256":  "b930ec481ab1ecb19bfe1b6b4ebe68ec579e2fc627e29c40a564ae769a504128",
+    "version_code":  41,
+    "version_name":  "1.2.30",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.30/app-release-v1.2.30.apk",
+    "checksum_sha256":  "59e7098d389b64a01e3841961d0c109b50e12dd3856edb3daec3487323af0182",
     "required":  false,
-    "release_notes":  "Removed non-functional \u0027Close the ritual\u0027 label from Weekly Review and shipped latest navigation/transition stability fixes."
+    "release_notes":  "Delivered pending UI refresh (Telegram-style LifeOS switches, outlined icon pass) plus latest navigation and transition stability fixes."
 }

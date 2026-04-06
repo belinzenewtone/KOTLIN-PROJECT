@@ -542,7 +542,7 @@ private fun LifeOSBottomBar(
                     selectedIcon = item.selectedIcon,
                     unselectedIcon = item.unselectedIcon,
                     onClick = {
-                        if (selected) return@BottomNavItem
+                        if (navController.currentDestination?.route == item.route) return@BottomNavItem
                         navController.navigate(item.route) {
                             popUpTo(navController.graph.findStartDestination().id) {
                                 saveState = true

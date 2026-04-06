@@ -1,8 +1,8 @@
 ﻿{
-    "version_code":  39,
-    "version_name":  "1.2.28",
-    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.28/app-release-v1.2.28.apk",
-    "checksum_sha256":  "51df2a4f57c9c0d5574e5fa492c3d9f32ec54c879a6507383c46c1f11ed5829a",
+    "version_code":  40,
+    "version_name":  "1.2.29",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.29/app-release-v1.2.29.apk",
+    "checksum_sha256":  "b930ec481ab1ecb19bfe1b6b4ebe68ec579e2fc627e29c40a564ae769a504128",
     "required":  false,
-    "release_notes":  "Fix Home tab routing guard to navigate correctly from legacy dashboard while preserving tab stability."
+    "release_notes":  "Removed non-functional \u0027Close the ritual\u0027 label from Weekly Review and shipped latest navigation/transition stability fixes."
 }

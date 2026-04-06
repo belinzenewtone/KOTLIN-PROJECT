@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -299,6 +300,7 @@ private fun OtaActionButtons(
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedButton(
             enabled = !state.isBusy,
+            border = BorderStroke(1.4.dp, MaterialTheme.colorScheme.outline),
             onClick = onCheck,
         ) {
             if (state.isBusy && state.availableUpdate == null) {
@@ -310,6 +312,7 @@ private fun OtaActionButtons(
 
         OutlinedButton(
             enabled = !state.isBusy && state.availableUpdate != null,
+            border = BorderStroke(1.4.dp, MaterialTheme.colorScheme.outline),
             onClick = onDownloadAndInstall,
         ) {
             if (state.isBusy && state.availableUpdate != null) {
@@ -323,6 +326,7 @@ private fun OtaActionButtons(
     if (state.hasDownloadedApk) {
         OutlinedButton(
             enabled = !state.isBusy,
+            border = BorderStroke(1.4.dp, MaterialTheme.colorScheme.outline),
             onClick = onInstallDownloaded,
         ) {
             Text("Install downloaded update")

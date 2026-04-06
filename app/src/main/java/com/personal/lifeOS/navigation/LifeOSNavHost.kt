@@ -35,6 +35,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -523,6 +524,11 @@ private fun LifeOSBottomBar(
                         shape = navBarShape,
                     )
                     // Reduced vertical padding → slimmer bar height
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = {},
+                    )
                     .padding(horizontal = 6.dp, vertical = 2.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
@@ -536,6 +542,7 @@ private fun LifeOSBottomBar(
                     selectedIcon = item.selectedIcon,
                     unselectedIcon = item.unselectedIcon,
                     onClick = {
+                        if (selected) return@BottomNavItem
                         navController.navigate(item.route) {
                             popUpTo(navController.graph.findStartDestination().id) {
                                 saveState = true
@@ -576,6 +583,7 @@ private fun RowScope.BottomNavItem(
         modifier =
             Modifier
                 .weight(1f)
+                .defaultMinSize(minHeight = 48.dp)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,

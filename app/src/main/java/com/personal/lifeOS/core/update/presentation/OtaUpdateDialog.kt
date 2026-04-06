@@ -1,6 +1,7 @@
 package com.personal.lifeOS.core.update.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -94,6 +95,7 @@ internal fun OtaUpdateDialog(
                 )
                 OutlinedButton(
                     modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.4.dp, MaterialTheme.colorScheme.outline),
                     onClick = callbacks.onWebsite,
                     shape = RoundedCornerShape(AppDesignTokens.radius.pill),
                 ) {
@@ -231,6 +233,7 @@ private fun OtaDialogActions(
             state.isDownloading -> {
                 OutlinedButton(
                     modifier = Modifier.weight(1f),
+                    border = BorderStroke(1.4.dp, MaterialTheme.colorScheme.outline),
                     onClick = callbacks.onCancelDownload,
                     shape = RoundedCornerShape(AppDesignTokens.radius.pill),
                 ) {
@@ -241,6 +244,7 @@ private fun OtaDialogActions(
             !manifest.mandatory -> {
                 OutlinedButton(
                     modifier = Modifier.weight(1f),
+                    border = BorderStroke(1.4.dp, MaterialTheme.colorScheme.outline),
                     onClick = callbacks.onLater,
                     shape = RoundedCornerShape(AppDesignTokens.radius.pill),
                 ) {

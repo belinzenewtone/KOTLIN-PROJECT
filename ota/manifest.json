@@ -1,8 +1,8 @@
 ﻿{
-    "version_code":  38,
-    "version_name":  "1.2.27",
-    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.27/app-release-v1.2.27.apk",
-    "checksum_sha256":  "ebe5338689d431b2e74bf27dd55bef0d104393718a63e6014194d4bd47373579",
+    "version_code":  39,
+    "version_name":  "1.2.28",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.28/app-release-v1.2.28.apk",
+    "checksum_sha256":  "51df2a4f57c9c0d5574e5fa492c3d9f32ec54c879a6507383c46c1f11ed5829a",
     "required":  false,
-    "release_notes":  "Fixed floating navbar Home taps, corrected Home task routing, and improved update action border visibility."
+    "release_notes":  "Fix Home tab routing guard to navigate correctly from legacy dashboard while preserving tab stability."
 }

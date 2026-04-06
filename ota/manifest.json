@@ -1,8 +1,8 @@
 ﻿{
-    "version_code":  37,
-    "version_name":  "1.2.26",
-    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.26/app-release-v1.2.26.apk",
-    "checksum_sha256":  "42406f1b310bad6c754d07528f8611ca46c7c0c6063bf995fdb12e8f3860b016",
+    "version_code":  38,
+    "version_name":  "1.2.27",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.27/app-release-v1.2.27.apk",
+    "checksum_sha256":  "ebe5338689d431b2e74bf27dd55bef0d104393718a63e6014194d4bd47373579",
     "required":  false,
-    "release_notes":  "Floating nav tap reliability fixes, aligned Budget/Income add buttons, and refreshed OTA dialog design."
+    "release_notes":  "Fixed floating navbar Home taps, corrected Home task routing, and improved update action border visibility."
 }

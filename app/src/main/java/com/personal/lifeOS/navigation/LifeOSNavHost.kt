@@ -544,7 +544,7 @@ private fun LifeOSBottomBar(
                     onClick = {
                         if (navController.currentDestination?.route == item.route) return@BottomNavItem
                         navController.navigate(item.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
+                            popUpTo(AppRoute.Home) {
                                 saveState = true
                             }
                             launchSingleTop = true

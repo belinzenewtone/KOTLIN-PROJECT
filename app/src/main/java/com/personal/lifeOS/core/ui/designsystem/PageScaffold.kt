@@ -1,6 +1,7 @@
 package com.personal.lifeOS.core.ui.designsystem
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -51,7 +52,7 @@ fun PageScaffold(
 ) {
     val bgColor by animateColorAsState(
         targetValue = MaterialTheme.colorScheme.background,
-        animationSpec = tween(durationMillis = 300),
+        animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing),
         label = "scaffoldBg",
     )
 

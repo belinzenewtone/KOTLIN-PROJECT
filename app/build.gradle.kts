@@ -48,8 +48,8 @@ android {
         applicationId = "com.personal.lifeOS"
         minSdk = 26
         targetSdk = 35
-        versionCode = 41
-        versionName = "1.2.30"
+        versionCode = 42
+        versionName = "1.2.31"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

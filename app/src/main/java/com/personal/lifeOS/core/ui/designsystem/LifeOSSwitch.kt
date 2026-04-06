@@ -6,16 +6,22 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.personal.lifeOS.ui.theme.Primary
 
 /**
  * Telegram-style toggle switch.
  *
  * Visual spec:
- *  • Checked   — track: primary blue, thumb: white, no border
- *  • Unchecked — track: surfaceVariant (muted grey), thumb: white, no border
+ *  • Checked   — track: app brand blue (Primary, identical in light & dark),
+ *                thumb: white, no border — matches Telegram's consistent switch
+ *  • Unchecked — track: onSurfaceVariant at 20 % opacity (visible in both
+ *                themes without looking washed-out), thumb: white, no border
  *
- * Drop-in replacement for Material 3 [Switch] — identical API, consistent
- * styling across the whole app without manual `colors =` repetition.
+ * Uses the static [Primary] constant rather than [MaterialTheme.colorScheme.primary]
+ * so the track stays the same vivid blue in dark mode (where the theme primary
+ * shifts to a lighter tint for text contrast purposes).
+ *
+ * Drop-in replacement for Material 3 [Switch] — identical API.
  */
 @Composable
 fun LifeOSSwitch(
@@ -24,6 +30,7 @@ fun LifeOSSwitch(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
+    val trackOff = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.20f)
     Switch(
         checked = checked,
         onCheckedChange = onCheckedChange,
@@ -31,20 +38,20 @@ fun LifeOSSwitch(
         enabled = enabled,
         colors = SwitchDefaults.colors(
             // ── Checked state ────────────────────────────────────────────────
-            checkedTrackColor = MaterialTheme.colorScheme.primary,
+            checkedTrackColor = Primary,
             checkedThumbColor = Color.White,
             checkedBorderColor = Color.Transparent,
             checkedIconColor = Color.Transparent,
             // ── Unchecked state ──────────────────────────────────────────────
-            uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+            uncheckedTrackColor = trackOff,
             uncheckedThumbColor = Color.White,
             uncheckedBorderColor = Color.Transparent,
             uncheckedIconColor = Color.Transparent,
             // ── Disabled states ──────────────────────────────────────────────
-            disabledCheckedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f),
+            disabledCheckedTrackColor = Primary.copy(alpha = 0.38f),
             disabledCheckedThumbColor = Color.White.copy(alpha = 0.60f),
             disabledCheckedBorderColor = Color.Transparent,
-            disabledUncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f),
+            disabledUncheckedTrackColor = trackOff.copy(alpha = 0.38f),
             disabledUncheckedThumbColor = Color.White.copy(alpha = 0.60f),
             disabledUncheckedBorderColor = Color.Transparent,
         ),

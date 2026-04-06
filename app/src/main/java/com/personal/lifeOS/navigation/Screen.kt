@@ -25,8 +25,7 @@ object AppRoute {
     const val Profile = "profile"
     const val Settings = "settings"
     const val Export = "export"
-    const val Analytics = "analytics"
-    const val Insights = "insights"   // Insights surface — accessible via Home card
+    const val Insights = "insights"   // Insights surface — accessible via Home shortcuts
     const val Search = "search"
     const val Planner = "planner"     // Finance Tools hub (budget, income, recurring, export)
     const val Review = "review"       // Weekly/monthly personal digest

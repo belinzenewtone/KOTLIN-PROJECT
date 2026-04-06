@@ -6,6 +6,8 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -72,7 +74,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -82,26 +83,26 @@ import com.personal.lifeOS.core.permissions.AppPermissionsOrchestrator
 import com.personal.lifeOS.core.security.BiometricAuthManager
 import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.core.update.presentation.OtaUpdatePromptHost
-import com.personal.lifeOS.feature.assistant.presentation.AssistantScreen
-import com.personal.lifeOS.feature.auth.presentation.AuthScreen
-import com.personal.lifeOS.feature.auth.presentation.OnboardingScreen
-import com.personal.lifeOS.feature.budget.presentation.BudgetScreen
-import com.personal.lifeOS.feature.calendar.presentation.CalendarScreen
-import com.personal.lifeOS.feature.export.presentation.ExportScreen
 import com.personal.lifeOS.feature.finance.presentation.FinanceScreen
 import com.personal.lifeOS.feature.home.presentation.HomeScreen
-import com.personal.lifeOS.feature.income.presentation.IncomeScreen
-import com.personal.lifeOS.feature.profile.presentation.ProfileScreen
-import com.personal.lifeOS.feature.recurring.presentation.RecurringScreen
 import com.personal.lifeOS.feature.search.presentation.SearchScreen
-import com.personal.lifeOS.feature.settings.presentation.SettingsScreen
-import com.personal.lifeOS.feature.tasks.presentation.TasksScreen
+import com.personal.lifeOS.features.assistant.presentation.AssistantScreen
+import com.personal.lifeOS.features.auth.presentation.AuthScreen
 import com.personal.lifeOS.features.auth.presentation.AuthUiEvent
 import com.personal.lifeOS.features.auth.presentation.AuthViewModel
+import com.personal.lifeOS.features.auth.presentation.OnboardingScreen
+import com.personal.lifeOS.features.budget.presentation.BudgetScreen
+import com.personal.lifeOS.features.calendar.presentation.CalendarScreen
+import com.personal.lifeOS.features.export.presentation.ExportScreen
+import com.personal.lifeOS.features.income.presentation.IncomeScreen
 import com.personal.lifeOS.features.insights.presentation.InsightsScreen
 import com.personal.lifeOS.features.learning.presentation.LearningScreen
 import com.personal.lifeOS.features.planner.presentation.PlannerScreen
+import com.personal.lifeOS.features.profile.presentation.ProfileScreen
+import com.personal.lifeOS.features.recurring.presentation.RecurringScreen
 import com.personal.lifeOS.features.review.presentation.ReviewScreen
+import com.personal.lifeOS.features.settings.presentation.SettingsScreen
+import com.personal.lifeOS.features.tasks.presentation.TasksScreen
 
 // Re-prompt biometric only if app was backgrounded for longer than this threshold.
 private const val BIOMETRIC_LOCK_TIMEOUT_MS = 5 * 60 * 1000L
@@ -322,33 +323,32 @@ private fun LifeOSNavigationGraph(
         navController = navController,
         startDestination = startDestination,
         modifier = Modifier.fillMaxSize(),
-        // Screen transitions — forward: fluid slide-in from right with spring; back: slide out.
-        // Spring damping gives a natural, intentional feel rather than a mechanical tween.
+        // ── Screen transitions ───────────────────────────────────────────────
+        // All four legs use the same spec type (tween) so fade and slide
+        // finish together — eliminating the visual pop caused by mismatched
+        // spring / tween durations.
+        //
+        // Easing choices follow Material motion:
+        //   Enter  → FastOutSlowInEasing  (decelerates, "settles in")
+        //   Exit   → FastOutLinearInEasing (accelerates, "gets out of the way")
+        //
+        // Slide distance is intentionally small (≈ 20 % of screen width) —
+        // large slides look slow on mid-range phones and distract from content.
         enterTransition = {
-            fadeIn(tween(260, easing = EaseInOut)) +
-                slideInHorizontally(
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioNoBouncy,
-                        stiffness = Spring.StiffnessMediumLow,
-                    ),
-                ) { it / 4 }
+            fadeIn(tween(280, easing = FastOutSlowInEasing)) +
+                slideInHorizontally(tween(280, easing = FastOutSlowInEasing)) { it / 5 }
         },
         exitTransition = {
-            fadeOut(tween(200, easing = EaseInOut)) +
-                slideOutHorizontally(tween(200, easing = EaseInOut)) { -it / 8 }
+            fadeOut(tween(200, easing = FastOutLinearInEasing)) +
+                slideOutHorizontally(tween(200, easing = FastOutLinearInEasing)) { -it / 10 }
         },
         popEnterTransition = {
-            fadeIn(tween(220, easing = EaseInOut)) +
-                slideInHorizontally(tween(220, easing = EaseInOut)) { -it / 8 }
+            fadeIn(tween(260, easing = FastOutSlowInEasing)) +
+                slideInHorizontally(tween(260, easing = FastOutSlowInEasing)) { -it / 5 }
         },
         popExitTransition = {
-            fadeOut(tween(240, easing = EaseInOut)) +
-                slideOutHorizontally(
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioNoBouncy,
-                        stiffness = Spring.StiffnessMediumLow,
-                    ),
-                ) { it / 4 }
+            fadeOut(tween(200, easing = FastOutLinearInEasing)) +
+                slideOutHorizontally(tween(200, easing = FastOutLinearInEasing)) { it / 5 }
         },
     ) {
         composable(AppRoute.Auth) {
@@ -419,10 +419,7 @@ private fun LifeOSNavigationGraph(
             ExportScreen(onBack = { navController.popBackStack() })
         }
 
-        // Insights — accessible via Home header button (not a bottom tab per design decision)
-        composable(AppRoute.Analytics) {
-            InsightsScreen(onBack = { navController.popBackStack() })
-        }
+        // Insights — accessible via Home shortcuts (not a primary nav tab)
         composable(AppRoute.Insights) {
             InsightsScreen(onBack = { navController.popBackStack() })
         }
@@ -529,6 +526,7 @@ private fun LifeOSBottomBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             val activeRoutes = currentDestination?.hierarchy?.mapNotNull { it.route }?.toSet().orEmpty()
+            val primaryTabRoutes = primaryTabs.map { it.route }.toSet()
             primaryTabs.forEach { item ->
                 val selected = isPrimaryTabSelected(item, activeRoutes)
                 BottomNavItem(
@@ -537,13 +535,44 @@ private fun LifeOSBottomBar(
                     selectedIcon = item.selectedIcon,
                     unselectedIcon = item.unselectedIcon,
                     onClick = {
-                        if (navController.currentDestination?.route == item.route) return@BottomNavItem
-                        navController.navigate(item.route) {
-                            popUpTo(AppRoute.Home) {
-                                saveState = true
+                        val currentRoute = navController.currentDestination?.route
+                        // Exact-route guard — already on this tab's root, do nothing.
+                        if (currentRoute == item.route) return@BottomNavItem
+
+                        val isOnPrimaryTab = currentRoute in primaryTabRoutes
+
+                        if (isOnPrimaryTab) {
+                            // ── Primary-tab → primary-tab transition ─────────────────────────
+                            // Standard Material tab switching: pop back to the Home root,
+                            // save the leaving tab's state, restore the arriving tab's state.
+                            navController.navigate(item.route) {
+                                popUpTo(AppRoute.Home) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                            launchSingleTop = true
-                            restoreState = true
+                        } else {
+                            // ── Deep-page → primary-tab transition ───────────────────────────
+                            // We are inside a sub-flow (Review, Search, Insights, Tasks, etc.)
+                            // that was pushed on top of a primary tab.
+                            //
+                            // Using popUpTo + launchSingleTop here is unreliable: after popUpTo
+                            // reveals the target tab, launchSingleTop detects it is already at
+                            // the top and suppresses the navigate call, which in some Android
+                            // Navigation versions produces a visible no-op.
+                            //
+                            // Instead use popBackStack directly — it pops entries until the
+                            // target route is at the top, then returns true.  If the target is
+                            // not in the back stack at all (e.g. user is deep inside Finance but
+                            // clicks Calendar which was never visited), fall back to a fresh
+                            // navigate that clears any sub-flow debris above Home.
+                            val popped = navController.popBackStack(item.route, inclusive = false)
+                            if (!popped) {
+                                navController.navigate(item.route) {
+                                    popUpTo(AppRoute.Home) { inclusive = false }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
                         }
                     },
                 )
@@ -591,8 +620,8 @@ private fun RowScope.BottomNavItem(
             // Animated pill indicator — scales in/out smoothly
             androidx.compose.animation.AnimatedVisibility(
                 visible = selected,
-                enter = scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)) + fadeIn(tween(180)),
-                exit  = scaleOut(tween(140)) + fadeOut(tween(140)),
+                enter = scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumHigh)) + fadeIn(tween(200, easing = FastOutSlowInEasing)),
+                exit  = scaleOut(tween(150, easing = FastOutLinearInEasing)) + fadeOut(tween(150, easing = FastOutLinearInEasing)),
             ) {
                 Box(
                     modifier =
@@ -606,7 +635,8 @@ private fun RowScope.BottomNavItem(
             AnimatedContent(
                 targetState = selected,
                 transitionSpec = {
-                    fadeIn(tween(180)) togetherWith fadeOut(tween(120))
+                    fadeIn(tween(200, easing = FastOutSlowInEasing)) togetherWith
+                        fadeOut(tween(150, easing = FastOutLinearInEasing))
                 },
                 label = "tabIcon",
             ) { isSelected ->

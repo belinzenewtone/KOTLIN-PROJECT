@@ -620,7 +620,7 @@ private fun RowScope.BottomNavItem(
             // Animated pill indicator — scales in/out smoothly
             androidx.compose.animation.AnimatedVisibility(
                 visible = selected,
-                enter = scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumHigh)) + fadeIn(tween(200, easing = FastOutSlowInEasing)),
+                enter = scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)) + fadeIn(tween(200, easing = FastOutSlowInEasing)),
                 exit  = scaleOut(tween(150, easing = FastOutLinearInEasing)) + fadeOut(tween(150, easing = FastOutLinearInEasing)),
             ) {
                 Box(

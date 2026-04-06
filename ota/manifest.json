@@ -1,8 +1,8 @@
 ﻿{
-    "version_code":  43,
-    "version_name":  "1.2.32",
-    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.32/app-release-v1.2.32.apk",
-    "checksum_sha256":  "cc63d0a16584116cf3a57aeaa3c93dfa04ea526dd3024e32f67f89c467ff2b6e",
+    "version_code":  44,
+    "version_name":  "1.2.33",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.33/app-release-v1.2.33.apk",
+    "checksum_sha256":  "49a862a4f243701c7c74c4711deb23b791beaf91fda41cabd06e923c2b55dd74",
     "required":  false,
-    "release_notes":  "Adds dedicated Events route from Home shortcut with upcoming-events screen (search, add/edit/delete via shared Calendar components), plus navigation wiring and version bump to 1.2.32."
+    "release_notes":  "Navigation reliability release: unified bottom-nav popBackStack strategy for deep pages and in-app tab pushes; Tasks screen now has a wired back button; Insights now uses a modern Canvas stacked bar chart with gradients, rounded tops, guide lines, and animated touch tooltip."
 }

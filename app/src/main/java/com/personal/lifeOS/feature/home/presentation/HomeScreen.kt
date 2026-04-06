@@ -143,7 +143,7 @@ private fun HomeAgendaCard(
                 icon = Icons.Outlined.CalendarMonth,
                 title = "Next Event",
                 value = uiState.nextEventTimeLabel ?: "No event",
-                onClick = { onOpenRoute(AppRoute.Calendar) },
+                onClick = { onOpenRoute(AppRoute.Events) },
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
             HomeAgendaRow(

@@ -93,6 +93,7 @@ import com.personal.lifeOS.features.auth.presentation.AuthViewModel
 import com.personal.lifeOS.features.auth.presentation.OnboardingScreen
 import com.personal.lifeOS.features.budget.presentation.BudgetScreen
 import com.personal.lifeOS.features.calendar.presentation.CalendarScreen
+import com.personal.lifeOS.features.calendar.presentation.EventsScreen
 import com.personal.lifeOS.features.export.presentation.ExportScreen
 import com.personal.lifeOS.features.income.presentation.IncomeScreen
 import com.personal.lifeOS.features.insights.presentation.InsightsScreen
@@ -422,6 +423,11 @@ private fun LifeOSNavigationGraph(
         // Insights — accessible via Home shortcuts (not a primary nav tab)
         composable(AppRoute.Insights) {
             InsightsScreen(onBack = { navController.popBackStack() })
+        }
+
+        // Events — focused upcoming events list, opened from Home shortcut
+        composable(AppRoute.Events) {
+            EventsScreen(onBack = { navController.popBackStack() })
         }
 
         composable(AppRoute.Search) {

@@ -29,6 +29,7 @@ object AppRoute {
     const val Search = "search"
     const val Planner = "planner"     // Finance Tools hub (budget, income, recurring, export)
     const val Review = "review"       // Weekly/monthly personal digest
+    const val Events = "events"       // Dedicated events list — opened from Home shortcut
 
     // Finance sub-screens — navigated from Finance Tools hub
     const val Budget = "budget"

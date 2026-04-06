@@ -1,8 +1,8 @@
 ﻿{
-    "version_code":  41,
-    "version_name":  "1.2.30",
-    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.30/app-release-v1.2.30.apk",
-    "checksum_sha256":  "59e7098d389b64a01e3841961d0c109b50e12dd3856edb3daec3487323af0182",
+    "version_code":  42,
+    "version_name":  "1.2.31",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.31/app-release-v1.2.31.apk",
+    "checksum_sha256":  "e74e8b62c366a46af14fb9ad2d4fa114ec4a2c484338fa10ee3693727b0a97a9",
     "required":  false,
-    "release_notes":  "Delivered pending UI refresh (Telegram-style LifeOS switches, outlined icon pass) plus latest navigation and transition stability fixes."
+    "release_notes":  "Major cleanup release: removed legacy bridge wrappers and unreachable analytics module; nav host now imports canonical features directly; includes UI and navigation stability updates."
 }

@@ -17,8 +17,8 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DeleteSweep
-import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material.icons.outlined.DeleteSweep
+import androidx.compose.material.icons.outlined.SmartToy
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -59,7 +59,7 @@ internal fun AssistantHeader(isProcessing: Boolean, onClearChat: () -> Unit) {
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = Icons.Filled.SmartToy,
+                    imageVector = Icons.Outlined.SmartToy,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp),
@@ -70,7 +70,7 @@ internal fun AssistantHeader(isProcessing: Boolean, onClearChat: () -> Unit) {
                 enabled = !isProcessing,
             ) {
                 Icon(
-                    imageVector = Icons.Filled.DeleteSweep,
+                    imageVector = Icons.Outlined.DeleteSweep,
                     contentDescription = "Clear chat",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(20.dp),
@@ -99,7 +99,7 @@ internal fun ChatBubble(message: ChatMessage) {
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = Icons.Filled.SmartToy,
+                    imageVector = Icons.Outlined.SmartToy,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(16.dp),
@@ -144,7 +144,7 @@ internal fun TypingIndicator() {
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = Icons.Filled.SmartToy,
+                imageVector = Icons.Outlined.SmartToy,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(16.dp),

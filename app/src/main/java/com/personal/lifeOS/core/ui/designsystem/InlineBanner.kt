@@ -7,10 +7,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.ErrorOutline
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -36,10 +36,10 @@ fun InlineBanner(
     val semanticColors = AppDesignTokens.semanticColors(semanticTone)
     val icon =
         when (tone) {
-            InlineBannerTone.INFO -> Icons.Filled.Info as ImageVector
-            InlineBannerTone.SUCCESS -> Icons.Filled.CheckCircle as ImageVector
-            InlineBannerTone.WARNING -> Icons.Filled.Warning as ImageVector
-            InlineBannerTone.ERROR -> Icons.Filled.ErrorOutline as ImageVector
+            InlineBannerTone.INFO -> Icons.Outlined.Info as ImageVector
+            InlineBannerTone.SUCCESS -> Icons.Outlined.CheckCircle as ImageVector
+            InlineBannerTone.WARNING -> Icons.Outlined.Warning as ImageVector
+            InlineBannerTone.ERROR -> Icons.Outlined.ErrorOutline as ImageVector
         }
 
     Row(

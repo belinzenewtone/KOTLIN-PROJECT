@@ -12,7 +12,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -96,7 +96,7 @@ internal fun InputBar(
                 )
             } else {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Send,
+                    imageVector = Icons.AutoMirrored.Outlined.Send,
                     contentDescription = "Send",
                     tint = MaterialTheme.colorScheme.onSurface,
                 )

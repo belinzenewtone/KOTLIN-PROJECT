@@ -26,11 +26,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,7 +40,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -360,7 +359,7 @@ fun SuperAddBottomSheet(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Icon(
-                    imageVector = if (showDetails) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                    imageVector = if (showDetails) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(20.dp),
@@ -481,7 +480,7 @@ fun SuperAddBottomSheet(
                                     )
                                 }
                             }
-                            Switch(checked = hasReminder, onCheckedChange = { hasReminder = it })
+                            LifeOSSwitch(checked = hasReminder, onCheckedChange = { hasReminder = it })
                         }
 
                         // Reminder time presets — only shown when reminder is on
@@ -595,7 +594,7 @@ private fun WhenSection(
                     modifier = Modifier.size(24.dp),
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Close,
+                        imageVector = Icons.Outlined.Close,
                         contentDescription = "Clear $rowLabel",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(16.dp),
@@ -606,13 +605,13 @@ private fun WhenSection(
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             DateTimeChip(
-                icon = Icons.Filled.CalendarMonth,
+                icon = Icons.Outlined.CalendarMonth,
                 label = dateText,
                 onClick = onPickDate,
                 modifier = Modifier.weight(1f),
             )
             DateTimeChip(
-                icon = Icons.Filled.Schedule,
+                icon = Icons.Outlined.Schedule,
                 label = timeText,
                 onClick = onPickTime,
                 modifier = Modifier.weight(1f),

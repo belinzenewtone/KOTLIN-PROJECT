@@ -17,7 +17,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
+import com.personal.lifeOS.core.ui.designsystem.LifeOSSwitch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -134,7 +134,7 @@ private fun ExportConfigurationCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Switch(
+                LifeOSSwitch(
                     checked = state.encryptionEnabled,
                     onCheckedChange = viewModel::setEncryptionEnabled,
                 )

@@ -23,13 +23,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.PieChart
-import androidx.compose.material.icons.filled.RocketLaunch
-import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.PieChart
+import androidx.compose.material.icons.outlined.RocketLaunch
+import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -104,7 +104,7 @@ fun OnboardingScreen(
                     },
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
                         contentDescription = "Back",
                         tint = MaterialTheme.colorScheme.primary,
                     )
@@ -230,8 +230,8 @@ private fun OnboardingPillarsStep() {
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        OnboardingPillarCard(icon = Icons.Filled.Speed, title = "Productivity", description = "Prioritize what matters and keep focused execution daily.")
-        OnboardingPillarCard(icon = Icons.Filled.PieChart, title = "Finance", description = "Track spending, watch budgets, and review trends with confidence.")
+        OnboardingPillarCard(icon = Icons.Outlined.Speed, title = "Productivity", description = "Prioritize what matters and keep focused execution daily.")
+        OnboardingPillarCard(icon = Icons.Outlined.PieChart, title = "Finance", description = "Track spending, watch budgets, and review trends with confidence.")
     }
 }
 
@@ -290,7 +290,7 @@ private fun OnboardingProfileSetupStep(
                     horizontalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.sm),
                 ) {
                     Icon(
-                        imageVector = if (goal == OnboardingGoal.PRODUCTIVITY) Icons.Filled.RocketLaunch else Icons.Filled.PieChart,
+                        imageVector = if (goal == OnboardingGoal.PRODUCTIVITY) Icons.Outlined.RocketLaunch else Icons.Outlined.PieChart,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                     )
@@ -299,7 +299,7 @@ private fun OnboardingProfileSetupStep(
                         Text(goal.description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     if (selected) {
-                        Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
@@ -312,9 +312,9 @@ private fun OnboardingFinalStep() {
     Column(verticalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.md)) {
         Text("You're all set.", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
         Text("Welcome to your new digital sanctuary.", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        OnboardingPillarCard(icon = Icons.Filled.AutoAwesome, title = "Personalized Insights", description = "Actionable summaries tuned to your real usage.")
-        OnboardingPillarCard(icon = Icons.Filled.Speed, title = "Unified Workflow", description = "Tasks, calendar, and finance in a single rhythm.")
-        OnboardingPillarCard(icon = Icons.Filled.Shield, title = "Private & Secure", description = "Your data stays controlled, with transparent protection.")
+        OnboardingPillarCard(icon = Icons.Outlined.AutoAwesome, title = "Personalized Insights", description = "Actionable summaries tuned to your real usage.")
+        OnboardingPillarCard(icon = Icons.Outlined.Speed, title = "Unified Workflow", description = "Tasks, calendar, and finance in a single rhythm.")
+        OnboardingPillarCard(icon = Icons.Outlined.Shield, title = "Private & Secure", description = "Your data stays controlled, with transparent protection.")
     }
 }
 

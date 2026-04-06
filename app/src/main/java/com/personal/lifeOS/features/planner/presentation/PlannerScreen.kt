@@ -8,11 +8,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBalance
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.Loop
-import androidx.compose.material.icons.filled.MonetizationOn
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.AccountBalance
+import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.Loop
+import androidx.compose.material.icons.outlined.MonetizationOn
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -47,31 +47,31 @@ fun PlannerScreen(
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
     ) {
         ToolCard(
-            icon = Icons.Filled.AccountBalance,
+            icon = Icons.Outlined.AccountBalance,
             title = "Budgets",
             description = "Set spending limits by category and track progress",
             onClick = onOpenBudget,
         )
         ToolCard(
-            icon = Icons.Filled.MonetizationOn,
+            icon = Icons.Outlined.MonetizationOn,
             title = "Income",
             description = "Log and review income sources",
             onClick = onOpenIncome,
         )
         ToolCard(
-            icon = Icons.Filled.Loop,
+            icon = Icons.Outlined.Loop,
             title = "Recurring",
             description = "Subscriptions, salaries, and scheduled payments",
             onClick = onOpenRecurring,
         )
         ToolCard(
-            icon = Icons.Filled.Search,
+            icon = Icons.Outlined.Search,
             title = "Search Finance",
             description = "Search transactions, budgets, and recurring entries",
             onClick = onOpenSearch,
         )
         ToolCard(
-            icon = Icons.Filled.FileDownload,
+            icon = Icons.Outlined.FileDownload,
             title = "Export",
             description = "Export your data as CSV or share a report",
             onClick = onOpenExport,

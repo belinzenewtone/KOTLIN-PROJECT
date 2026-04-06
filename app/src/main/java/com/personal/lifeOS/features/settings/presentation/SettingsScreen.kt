@@ -15,7 +15,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.runtime.Composable
@@ -51,11 +50,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.SettingsBrightness
+import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.LightMode
+import androidx.compose.material.icons.outlined.SettingsBrightness
 import androidx.compose.material3.Icon
 import androidx.compose.ui.draw.clip
+import com.personal.lifeOS.core.ui.designsystem.LifeOSSwitch
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.EaseInOut
@@ -148,7 +148,7 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Switch(
+                LifeOSSwitch(
                     checked = state.notificationsEnabled,
                     onCheckedChange = { enabled ->
                         viewModel.onEvent(SettingsUiEvent.ToggleNotifications(enabled))
@@ -356,9 +356,9 @@ private fun ThemeModeToggle(
     onSelect: (com.personal.lifeOS.ui.theme.AppThemeMode) -> Unit,
 ) {
     val modes = listOf(
-        Triple(com.personal.lifeOS.ui.theme.AppThemeMode.LIGHT,  Icons.Filled.LightMode,         "Light"),
-        Triple(com.personal.lifeOS.ui.theme.AppThemeMode.SYSTEM, Icons.Filled.SettingsBrightness, "Auto"),
-        Triple(com.personal.lifeOS.ui.theme.AppThemeMode.DARK,   Icons.Filled.DarkMode,           "Dark"),
+        Triple(com.personal.lifeOS.ui.theme.AppThemeMode.LIGHT,  Icons.Outlined.LightMode,         "Light"),
+        Triple(com.personal.lifeOS.ui.theme.AppThemeMode.SYSTEM, Icons.Outlined.SettingsBrightness, "Auto"),
+        Triple(com.personal.lifeOS.ui.theme.AppThemeMode.DARK,   Icons.Outlined.DarkMode,           "Dark"),
     )
     val shape = RoundedCornerShape(AppDesignTokens.radius.sm)
     Row(

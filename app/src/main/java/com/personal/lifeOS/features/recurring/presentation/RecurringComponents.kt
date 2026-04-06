@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -17,7 +17,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
+import com.personal.lifeOS.core.ui.designsystem.LifeOSSwitch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -51,7 +51,7 @@ internal fun RecurringHeader(onAdd: () -> Unit) {
             onClick = onAdd,
             modifier = Modifier.size(48.dp),
         ) {
-            Icon(Icons.Filled.Add, contentDescription = "Add recurring rule")
+            Icon(Icons.Outlined.Add, contentDescription = "Add recurring rule")
         }
     }
 }
@@ -95,12 +95,12 @@ internal fun RecurringRuleCard(
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Switch(
+                LifeOSSwitch(
                     checked = rule.enabled,
                     onCheckedChange = onToggle,
                 )
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Filled.Delete, contentDescription = "Delete rule")
+                    Icon(Icons.Outlined.Delete, contentDescription = "Delete rule")
                 }
             }
         }

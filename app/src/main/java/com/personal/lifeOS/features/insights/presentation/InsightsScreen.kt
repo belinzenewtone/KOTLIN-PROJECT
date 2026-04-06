@@ -13,8 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -69,7 +69,7 @@ fun InsightsScreen(
                 enabled = !state.isRefreshing,
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Refresh,
+                    imageVector = Icons.Outlined.Refresh,
                     contentDescription = "Refresh insights",
                 )
             }
@@ -221,7 +221,7 @@ private fun InsightCardItem(card: InsightCard) {
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.AutoAwesome,
+                            imageVector = Icons.Outlined.AutoAwesome,
                             contentDescription = "AI generated",
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(14.dp),

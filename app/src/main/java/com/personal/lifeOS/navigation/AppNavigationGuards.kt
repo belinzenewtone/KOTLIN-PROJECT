@@ -5,14 +5,6 @@ internal fun isPublicRoute(route: String?): Boolean {
     return route == AppRoute.Auth || route == AppRoute.Onboarding
 }
 
-internal fun canonicalRoute(route: String): String {
-    return when (route) {
-        AppRoute.LegacyDashboard -> AppRoute.Home
-        AppRoute.LegacyExpenses -> AppRoute.Finance
-        else -> route
-    }
-}
-
 internal fun resolveGuardNavigationTarget(
     isLoggedIn: Boolean,
     onboardingCompleted: Boolean,
@@ -47,7 +39,6 @@ internal fun isSensitiveRoute(route: String?): Boolean {
     return route in
         setOf(
             AppRoute.Finance,
-            AppRoute.LegacyExpenses,
             AppRoute.Planner,
             AppRoute.Budget,
             AppRoute.Income,

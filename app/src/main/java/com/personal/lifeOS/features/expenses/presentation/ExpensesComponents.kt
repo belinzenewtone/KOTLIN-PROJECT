@@ -20,17 +20,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.DirectionsBus
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.LocalGroceryStore
-import androidx.compose.material.icons.filled.MoreHoriz
-import androidx.compose.material.icons.filled.PhoneAndroid
-import androidx.compose.material.icons.filled.Receipt
-import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.Savings
-import androidx.compose.material.icons.filled.ShoppingBag
-import androidx.compose.material.icons.filled.Subscriptions
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.DirectionsBus
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.LocalGroceryStore
+import androidx.compose.material.icons.outlined.MoreHoriz
+import androidx.compose.material.icons.outlined.PhoneAndroid
+import androidx.compose.material.icons.outlined.Receipt
+import androidx.compose.material.icons.outlined.Restaurant
+import androidx.compose.material.icons.outlined.Savings
+import androidx.compose.material.icons.outlined.ShoppingBag
+import androidx.compose.material.icons.outlined.Subscriptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -387,7 +387,7 @@ internal fun TransactionItem(
                 Row {
                     IconButton(onClick = onRecategorize, modifier = Modifier.size(28.dp)) {
                         Icon(
-                            imageVector = Icons.Filled.Edit,
+                            imageVector = Icons.Outlined.Edit,
                             contentDescription = "Edit",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(16.dp),
@@ -395,7 +395,7 @@ internal fun TransactionItem(
                     }
                     IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
                         Icon(
-                            imageVector = Icons.Filled.Delete,
+                            imageVector = Icons.Outlined.Delete,
                             contentDescription = "Delete",
                             tint = Error.copy(alpha = 0.7f),
                             modifier = Modifier.size(16.dp),
@@ -608,15 +608,15 @@ private fun getCategoryColor(category: String): Color {
 
 private fun getCategoryIcon(category: String): ImageVector {
     return when (category.lowercase()) {
-        "food" -> Icons.Filled.Restaurant
-        "transport" -> Icons.Filled.DirectionsBus
-        "bills" -> Icons.Filled.Receipt
-        "shopping" -> Icons.Filled.ShoppingBag
-        "entertainment" -> Icons.Filled.Subscriptions
-        "subscriptions" -> Icons.Filled.Subscriptions
-        "savings" -> Icons.Filled.Savings
-        "groceries" -> Icons.Filled.LocalGroceryStore
-        "airtime" -> Icons.Filled.PhoneAndroid
-        else -> Icons.Filled.MoreHoriz
+        "food" -> Icons.Outlined.Restaurant
+        "transport" -> Icons.Outlined.DirectionsBus
+        "bills" -> Icons.Outlined.Receipt
+        "shopping" -> Icons.Outlined.ShoppingBag
+        "entertainment" -> Icons.Outlined.Subscriptions
+        "subscriptions" -> Icons.Outlined.Subscriptions
+        "savings" -> Icons.Outlined.Savings
+        "groceries" -> Icons.Outlined.LocalGroceryStore
+        "airtime" -> Icons.Outlined.PhoneAndroid
+        else -> Icons.Outlined.MoreHoriz
     }
 }

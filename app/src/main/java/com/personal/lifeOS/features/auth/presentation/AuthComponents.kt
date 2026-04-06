@@ -19,11 +19,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -143,7 +143,7 @@ internal fun SignInCard(
                 value = state.email,
                 onValueChange = { viewModel.onEvent(AuthUiEvent.UpdateEmail(it)) },
                 label = "Email Address",
-                leadingIcon = Icons.Filled.Email,
+                leadingIcon = Icons.Outlined.Email,
                 keyboardType = KeyboardType.Email,
                 placeholder = "name@example.com",
             )
@@ -151,7 +151,7 @@ internal fun SignInCard(
                 value = state.password,
                 onValueChange = { viewModel.onEvent(AuthUiEvent.UpdatePassword(it)) },
                 label = "Password",
-                leadingIcon = Icons.Filled.Lock,
+                leadingIcon = Icons.Outlined.Lock,
                 isPassword = true,
                 showPassword = state.showPassword,
                 onTogglePassword = { viewModel.onEvent(AuthUiEvent.TogglePasswordVisibility) },
@@ -199,14 +199,14 @@ internal fun SignUpCard(
                 value = state.signUpUsername,
                 onValueChange = { viewModel.onEvent(AuthUiEvent.UpdateSignUpUsername(it)) },
                 label = "Full Name",
-                leadingIcon = Icons.Filled.Person,
+                leadingIcon = Icons.Outlined.Person,
                 placeholder = "Your name",
             )
             AuthTextField(
                 value = state.signUpEmail,
                 onValueChange = { viewModel.onEvent(AuthUiEvent.UpdateSignUpEmail(it)) },
                 label = "Email Address",
-                leadingIcon = Icons.Filled.Email,
+                leadingIcon = Icons.Outlined.Email,
                 keyboardType = KeyboardType.Email,
                 placeholder = "you@personal-os.com",
             )
@@ -214,7 +214,7 @@ internal fun SignUpCard(
                 value = state.signUpPassword,
                 onValueChange = { viewModel.onEvent(AuthUiEvent.UpdateSignUpPassword(it)) },
                 label = "Secure Password",
-                leadingIcon = Icons.Filled.Lock,
+                leadingIcon = Icons.Outlined.Lock,
                 isPassword = true,
                 showPassword = state.showPassword,
                 onTogglePassword = { viewModel.onEvent(AuthUiEvent.TogglePasswordVisibility) },
@@ -224,7 +224,7 @@ internal fun SignUpCard(
                 value = state.signUpConfirmPassword,
                 onValueChange = { viewModel.onEvent(AuthUiEvent.UpdateSignUpConfirmPassword(it)) },
                 label = "Confirm Password",
-                leadingIcon = Icons.Filled.Lock,
+                leadingIcon = Icons.Outlined.Lock,
                 isPassword = true,
                 showPassword = state.showPassword,
                 onTogglePassword = { viewModel.onEvent(AuthUiEvent.TogglePasswordVisibility) },
@@ -351,7 +351,7 @@ private fun AuthTextField(
                     {
                         IconButton(onClick = { onTogglePassword?.invoke() }) {
                             Icon(
-                                imageVector = if (showPassword) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                                imageVector = if (showPassword) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
                                 contentDescription = "Toggle password",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
                             )

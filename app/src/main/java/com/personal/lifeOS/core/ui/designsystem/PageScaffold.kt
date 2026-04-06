@@ -17,7 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -94,7 +94,7 @@ fun PageScaffold(
                                                 .clip(RoundedCornerShape(AppDesignTokens.radius.pill)),
                                     ) {
                                         Icon(
-                                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
                                             contentDescription = "Go back",
                                             tint = MaterialTheme.colorScheme.onSurface,
                                             modifier = Modifier.size(20.dp),
@@ -127,7 +127,7 @@ fun PageScaffold(
                                     modifier = Modifier.size(36.dp),
                                 ) {
                                     Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                        imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
                                         contentDescription = "Go back",
                                         tint = MaterialTheme.colorScheme.onSurface,
                                         modifier = Modifier.size(22.dp),

@@ -17,10 +17,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.automirrored.outlined.TrendingUp
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -139,7 +139,7 @@ internal fun ProductivityCard(
                         .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Filled.CheckCircle, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+                Icon(Icons.Outlined.CheckCircle, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
             }
             Spacer(Modifier.width(16.dp))
             Column {
@@ -159,7 +159,7 @@ internal fun UpcomingEventsCard(events: List<UpcomingEvent>) {
     GlassCard(modifier = Modifier.fillMaxWidth()) {
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.CalendarMonth, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                Icon(Icons.Outlined.CalendarMonth, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
                 Text("Upcoming Events", style = MaterialTheme.typography.titleMedium)
             }
@@ -216,7 +216,7 @@ internal fun WeeklySpendingCard(data: List<DailySpending>) {
     GlassCard(modifier = Modifier.fillMaxWidth()) {
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.AutoMirrored.Filled.TrendingUp, null, tint = Accent, modifier = Modifier.size(20.dp))
+                Icon(Icons.AutoMirrored.Outlined.TrendingUp, null, tint = Accent, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
                 Text("Weekly Spending", style = MaterialTheme.typography.titleMedium)
             }
@@ -291,7 +291,7 @@ internal fun DashboardInsightsCard(insights: List<DashboardInsight>) {
     GlassCard(modifier = Modifier.fillMaxWidth()) {
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.AutoAwesome, null, tint = Accent, modifier = Modifier.size(20.dp))
+                Icon(Icons.Outlined.AutoAwesome, null, tint = Accent, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
                 Text("Insights", style = MaterialTheme.typography.titleMedium)
             }

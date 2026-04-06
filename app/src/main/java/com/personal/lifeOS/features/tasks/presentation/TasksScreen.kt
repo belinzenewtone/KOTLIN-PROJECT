@@ -12,9 +12,9 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -88,7 +88,7 @@ fun TasksScreen(viewModel: TasksViewModel = hiltViewModel()) {
                 contentColor = MaterialTheme.colorScheme.onSurface,
                 shape = CircleShape,
             ) {
-                Icon(Icons.Filled.Add, contentDescription = "Add task")
+                Icon(Icons.Outlined.Add, contentDescription = "Add task")
             }
         },
     ) { padding ->
@@ -281,8 +281,8 @@ private fun PrioritySection(
                         label = "swipe_bg",
                     )
                     val icon = when (direction) {
-                        SwipeToDismissBoxValue.StartToEnd -> Icons.Filled.CheckCircle
-                        SwipeToDismissBoxValue.EndToStart -> Icons.Filled.Delete
+                        SwipeToDismissBoxValue.StartToEnd -> Icons.Outlined.CheckCircle
+                        SwipeToDismissBoxValue.EndToStart -> Icons.Outlined.Delete
                         else -> null
                     }
                     val alignment = when (direction) {

@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
@@ -75,7 +75,7 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
                 shape = CircleShape,
             ) {
                 Icon(
-                    Icons.Filled.Add,
+                    Icons.Outlined.Add,
                     contentDescription = if (section == CalendarSection.TASKS) "Add task" else "Add event",
                 )
             }

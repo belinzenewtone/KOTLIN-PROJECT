@@ -19,8 +19,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -172,7 +172,7 @@ internal fun AddEventDialog(
 
                 DateTimePickerRow(
                     title = "Event Date",
-                    icon = Icons.Filled.CalendarMonth,
+                    icon = Icons.Outlined.CalendarMonth,
                     value = DateUtils.formatDate(eventDateTime, "MMM dd, yyyy"),
                     onClick = {
                         val calendar = Calendar.getInstance().apply { timeInMillis = eventDateTime }
@@ -195,7 +195,7 @@ internal fun AddEventDialog(
 
                 DateTimePickerRow(
                     title = "Event Time",
-                    icon = Icons.Filled.Schedule,
+                    icon = Icons.Outlined.Schedule,
                     value = DateUtils.formatTime(eventDateTime),
                     onClick = {
                         val calendar = Calendar.getInstance().apply { timeInMillis = eventDateTime }
@@ -217,7 +217,7 @@ internal fun AddEventDialog(
 
                 DateTimePickerRow(
                     title = "Due Date (optional)",
-                    icon = Icons.Filled.CalendarMonth,
+                    icon = Icons.Outlined.CalendarMonth,
                     value = dueDateTime?.let { DateUtils.formatDate(it, "MMM dd, yyyy") } ?: "Set due date",
                     onClick = {
                         val base = dueDateTime ?: eventDateTime
@@ -242,7 +242,7 @@ internal fun AddEventDialog(
 
                 DateTimePickerRow(
                     title = "Due Time (optional)",
-                    icon = Icons.Filled.Schedule,
+                    icon = Icons.Outlined.Schedule,
                     value = dueDateTime?.let { DateUtils.formatTime(it) } ?: "Set due time",
                     onClick = {
                         val base = dueDateTime ?: eventDateTime.withTime(hour = 23, minute = 59)

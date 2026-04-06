@@ -10,11 +10,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.ErrorOutline
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -62,10 +62,10 @@ fun TopBanner(
     val semanticColors = AppDesignTokens.semanticColors(semanticTone)
     val icon =
         when (tone) {
-            TopBannerTone.ERROR -> Icons.Filled.ErrorOutline
-            TopBannerTone.WARNING -> Icons.Filled.Warning
-            TopBannerTone.SUCCESS -> Icons.Filled.CheckCircle
-            TopBannerTone.INFO -> Icons.Filled.Info
+            TopBannerTone.ERROR -> Icons.Outlined.ErrorOutline
+            TopBannerTone.WARNING -> Icons.Outlined.Warning
+            TopBannerTone.SUCCESS -> Icons.Outlined.CheckCircle
+            TopBannerTone.INFO -> Icons.Outlined.Info
         }
 
     Box(
@@ -147,7 +147,7 @@ fun TopBanner(
                     modifier = Modifier.padding(0.dp),
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Close,
+                        imageVector = Icons.Outlined.Close,
                         contentDescription = "Dismiss",
                         tint = semanticColors.onContainer,
                     )

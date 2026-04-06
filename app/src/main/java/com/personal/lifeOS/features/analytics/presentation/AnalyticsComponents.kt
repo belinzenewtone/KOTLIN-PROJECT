@@ -14,11 +14,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.TrendingDown
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Pending
+import androidx.compose.material.icons.automirrored.outlined.TrendingDown
+import androidx.compose.material.icons.automirrored.outlined.TrendingUp
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Pending
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -69,7 +69,7 @@ internal fun AnalyticsMetricRows(data: AnalyticsData) {
             modifier = Modifier.weight(1f),
             title = "Monthly Spend",
             value = DateUtils.formatCurrency(data.totalSpentThisMonth),
-            icon = Icons.AutoMirrored.Filled.TrendingUp,
+            icon = Icons.AutoMirrored.Outlined.TrendingUp,
             iconColor = MaterialTheme.colorScheme.primary,
             isAccent = true,
         )
@@ -77,7 +77,7 @@ internal fun AnalyticsMetricRows(data: AnalyticsData) {
             modifier = Modifier.weight(1f),
             title = "Daily Average",
             value = DateUtils.formatCurrency(data.averageDailySpending),
-            icon = Icons.AutoMirrored.Filled.TrendingDown,
+            icon = Icons.AutoMirrored.Outlined.TrendingDown,
             iconColor = Accent,
         )
     }
@@ -90,21 +90,21 @@ internal fun AnalyticsMetricRows(data: AnalyticsData) {
             modifier = Modifier.weight(1f),
             title = "Tasks Done",
             value = "${data.totalTasksCompleted}",
-            icon = Icons.Filled.CheckCircle,
+            icon = Icons.Outlined.CheckCircle,
             iconColor = Success,
         )
         MetricCard(
             modifier = Modifier.weight(1f),
             title = "Pending",
             value = "${data.totalTasksPending}",
-            icon = Icons.Filled.Pending,
+            icon = Icons.Outlined.Pending,
             iconColor = Warning,
         )
         MetricCard(
             modifier = Modifier.weight(1f),
             title = "Events",
             value = "${data.totalEvents}",
-            icon = Icons.Filled.CalendarMonth,
+            icon = Icons.Outlined.CalendarMonth,
             iconColor = Info,
         )
     }

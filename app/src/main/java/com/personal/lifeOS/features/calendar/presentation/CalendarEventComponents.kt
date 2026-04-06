@@ -16,9 +16,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -105,9 +105,9 @@ internal fun CalendarEventCard(
             )
             val icon =
                 if (direction == SwipeToDismissBoxValue.StartToEnd) {
-                    Icons.Filled.CheckCircle
+                    Icons.Outlined.CheckCircle
                 } else {
-                    Icons.Filled.Delete
+                    Icons.Outlined.Delete
                 }
             val iconAlignment =
                 if (direction == SwipeToDismissBoxValue.StartToEnd) {
@@ -194,7 +194,7 @@ internal fun CalendarEventCard(
                 }
                 IconButton(onClick = onEdit) {
                     Icon(
-                        imageVector = Icons.Filled.Edit,
+                        imageVector = Icons.Outlined.Edit,
                         contentDescription = "Edit event",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(18.dp),

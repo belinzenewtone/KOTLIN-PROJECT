@@ -21,8 +21,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.outlined.ChevronLeft
+import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -106,7 +106,7 @@ internal fun CalendarMonthCard(
             ) {
                 IconButton(onClick = onPreviousMonth) {
                     Icon(
-                        Icons.Filled.ChevronLeft,
+                        Icons.Outlined.ChevronLeft,
                         contentDescription = "Previous month",
                         tint = MaterialTheme.colorScheme.onSurface,
                     )
@@ -134,7 +134,7 @@ internal fun CalendarMonthCard(
 
                 IconButton(onClick = onNextMonth) {
                     Icon(
-                        Icons.Filled.ChevronRight,
+                        Icons.Outlined.ChevronRight,
                         contentDescription = "Next month",
                         tint = MaterialTheme.colorScheme.onSurface,
                     )

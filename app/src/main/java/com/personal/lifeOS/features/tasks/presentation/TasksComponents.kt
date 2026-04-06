@@ -16,8 +16,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -139,7 +139,7 @@ internal fun TaskDialog(
                 ) {
                     DeadlinePickerRow(
                         modifier = Modifier.weight(1f),
-                        icon = Icons.Filled.CalendarMonth,
+                        icon = Icons.Outlined.CalendarMonth,
                         label = "Due Date",
                         value =
                             if (state.deadline != null) {
@@ -176,7 +176,7 @@ internal fun TaskDialog(
 
                     DeadlinePickerRow(
                         modifier = Modifier.weight(1f),
-                        icon = Icons.Filled.Timer,
+                        icon = Icons.Outlined.Timer,
                         label = "Due Time",
                         value =
                             if (state.deadline != null) {

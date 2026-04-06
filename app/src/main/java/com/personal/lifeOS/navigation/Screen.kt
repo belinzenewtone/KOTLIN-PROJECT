@@ -39,9 +39,6 @@ object AppRoute {
     // Learning module
     const val Learning = "learning"
 
-    // Compatibility aliases preserved during navigation migration.
-    const val LegacyDashboard = "dashboard"
-    const val LegacyExpenses = "expenses"
 }
 
 data class AppPrimaryTab(
@@ -59,14 +56,14 @@ val primaryTabs =
             label = "Home",
             selectedIcon = Icons.Filled.Home,
             unselectedIcon = Icons.Outlined.Home,
-            routeAliases = setOf(AppRoute.Home, AppRoute.LegacyDashboard),
+            routeAliases = setOf(AppRoute.Home),
         ),
         AppPrimaryTab(
             route = AppRoute.Finance,
             label = "Finance",
             selectedIcon = Icons.Filled.Payments,
             unselectedIcon = Icons.Outlined.Payments,
-            routeAliases = setOf(AppRoute.Finance, AppRoute.LegacyExpenses),
+            routeAliases = setOf(AppRoute.Finance),
         ),
         AppPrimaryTab(
             route = AppRoute.Calendar,

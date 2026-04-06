@@ -14,8 +14,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -135,7 +135,7 @@ private fun LearningSessionCard(
             }
             if (session.isCompleted) {
                 Icon(
-                    imageVector = Icons.Filled.CheckCircle,
+                    imageVector = Icons.Outlined.CheckCircle,
                     contentDescription = "Completed",
                     tint = Success,
                     modifier = Modifier.padding(start = 8.dp),
@@ -154,7 +154,7 @@ private fun LearningSessionCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = Icons.Filled.Timer,
+                imageVector = Icons.Outlined.Timer,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier

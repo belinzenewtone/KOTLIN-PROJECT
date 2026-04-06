@@ -133,7 +133,13 @@ fun LifeOSNavHost(
     val requiresBiometricLock = authState.isLoggedIn && biometricEnabled && !isOnPublicFlow
     val lockState = rememberBiometricLockState(requiresBiometricLock)
 
-    LaunchedEffect(authState.isLoggedIn, authState.onboardingCompleted, currentRoute) {
+    LaunchedEffect(authState.isLoading, authState.isLoggedIn, authState.onboardingCompleted, currentRoute) {
+        // Auth state starts as isLoading=true, isLoggedIn=false, onboardingCompleted=false
+        // before checkExistingSession() finishes its network call. Firing the guard with those
+        // stale initial values causes a spurious redirect to Onboarding that clears the back
+        // stack and places the user on Home without them realising it — making the Home button
+        // appear broken on their very next tap. Wait until auth is fully resolved.
+        if (authState.isLoading) return@LaunchedEffect
         when (
             val guardRoute =
                 resolveGuardNavigationTarget(
@@ -314,7 +320,7 @@ private fun LifeOSNavigationGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = canonicalRoute(startDestination),
+        startDestination = startDestination,
         modifier = Modifier.fillMaxSize(),
         // Screen transitions — forward: fluid slide-in from right with spring; back: slide out.
         // Spring damping gives a natural, intentional feel rather than a mechanical tween.
@@ -387,19 +393,8 @@ private fun LifeOSNavigationGraph(
                 onOpenProfile = { navController.navigate(AppRoute.Profile) },
             )
         }
-        composable(AppRoute.LegacyDashboard) {
-            HomeScreen(
-                onOpenRoute = navController::navigate,
-                onOpenProfile = { navController.navigate(AppRoute.Profile) },
-            )
-        }
         composable(AppRoute.Tasks) { TasksScreen() }
         composable(AppRoute.Finance) {
-            FinanceScreen(
-                onOpenTools = { navController.navigate(AppRoute.Planner) },
-            )
-        }
-        composable(AppRoute.LegacyExpenses) {
             FinanceScreen(
                 onOpenTools = { navController.navigate(AppRoute.Planner) },
             )

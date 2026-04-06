@@ -3,8 +3,8 @@ package com.personal.lifeOS.core.ui.designsystem
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,7 +36,7 @@ fun SearchField(
         },
         leadingIcon = {
             Icon(
-                imageVector = Icons.Filled.Search,
+                imageVector = Icons.Outlined.Search,
                 contentDescription = "Search",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
             )
@@ -45,7 +45,7 @@ fun SearchField(
             if (value.isNotEmpty()) {
                 IconButton(onClick = { onValueChange("") }) {
                     Icon(
-                        imageVector = Icons.Filled.Close,
+                        imageVector = Icons.Outlined.Close,
                         contentDescription = "Clear search",
                     )
                 }

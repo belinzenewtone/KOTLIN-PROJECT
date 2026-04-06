@@ -20,20 +20,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.CloudDownload
-import androidx.compose.material.icons.filled.CloudUpload
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Fingerprint
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.MarkEmailUnread
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.SettingsBrightness
-import androidx.compose.material.icons.filled.Verified
-import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material.icons.automirrored.outlined.Logout
+import androidx.compose.material.icons.outlined.CameraAlt
+import androidx.compose.material.icons.outlined.CloudDownload
+import androidx.compose.material.icons.outlined.CloudUpload
+import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Fingerprint
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.MarkEmailUnread
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.SettingsBrightness
+import androidx.compose.material.icons.outlined.Verified
+import androidx.compose.material.icons.outlined.WbSunny
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material3.AlertDialog
@@ -45,7 +45,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Switch
+import com.personal.lifeOS.core.ui.designsystem.LifeOSSwitch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -251,7 +251,7 @@ private fun ChangePhotoButton(onChangePhoto: () -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            imageVector = Icons.Filled.CameraAlt,
+            imageVector = Icons.Outlined.CameraAlt,
             contentDescription = "Change photo",
             tint = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier.size(16.dp),
@@ -271,7 +271,7 @@ private fun ProfileIdentityMeta(
     ) {
         emailVerified?.let { verified ->
             ProfileIdentityPill(
-                icon = if (verified) Icons.Filled.Verified else Icons.Filled.MarkEmailUnread,
+                icon = if (verified) Icons.Outlined.Verified else Icons.Outlined.MarkEmailUnread,
                 text = if (verified) "Verified" else "Pending verification",
                 tint = if (verified) AppDesignTokens.colors.success else AppDesignTokens.colors.warning,
                 container =
@@ -282,7 +282,7 @@ private fun ProfileIdentityMeta(
 
         if (memberSince > 0L) {
             ProfileIdentityPill(
-                icon = Icons.Filled.Person,
+                icon = Icons.Outlined.Person,
                 text = "Active since ${DateUtils.formatDate(memberSince, "MMM dd, yyyy")}",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 container = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
@@ -343,10 +343,10 @@ internal fun ProfileDetailsCard(
             ) {
                 Text("Personal Information", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 IconButton(onClick = onEdit) {
-                    Icon(Icons.Filled.Edit, contentDescription = "Edit profile", tint = MaterialTheme.colorScheme.primary)
+                    Icon(Icons.Outlined.Edit, contentDescription = "Edit profile", tint = MaterialTheme.colorScheme.primary)
                 }
             }
-            ProfileInfoRow(icon = Icons.Filled.Person, label = "Name", value = state.profile.name.ifBlank { "Not set" })
+            ProfileInfoRow(icon = Icons.Outlined.Person, label = "Name", value = state.profile.name.ifBlank { "Not set" })
             ProfileInfoRow(icon = Icons.Outlined.Email, label = "Email", value = state.profile.email.ifBlank { "Not set" })
             ProfileInfoRow(icon = Icons.Outlined.Phone, label = "Phone", value = state.profile.phone.ifBlank { "Not set" })
         }
@@ -408,8 +408,8 @@ internal fun ProfileSecurityCard(
     AppCard(elevated = true) {
         Column(verticalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.sm)) {
             Text("Security", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            ActionRow(icon = Icons.Filled.Lock, title = "Change Password", subtitle = "Update your local app password", onClick = onChangePassword)
-            ToggleRow(icon = Icons.Filled.Fingerprint, title = "Biometric Lock", subtitle = "Require biometric unlock on resume", checked = biometricEnabled, onToggle = onToggleBiometric)
+            ActionRow(icon = Icons.Outlined.Lock, title = "Change Password", subtitle = "Update your local app password", onClick = onChangePassword)
+            ToggleRow(icon = Icons.Outlined.Fingerprint, title = "Biometric Lock", subtitle = "Require biometric unlock on resume", checked = biometricEnabled, onToggle = onToggleBiometric)
         }
     }
 }
@@ -424,7 +424,7 @@ internal fun ProfilePreferencesCard(
     AppCard(elevated = true) {
         Column(verticalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.sm)) {
             Text("Preferences", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            ToggleRow(icon = Icons.Filled.Notifications, title = "Notifications", subtitle = "Task and event reminders", checked = notificationsEnabled, onToggle = onToggleNotifications)
+            ToggleRow(icon = Icons.Outlined.Notifications, title = "Notifications", subtitle = "Task and event reminders", checked = notificationsEnabled, onToggle = onToggleNotifications)
             ThemeModeRow(selected = themeMode, onSelect = onSetThemeMode)
         }
     }
@@ -436,9 +436,9 @@ private fun ThemeModeRow(
     onSelect: (AppThemeMode) -> Unit,
 ) {
     val options = listOf(
-        Triple(AppThemeMode.LIGHT, Icons.Filled.WbSunny, "Light"),
-        Triple(AppThemeMode.SYSTEM, Icons.Filled.SettingsBrightness, "Auto"),
-        Triple(AppThemeMode.DARK, Icons.Filled.DarkMode, "Dark"),
+        Triple(AppThemeMode.LIGHT, Icons.Outlined.WbSunny, "Light"),
+        Triple(AppThemeMode.SYSTEM, Icons.Outlined.SettingsBrightness, "Auto"),
+        Triple(AppThemeMode.DARK, Icons.Outlined.DarkMode, "Dark"),
     )
     Row(
         modifier = Modifier
@@ -449,7 +449,7 @@ private fun ThemeModeRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.sm),
     ) {
-        Icon(Icons.Filled.DarkMode, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        Icon(Icons.Outlined.DarkMode, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
         Column(modifier = Modifier.weight(1f)) {
             Text("Theme", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
             Text("Light, Dark, or follow system", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -488,8 +488,8 @@ internal fun ProfileCloudSyncCard(
     AppCard(elevated = true) {
         Column(verticalArrangement = Arrangement.spacedBy(AppDesignTokens.spacing.sm)) {
             Text("Cloud Sync", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            ActionRow(icon = Icons.Filled.CloudUpload, title = "Backup to Cloud", subtitle = "Push local data to Supabase", onClick = onBackup)
-            ActionRow(icon = Icons.Filled.CloudDownload, title = "Restore from Cloud", subtitle = "Pull cloud snapshot into local cache", onClick = onRestore)
+            ActionRow(icon = Icons.Outlined.CloudUpload, title = "Backup to Cloud", subtitle = "Push local data to Supabase", onClick = onBackup)
+            ActionRow(icon = Icons.Outlined.CloudDownload, title = "Restore from Cloud", subtitle = "Pull cloud snapshot into local cache", onClick = onRestore)
         }
     }
 }
@@ -514,7 +514,7 @@ internal fun SignOutButton(onClick: () -> Unit) {
                 .height(52.dp),
         colors = ButtonDefaults.buttonColors(containerColor = AppDesignTokens.colors.error.copy(alpha = 0.12f), contentColor = AppDesignTokens.colors.error),
     ) {
-        Icon(imageVector = Icons.AutoMirrored.Filled.Logout, contentDescription = null)
+        Icon(imageVector = Icons.AutoMirrored.Outlined.Logout, contentDescription = null)
         Spacer(modifier = Modifier.size(8.dp))
         Text("Sign Out")
     }
@@ -588,7 +588,7 @@ private fun ToggleRow(
             Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
             Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Switch(checked = checked, onCheckedChange = onToggle)
+        LifeOSSwitch(checked = checked, onCheckedChange = onToggle)
     }
 }
 

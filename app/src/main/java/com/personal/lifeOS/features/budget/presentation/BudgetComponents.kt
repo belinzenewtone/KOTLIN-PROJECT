@@ -19,9 +19,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -238,10 +238,10 @@ internal fun BudgetCard(
                         )
                     }
                     IconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Filled.Edit, contentDescription = "Edit", modifier = Modifier.size(16.dp))
+                        Icon(Icons.Outlined.Edit, contentDescription = "Edit", modifier = Modifier.size(16.dp))
                     }
                     IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Filled.Delete, contentDescription = "Delete", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error)
+                        Icon(Icons.Outlined.Delete, contentDescription = "Delete", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error)
                     }
                 }
             }

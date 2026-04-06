@@ -14,8 +14,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -126,7 +126,7 @@ fun FinanceScreen(
         actions = {
             IconButton(onClick = { viewModel.onEvent(FinanceUiEvent.ShowAddDialog) }) {
                 Icon(
-                    imageVector = Icons.Filled.Add,
+                    imageVector = Icons.Outlined.Add,
                     contentDescription = "Add transaction",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp),
@@ -134,7 +134,7 @@ fun FinanceScreen(
             }
             IconButton(onClick = { viewModel.onEvent(FinanceUiEvent.ShowImportDialog) }) {
                 Icon(
-                    imageVector = Icons.Filled.FileDownload,
+                    imageVector = Icons.Outlined.FileDownload,
                     contentDescription = "Import from SMS",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp),

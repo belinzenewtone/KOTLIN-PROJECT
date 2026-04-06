@@ -54,7 +54,7 @@ fun AppPermissionsOrchestrator(
         // Show rationale card only on Home, only once, only if not yet granted.
         var showNotificationRationale by rememberSaveable { mutableStateOf(false) }
 
-        val isOnHome = currentRoute == AppRoute.Home || currentRoute == AppRoute.LegacyDashboard
+        val isOnHome = currentRoute == AppRoute.Home
         LaunchedEffect(isOnHome, notificationAsked, notificationPermState.status.isGranted) {
             if (isOnHome && !notificationAsked && !notificationPermState.status.isGranted) {
                 showNotificationRationale = true
@@ -93,7 +93,7 @@ fun AppPermissionsOrchestrator(
 
     var showSmsRationale by rememberSaveable { mutableStateOf(false) }
 
-    val isOnFinance = currentRoute == AppRoute.Finance || currentRoute == AppRoute.LegacyExpenses
+    val isOnFinance = currentRoute == AppRoute.Finance
     LaunchedEffect(isOnFinance, smsAsked, allSmsGranted) {
         if (isOnFinance && !smsAsked && !allSmsGranted) {
             showSmsRationale = true

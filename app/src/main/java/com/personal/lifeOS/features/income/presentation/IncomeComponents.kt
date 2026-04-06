@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -76,7 +76,7 @@ internal fun IncomeCard(
                     fontWeight = FontWeight.SemiBold,
                 )
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Filled.Delete, contentDescription = "Delete income")
+                    Icon(Icons.Outlined.Delete, contentDescription = "Delete income")
                 }
             }
         }

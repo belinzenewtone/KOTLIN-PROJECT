@@ -12,12 +12,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
-import androidx.compose.material.icons.filled.AutoGraph
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.TaskAlt
+import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
+import androidx.compose.material.icons.outlined.AutoGraph
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -70,7 +70,7 @@ fun HomeScreen(
         actions = {
             IconButton(onClick = onOpenProfile) {
                 Icon(
-                    imageVector = Icons.Filled.Person,
+                    imageVector = Icons.Outlined.Person,
                     contentDescription = "Open profile",
                 )
             }
@@ -128,7 +128,7 @@ private fun HomeAgendaCard(
     AppCard(elevated = true) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             HomeAgendaRow(
-                icon = Icons.Filled.TaskAlt,
+                icon = Icons.Outlined.TaskAlt,
                 title = "Tasks",
                 value =
                     if (uiState.pendingTaskCount == 0) {
@@ -140,21 +140,21 @@ private fun HomeAgendaCard(
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
             HomeAgendaRow(
-                icon = Icons.Filled.CalendarMonth,
+                icon = Icons.Outlined.CalendarMonth,
                 title = "Next Event",
                 value = uiState.nextEventTimeLabel ?: "No event",
                 onClick = { onOpenRoute(AppRoute.Calendar) },
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
             HomeAgendaRow(
-                icon = Icons.Filled.AutoGraph,
+                icon = Icons.Outlined.AutoGraph,
                 title = "Insights",
                 value = "Trends",
                 onClick = { onOpenRoute(AppRoute.Insights) },
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
             HomeAgendaRow(
-                icon = Icons.Filled.Search,
+                icon = Icons.Outlined.Search,
                 title = "Search",
                 value = "Explore",
                 onClick = { onOpenRoute(AppRoute.Search) },
@@ -205,7 +205,7 @@ private fun HomeAgendaRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                imageVector = Icons.AutoMirrored.Outlined.ArrowForwardIos,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(12.dp),

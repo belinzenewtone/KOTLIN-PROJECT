@@ -2,6 +2,7 @@ package com.personal.lifeOS.core.security
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -26,10 +27,10 @@ class AuthSessionStore
             accessToken: String,
             userId: String,
         ) {
-            prefs.edit()
-                .putString(KEY_ACCESS_TOKEN, accessToken)
-                .putString(KEY_USER_ID, userId)
-                .apply()
+            prefs.edit {
+                putString(KEY_ACCESS_TOKEN, accessToken)
+                putString(KEY_USER_ID, userId)
+            }
         }
 
         fun getAccessToken(): String {
@@ -41,10 +42,10 @@ class AuthSessionStore
         }
 
         fun clearSession() {
-            prefs.edit()
-                .remove(KEY_ACCESS_TOKEN)
-                .remove(KEY_USER_ID)
-                .apply()
+            prefs.edit {
+                remove(KEY_ACCESS_TOKEN)
+                remove(KEY_USER_ID)
+            }
         }
 
         private fun createSecurePrefs(): SharedPreferences {

@@ -39,6 +39,7 @@ import com.personal.lifeOS.ui.theme.AppSpacing
 
 @Composable
 @OptIn(ExperimentalLayoutApi::class)
+@Suppress("LongMethod")
 fun AssistantScreen(viewModel: AssistantViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()

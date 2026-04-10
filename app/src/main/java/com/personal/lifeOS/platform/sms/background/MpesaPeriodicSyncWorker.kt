@@ -1,6 +1,7 @@
 package com.personal.lifeOS.platform.sms.background
 
 import android.content.Context
+import androidx.core.content.edit
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
@@ -59,9 +60,9 @@ class MpesaPeriodicSyncWorker(
     private suspend fun saveLastSyncTimestamp(timestamp: Long) {
         applicationContext
             .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .edit()
-            .putLong(KEY_LAST_SYNC, timestamp)
-            .apply()
+            .edit {
+                putLong(KEY_LAST_SYNC, timestamp)
+            }
     }
 
     private fun historicalScanner(): MpesaHistoricalImportScanner {

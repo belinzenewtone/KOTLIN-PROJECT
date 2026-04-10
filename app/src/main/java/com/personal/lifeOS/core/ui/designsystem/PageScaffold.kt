@@ -1,3 +1,5 @@
+@file:Suppress("MatchingDeclarationName")
+
 package com.personal.lifeOS.core.ui.designsystem
 
 import androidx.compose.animation.animateColorAsState
@@ -37,6 +39,7 @@ enum class PageHeaderVariant {
 }
 
 @Composable
+@Suppress("LongMethod", "LongParameterList")
 fun PageScaffold(
     title: String,
     modifier: Modifier = Modifier,

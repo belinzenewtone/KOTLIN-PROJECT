@@ -49,6 +49,7 @@ private enum class CalendarSection {
 }
 
 @Composable
+@Suppress("LongMethod")
 fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
     var query by rememberSaveable { mutableStateOf("") }
@@ -146,7 +147,7 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
 }
 
 @Composable
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 private fun CalendarBody(
     state: CalendarUiState,
     events: List<CalendarEvent>,

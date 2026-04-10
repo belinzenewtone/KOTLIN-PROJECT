@@ -1,7 +1,7 @@
 package com.personal.lifeOS.platform.sms.background
 
 import android.content.Context
-import android.net.Uri
+import androidx.core.net.toUri
 import com.personal.lifeOS.platform.sms.ingestion.MpesaIngestionOutcome
 import com.personal.lifeOS.platform.sms.ingestion.MpesaIngestionPipeline
 import com.personal.lifeOS.platform.sms.ingestion.MpesaIngestionSource
@@ -43,7 +43,7 @@ class MpesaHistoricalImportScanner
                 val cutoff = System.currentTimeMillis() - (normalizedDaysBack.toLong() * ONE_DAY_MILLIS)
                 val cursor =
                     context.contentResolver.query(
-                        Uri.parse("content://sms/inbox"),
+                        "content://sms/inbox".toUri(),
                         arrayOf("body", "date", "address"),
                         "address LIKE ? AND date >= ?",
                         arrayOf("%MPESA%", cutoff.toString()),

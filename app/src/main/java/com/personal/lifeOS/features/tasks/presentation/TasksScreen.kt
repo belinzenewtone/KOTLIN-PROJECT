@@ -54,6 +54,7 @@ import com.personal.lifeOS.ui.theme.AppSpacing
 import com.personal.lifeOS.ui.theme.Warning
 
 @Composable
+@Suppress("LongMethod")
 fun TasksScreen(
     onBack: (() -> Unit)? = null,
     viewModel: TasksViewModel = hiltViewModel(),

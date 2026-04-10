@@ -63,6 +63,7 @@ import androidx.compose.animation.core.tween
 import com.personal.lifeOS.BuildConfig
 
 @Composable
+@Suppress("LongMethod")
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
     onBack: (() -> Unit)? = null,

@@ -34,6 +34,7 @@ import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.ui.components.StyledSnackbarHost
 
 @Composable
+@Suppress("LongMethod")
 fun AuthScreen(
     viewModel: AuthViewModel,
     onAuthenticated: () -> Unit,

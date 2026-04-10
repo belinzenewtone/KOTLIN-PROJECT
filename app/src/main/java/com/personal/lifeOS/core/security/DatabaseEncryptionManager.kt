@@ -4,12 +4,12 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Base64
 import android.util.Log
+import androidx.core.content.edit
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.personal.lifeOS.core.observability.AppTelemetry
 import net.sqlcipher.database.SQLiteDatabase
 import net.sqlcipher.database.SupportFactory
-import java.io.File
 import java.security.SecureRandom
 
 /**
@@ -17,7 +17,7 @@ import java.security.SecureRandom
  *
  * Rollout strategy:
  * - New installs: encrypted DB is enabled by default.
- * - Existing plaintext installs: migrate in place using sqlcipher_export.
+ * - Existing plaintext installs: stay on plaintext mode until migration rollout is re-enabled.
  * - If migration fails: keep plaintext mode to avoid data-loss/lockout.
  */
 object DatabaseEncryptionManager {
@@ -35,7 +35,7 @@ object DatabaseEncryptionManager {
         dbName: String,
     ): Boolean {
         if (EMERGENCY_DISABLE_ENCRYPTION) {
-            runCatching { prefs(context).edit().putString(KEY_DB_MODE, MODE_PLAINTEXT).apply() }
+            runCatching { prefs(context).edit { putString(KEY_DB_MODE, MODE_PLAINTEXT) } }
             AppTelemetry.trackEvent(
                 name = "db_encryption_not_applied",
                 attributes = mapOf("db_name" to dbName, "reason" to "emergency_disable_encryption"),
@@ -57,7 +57,7 @@ object DatabaseEncryptionManager {
                 else -> {
                     val dbFile = context.getDatabasePath(dbName)
                     if (!dbFile.exists()) {
-                        prefs.edit().putString(KEY_DB_MODE, MODE_ENCRYPTED).apply()
+                        prefs.edit { putString(KEY_DB_MODE, MODE_ENCRYPTED) }
                         AppTelemetry.trackEvent(
                             name = "db_encryption_enabled",
                             attributes = mapOf("db_name" to dbName, "reason" to "new_install"),
@@ -66,7 +66,7 @@ object DatabaseEncryptionManager {
                     } else {
                         // Safety-first hotfix: do not attempt in-place migration during app start.
                         // Existing installs continue on plaintext mode until explicit migration rollout.
-                        prefs.edit().putString(KEY_DB_MODE, MODE_PLAINTEXT).apply()
+                        prefs.edit { putString(KEY_DB_MODE, MODE_PLAINTEXT) }
                         AppTelemetry.trackEvent(
                             name = "db_encryption_not_applied",
                             attributes = mapOf("db_name" to dbName, "reason" to "existing_install_fallback"),
@@ -83,7 +83,7 @@ object DatabaseEncryptionManager {
                 context = mapOf("event" to "db_encryption_mode_resolve", "db_name" to dbName),
             )
             runCatching {
-                prefs(context).edit().putString(KEY_DB_MODE, MODE_PLAINTEXT).apply()
+                prefs(context).edit { putString(KEY_DB_MODE, MODE_PLAINTEXT) }
             }
             false
         }
@@ -95,112 +95,6 @@ object DatabaseEncryptionManager {
         return SupportFactory(passphrase)
     }
 
-    private fun migratePlaintextToEncrypted(
-        context: Context,
-        dbName: String,
-        passphrase: String,
-    ): Boolean {
-        val dbFile = context.getDatabasePath(dbName)
-        val tempFile = context.getDatabasePath("${dbName}_encrypted_tmp")
-        val backupFile = context.getDatabasePath("${dbName}_plaintext_backup")
-        if (!dbFile.exists()) return true
-
-        deleteIfExists(tempFile)
-        deleteIfExists(backupFile)
-        deleteSidecars(tempFile)
-
-        val sourcePath = dbFile.absolutePath
-        val tempPath = tempFile.absolutePath
-        val escapedTempPath = tempPath.replace("'", "''")
-        val escapedPassphrase = passphrase.replace("'", "''")
-
-        return runCatching {
-            val plaintextDb =
-                SQLiteDatabase.openDatabase(
-                    sourcePath,
-                    "",
-                    null,
-                    SQLiteDatabase.OPEN_READWRITE,
-                )
-            plaintextDb.use {
-                it.rawExecSQL("PRAGMA journal_mode=DELETE;")
-                it.rawExecSQL("ATTACH DATABASE '$escapedTempPath' AS encrypted KEY '$escapedPassphrase';")
-                it.rawExecSQL("SELECT sqlcipher_export('encrypted');")
-                it.rawExecSQL("DETACH DATABASE encrypted;")
-            }
-
-            if (!tempFile.exists() || tempFile.length() == 0L) {
-                error("Encrypted export file missing or empty.")
-            }
-
-            deleteSidecars(dbFile)
-            if (!dbFile.renameTo(backupFile)) {
-                error("Could not create plaintext backup before swap.")
-            }
-            if (!tempFile.renameTo(dbFile)) {
-                backupFile.renameTo(dbFile)
-                error("Could not replace plaintext DB with encrypted DB.")
-            }
-
-            verifyEncryptedDatabase(dbFile, passphrase)
-            deleteIfExists(backupFile)
-            true
-        }.onFailure { error ->
-            Log.e(TAG, "Database encryption migration failed.", error)
-            AppTelemetry.captureError(
-                throwable = error,
-                context = mapOf("event" to "db_encryption_migration", "db_name" to dbName),
-            )
-            restoreBackupIfNeeded(dbFile, backupFile, tempFile)
-            prefs(context).edit().putString(KEY_DB_MODE, MODE_MIGRATION_FAILED).apply()
-        }.getOrDefault(false)
-    }
-
-    private fun verifyEncryptedDatabase(
-        dbFile: File,
-        passphrase: String,
-    ) {
-        val verifyDb =
-            SQLiteDatabase.openDatabase(
-                dbFile.absolutePath,
-                passphrase,
-                null,
-                SQLiteDatabase.OPEN_READONLY,
-            )
-        verifyDb.use {
-            it.rawQuery("SELECT count(*) FROM sqlite_master;", emptyArray()).use { cursor ->
-                cursor.moveToFirst()
-            }
-        }
-    }
-
-    private fun restoreBackupIfNeeded(
-        dbFile: File,
-        backupFile: File,
-        tempFile: File,
-    ) {
-        if (!dbFile.exists() && backupFile.exists()) {
-            backupFile.renameTo(dbFile)
-        }
-        deleteIfExists(tempFile)
-        deleteSidecars(tempFile)
-    }
-
-    private fun deleteIfExists(file: File) {
-        if (file.exists()) {
-            file.delete()
-        }
-    }
-
-    private fun deleteSidecars(file: File) {
-        val wal = File("${file.absolutePath}-wal")
-        val shm = File("${file.absolutePath}-shm")
-        val journal = File("${file.absolutePath}-journal")
-        deleteIfExists(wal)
-        deleteIfExists(shm)
-        deleteIfExists(journal)
-    }
-
     private fun getOrCreatePassphrase(context: Context): String {
         val prefs = prefs(context)
         val existing = prefs.getString(KEY_DB_PASSPHRASE, null)
@@ -209,7 +103,7 @@ object DatabaseEncryptionManager {
         val raw = ByteArray(32)
         SecureRandom().nextBytes(raw)
         val encoded = Base64.encodeToString(raw, Base64.NO_WRAP)
-        prefs.edit().putString(KEY_DB_PASSPHRASE, encoded).apply()
+        prefs.edit { putString(KEY_DB_PASSPHRASE, encoded) }
         return encoded
     }
 

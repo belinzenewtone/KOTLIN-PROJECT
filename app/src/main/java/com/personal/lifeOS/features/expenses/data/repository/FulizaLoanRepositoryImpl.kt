@@ -83,24 +83,24 @@ class FulizaLoanRepositoryImpl
             for (loan in openLoans) {
                 if (remaining <= 0.0) break
                 val outstanding = (loan.drawAmountKes - loan.totalRepaidKes).coerceAtLeast(0.0)
-                if (outstanding <= 0.0) continue
-
-                val applied = minOf(outstanding, remaining)
-                val updatedRepaid = loan.totalRepaidKes + applied
-                val updatedStatus = when {
-                    updatedRepaid >= loan.drawAmountKes -> FulizaLoanStatus.CLOSED
-                    updatedRepaid > 0.0 -> FulizaLoanStatus.PARTIALLY_REPAID
-                    else -> FulizaLoanStatus.OPEN
+                if (outstanding > 0.0) {
+                    val applied = minOf(outstanding, remaining)
+                    val updatedRepaid = loan.totalRepaidKes + applied
+                    val updatedStatus = when {
+                        updatedRepaid >= loan.drawAmountKes -> FulizaLoanStatus.CLOSED
+                        updatedRepaid > 0.0 -> FulizaLoanStatus.PARTIALLY_REPAID
+                        else -> FulizaLoanStatus.OPEN
+                    }
+                    fulizaLoanDao.update(
+                        loan.copy(
+                            totalRepaidKes = updatedRepaid.coerceAtMost(loan.drawAmountKes),
+                            status = updatedStatus.name,
+                            lastRepaymentDate = repaymentDate,
+                            updatedAt = now,
+                        ),
+                    )
+                    remaining -= applied
                 }
-                fulizaLoanDao.update(
-                    loan.copy(
-                        totalRepaidKes = updatedRepaid.coerceAtMost(loan.drawAmountKes),
-                        status = updatedStatus.name,
-                        lastRepaymentDate = repaymentDate,
-                        updatedAt = now,
-                    ),
-                )
-                remaining -= applied
             }
         }
     }

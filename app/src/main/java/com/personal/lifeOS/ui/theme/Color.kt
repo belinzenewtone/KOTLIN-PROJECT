@@ -1,3 +1,5 @@
+@file:Suppress("TopLevelPropertyNaming")
+
 package com.personal.lifeOS.ui.theme
 
 import androidx.compose.ui.graphics.Color

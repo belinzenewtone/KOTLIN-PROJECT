@@ -10,6 +10,7 @@ import android.net.Uri
 import android.os.Environment
 import android.provider.Settings
 import androidx.core.content.pm.PackageInfoCompat
+import androidx.core.net.toUri
 import com.personal.lifeOS.core.observability.AppTelemetry
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
@@ -85,6 +86,7 @@ private val otaManifestGson =
 /**
  * APK OTA update manager for non-Play distribution.
  */
+@Suppress("TooManyFunctions")
 object OtaUpdateManager {
     private val httpClient =
         OkHttpClient.Builder()
@@ -138,7 +140,7 @@ object OtaUpdateManager {
                     ?: return@withContext OtaDownloadResult.Error("Download manager unavailable.")
 
             val request =
-                DownloadManager.Request(Uri.parse(manifest.apkUrl))
+                DownloadManager.Request(manifest.apkUrl.toUri())
                     .setMimeType("application/vnd.android.package-archive")
                     .setTitle("BELTECH update")
                     .setDescription("Downloading version ${manifest.versionName ?: manifest.versionCode}")
@@ -198,7 +200,7 @@ object OtaUpdateManager {
         if (!activity.packageManager.canRequestPackageInstalls()) {
             val settingsIntent =
                 Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
-                    data = Uri.parse("package:${activity.packageName}")
+                    data = "package:${activity.packageName}".toUri()
                 }
             activity.startActivity(settingsIntent)
             AppTelemetry.trackEvent(
@@ -255,7 +257,7 @@ object OtaUpdateManager {
         val target = url.trim()
         if (target.isBlank()) return false
         val intent =
-            Intent(Intent.ACTION_VIEW, Uri.parse(target)).apply {
+            Intent(Intent.ACTION_VIEW, target.toUri()).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
         return try {

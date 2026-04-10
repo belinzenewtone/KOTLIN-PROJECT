@@ -1,4 +1,4 @@
-@file:Suppress("LongMethod", "CyclomaticComplexMethod")
+@file:Suppress("LongMethod", "CyclomaticComplexMethod", "LongParameterList", "MatchingDeclarationName")
 
 package com.personal.lifeOS.core.ui.designsystem
 

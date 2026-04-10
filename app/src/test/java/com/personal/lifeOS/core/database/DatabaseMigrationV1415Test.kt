@@ -47,13 +47,16 @@ class DatabaseMigrationV1415Test {
         createVersion14Views(db)
 
         DatabaseMigrations.MIGRATION_14_15.migrate(db)
+        val outflowTypes =
+            "'SENT', 'AIRTIME', 'PAYBILL', 'BUY_GOODS', " +
+                "'WITHDRAW', 'PAID', 'WITHDRAWN'"
 
         assertEquals(
             normalizeSql(
                 "CREATE VIEW `daily_spend` AS " +
                     "SELECT user_id, strftime('%Y-%m-%d', date / 1000, 'unixepoch', 'localtime') AS spend_date, " +
                     "SUM(amount) AS total_amount, COUNT(*) AS tx_count FROM transactions " +
-                    "WHERE deleted_at IS NULL AND UPPER(transaction_type) IN ('SENT', 'AIRTIME', 'PAYBILL', 'BUY_GOODS', 'WITHDRAW', 'PAID', 'WITHDRAWN') " +
+                    "WHERE deleted_at IS NULL AND UPPER(transaction_type) IN ($outflowTypes) " +
                     "GROUP BY user_id, strftime('%Y-%m-%d', date / 1000, 'unixepoch', 'localtime')",
             ),
             normalizeSql(viewSql(db, "daily_spend")),
@@ -63,7 +66,7 @@ class DatabaseMigrationV1415Test {
                 "CREATE VIEW `monthly_spend` AS " +
                     "SELECT user_id, strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime') AS spend_month, " +
                     "SUM(amount) AS total_amount, COUNT(*) AS tx_count FROM transactions " +
-                    "WHERE deleted_at IS NULL AND UPPER(transaction_type) IN ('SENT', 'AIRTIME', 'PAYBILL', 'BUY_GOODS', 'WITHDRAW', 'PAID', 'WITHDRAWN') " +
+                    "WHERE deleted_at IS NULL AND UPPER(transaction_type) IN ($outflowTypes) " +
                     "GROUP BY user_id, strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime')",
             ),
             normalizeSql(viewSql(db, "monthly_spend")),

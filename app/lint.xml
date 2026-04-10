@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- Dependency/version advisory warnings are tracked separately from CI lint gating. -->
+    <issue id="GradleDependency" severity="ignore" />
+    <issue id="NewerVersionAvailable" severity="ignore" />
+    <issue id="AndroidGradlePluginVersion" severity="ignore" />
+    <issue id="OldTargetApi" severity="ignore" />
+
+    <!-- Resource packaging/style warnings intentionally deferred to dedicated design/release passes. -->
+    <issue id="IconLauncherShape" severity="ignore" />
+    <issue id="IconDuplicates" severity="ignore" />
+    <issue id="IconLocation" severity="ignore" />
+
+    <!-- 16 KB page alignment depends on upstream native dependency updates. -->
+    <issue id="Aligned16KB" severity="ignore" />
+</lint>

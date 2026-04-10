@@ -101,21 +101,21 @@ private fun ExportConfigurationCard(
             )
 
             Text("Format", style = MaterialTheme.typography.titleSmall)
-            optionRow(
+            OptionRow(
                 options = ExportFormat.entries.map { it.name },
                 selected = state.selectedFormat.name,
                 onSelect = { selected -> viewModel.setFormat(ExportFormat.valueOf(selected)) },
             )
 
             Text("Domain", style = MaterialTheme.typography.titleSmall)
-            optionRow(
+            OptionRow(
                 options = state.selectedFormat.allowedDomains().map { it.name },
                 selected = state.selectedDomain.name,
                 onSelect = { selected -> viewModel.setDomain(ExportDomain.valueOf(selected)) },
             )
 
             Text("Date window", style = MaterialTheme.typography.titleSmall)
-            optionRow(
+            OptionRow(
                 options = ExportDatePreset.entries.map { it.name },
                 selected = state.selectedDatePreset.name,
                 onSelect = { selected -> viewModel.setDatePreset(ExportDatePreset.valueOf(selected)) },
@@ -272,7 +272,7 @@ private fun ExportHistoryCard(history: List<ExportHistoryItem>) {
 }
 
 @Composable
-private fun optionRow(
+private fun OptionRow(
     options: List<String>,
     selected: String,
     onSelect: (String) -> Unit,

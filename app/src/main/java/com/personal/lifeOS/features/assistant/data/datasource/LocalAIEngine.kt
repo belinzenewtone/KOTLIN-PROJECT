@@ -172,6 +172,7 @@ class LocalAIEngine
             }
         }
 
+        @Suppress("LongMethod", "CyclomaticComplexMethod")
         private suspend fun handleSpendingQuery(
             query: String,
             userId: String,
@@ -193,7 +194,9 @@ class LocalAIEngine
                     val topLine = if (topTx != null)
                         "\n\nLargest: **${DateUtils.formatCurrency(topTx.amount)}** at ${topTx.merchant}"
                     else ""
-                    "Today you've spent **${DateUtils.formatCurrency(total)}** across ${txs.size} transaction${if (txs.size != 1) "s" else ""}.\n\n$topCats$topLine"
+                    val txLabel = "transaction${if (txs.size != 1) "s" else ""}"
+                    "Today you've spent **${DateUtils.formatCurrency(total)}** across " +
+                        "${txs.size} $txLabel.\n\n$topCats$topLine"
                 }
                 query.containsAny("week", "this week") -> {
                     val start = DateUtils.weekStartMillis()
@@ -210,7 +213,8 @@ class LocalAIEngine
                         }
                     val top3Txs = txs.sortedByDescending { it.amount }.take(3)
                         .joinToString("\n") { "• ${it.merchant}: ${DateUtils.formatCurrency(it.amount)}" }
-                    "This week you've spent **${DateUtils.formatCurrency(total)}** across ${txs.size} transaction${if (txs.size != 1) "s" else ""}.\n\n" +
+                    val txLabel = "transaction${if (txs.size != 1) "s" else ""}"
+                    "This week you've spent **${DateUtils.formatCurrency(total)}** across ${txs.size} $txLabel.\n\n" +
                         "**By category:**\n$catBreakdown\n\n" +
                         "**Top transactions:**\n$top3Txs"
                 }
@@ -229,7 +233,8 @@ class LocalAIEngine
                     val topLine = if (topTx != null)
                         "\n\nLargest single expense: **${DateUtils.formatCurrency(topTx.amount)}** at ${topTx.merchant}"
                     else ""
-                    "This month you've spent **${DateUtils.formatCurrency(total)}** across ${txs.size} transaction${if (txs.size != 1) "s" else ""}.\n\n" +
+                    val txLabel = "transaction${if (txs.size != 1) "s" else ""}"
+                    "This month you've spent **${DateUtils.formatCurrency(total)}** across ${txs.size} $txLabel.\n\n" +
                         "**Top categories:**\n$catLines$topLine"
                 }
                 query.containsAny("food", "restaurant", "eat") -> {
@@ -259,7 +264,9 @@ class LocalAIEngine
                     val hint = if (topCat != null)
                         " Your top category is **${topCat.category}** at ${DateUtils.formatCurrency(topCat.total)}."
                     else ""
-                    "This month you've spent **${DateUtils.formatCurrency(total)}**.$hint\n\nAsk about a specific period (today, this week, this month) or category (food, transport) for a detailed breakdown."
+                    "This month you've spent **${DateUtils.formatCurrency(total)}**.$hint\n\n" +
+                        "Ask about a specific period (today, this week, this month) " +
+                        "or category (food, transport) for a detailed breakdown."
                 }
             }
         }

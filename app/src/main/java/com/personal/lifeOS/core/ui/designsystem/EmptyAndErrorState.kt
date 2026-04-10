@@ -35,8 +35,8 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun LoadingState(
-    label: String = "Loading...",
     modifier: Modifier = Modifier,
+    label: String = "Loading...",
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -61,8 +61,8 @@ fun LoadingState(
  */
 @Composable
 fun ShimmerLoadingState(
-    rows: Int = 4,
     modifier: Modifier = Modifier,
+    rows: Int = 4,
 ) {
     val transition = rememberInfiniteTransition(label = "shimmer")
     val translateAnim by transition.animateFloat(
@@ -204,9 +204,9 @@ fun EmptyState(
 fun ErrorState(
     title: String,
     description: String,
-    retryLabel: String = "Retry",
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
+    retryLabel: String = "Retry",
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),

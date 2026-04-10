@@ -32,6 +32,7 @@ class EnhancedMpesaIngestionPipeline
          * Main ingestion method for realtime SMS receipt.
          * Implements the full 6-stage pipeline with confidence-based decisions.
          */
+        @Suppress("LongMethod")
         suspend fun ingestRealtimeSms(
             rawMessage: String,
             source: MpesaIngestionSource,

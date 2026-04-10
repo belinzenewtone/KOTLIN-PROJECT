@@ -5,6 +5,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAdjusters
+import java.util.Locale
 
 object DateUtils {
     fun todayStartMillis(): Long {
@@ -64,7 +65,7 @@ object DateUtils {
     }
 
     fun formatCurrency(amount: Double): String {
-        return "KSh ${String.format("%,.0f", amount)}"
+        return "KSh ${String.format(Locale.getDefault(), "%,.0f", amount)}"
     }
 
     fun formatRelativeTime(

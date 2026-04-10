@@ -170,7 +170,6 @@ private fun WeeklySpendBarChart(
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
     val tooltipSurface = MaterialTheme.colorScheme.surfaceContainerHighest
     val tooltipText = MaterialTheme.colorScheme.onSurface
-    val tooltipOutline = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
 
     val density = LocalDensity.current
     val textMeasurer = rememberTextMeasurer()

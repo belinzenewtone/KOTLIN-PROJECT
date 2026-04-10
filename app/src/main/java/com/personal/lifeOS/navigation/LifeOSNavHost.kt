@@ -116,7 +116,7 @@ private data class BiometricLockState(
 )
 
 @Composable
-@Suppress("CyclomaticComplexMethod")
+@Suppress("CyclomaticComplexMethod", "LongMethod")
 @OptIn(ExperimentalLayoutApi::class)
 fun LifeOSNavHost(
     biometricEnabled: Boolean,

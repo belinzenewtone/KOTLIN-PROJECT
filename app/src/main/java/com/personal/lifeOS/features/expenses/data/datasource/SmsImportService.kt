@@ -2,7 +2,7 @@ package com.personal.lifeOS.features.expenses.data.datasource
 
 import android.content.ContentResolver
 import android.database.Cursor
-import android.net.Uri
+import androidx.core.net.toUri
 import com.personal.lifeOS.features.expenses.data.parser.MpesaSmsParser
 import com.personal.lifeOS.features.expenses.domain.repository.ExpenseRepository
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +34,7 @@ class SmsImportService
                 try {
                     cursor =
                         contentResolver.query(
-                            Uri.parse("content://sms/inbox"),
+                            "content://sms/inbox".toUri(),
                             arrayOf("_id", "address", "body", "date"),
                             "address LIKE ?",
                             arrayOf("%MPESA%"),

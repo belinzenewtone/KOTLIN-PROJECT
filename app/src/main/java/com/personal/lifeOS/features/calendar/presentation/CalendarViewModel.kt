@@ -92,6 +92,7 @@ class CalendarViewModel
             _uiState.update { it.copy(showAddDialog = false, editingEvent = null) }
         }
 
+        @Suppress("LongParameterList")
         fun saveEvent(
             title: String,
             description: String,

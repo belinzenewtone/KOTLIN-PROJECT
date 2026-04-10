@@ -8,6 +8,7 @@ import com.personal.lifeOS.core.preferences.AppSettingsStore
 import com.personal.lifeOS.core.security.AuthSessionStore
 import com.personal.lifeOS.core.utils.DateUtils
 import kotlinx.coroutines.flow.first
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -70,13 +71,13 @@ class DataContextBuilder
                     ).first().take(15)
 
                 sb.appendLine("=== SPENDING ===")
-                sb.appendLine("Today: KES ${String.format("%,.0f", todaySpend)}")
-                sb.appendLine("This week: KES ${String.format("%,.0f", weekSpend)}")
-                sb.appendLine("This month: KES ${String.format("%,.0f", monthSpend)}")
+                sb.appendLine("Today: KES ${formatKes(todaySpend)}")
+                sb.appendLine("This week: KES ${formatKes(weekSpend)}")
+                sb.appendLine("This month: KES ${formatKes(monthSpend)}")
 
                 if (categories.isNotEmpty()) {
                     sb.appendLine("Category breakdown this month:")
-                    categories.forEach { sb.appendLine("  ${it.category}: KES ${String.format("%,.0f", it.total)}") }
+                    categories.forEach { sb.appendLine("  ${it.category}: KES ${formatKes(it.total)}") }
                 }
 
                 if (recentTransactions.isNotEmpty()) {
@@ -84,6 +85,7 @@ class DataContextBuilder
                     recentTransactions.forEach {
                         sb.appendLine(
                             "  ${it.merchant} - KES ${String.format(
+                                Locale.getDefault(),
                                 "%,.0f",
                                 it.amount,
                             )} (${it.category}, ${DateUtils.formatDate(it.date)})",
@@ -108,14 +110,14 @@ class DataContextBuilder
 
                 sb.appendLine()
                 sb.appendLine("=== INCOME ===")
-                sb.appendLine("This month income: KES ${String.format("%,.0f", totalMonthIncome)}")
-                sb.appendLine("All-time income recorded: KES ${String.format("%,.0f", totalAllTime)}")
+                sb.appendLine("This month income: KES ${formatKes(totalMonthIncome)}")
+                sb.appendLine("All-time income recorded: KES ${formatKes(totalAllTime)}")
                 sb.appendLine("Income entries this month: ${monthIncome.size}")
 
                 if (monthIncome.isNotEmpty()) {
                     sb.appendLine("Recent income:")
                     monthIncome.take(5).forEach {
-                        sb.appendLine("  ${it.source} - KES ${String.format("%,.0f", it.amount)} (${DateUtils.formatDate(it.date)})")
+                        sb.appendLine("  ${it.source} - KES ${formatKes(it.amount)} (${DateUtils.formatDate(it.date)})")
                     }
                 }
             } catch (e: Exception) {
@@ -168,5 +170,9 @@ class DataContextBuilder
             )
 
             return sb.toString()
+        }
+
+        private fun formatKes(amount: Double): String {
+            return String.format(Locale.getDefault(), "%,.0f", amount)
         }
     }

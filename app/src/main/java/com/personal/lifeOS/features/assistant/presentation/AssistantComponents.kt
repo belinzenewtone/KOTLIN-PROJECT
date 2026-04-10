@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -27,7 +28,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.personal.lifeOS.core.ui.designsystem.AppCard
@@ -83,7 +83,6 @@ internal fun AssistantHeader(isProcessing: Boolean, onClearChat: () -> Unit) {
 @Composable
 internal fun ChatBubble(message: ChatMessage) {
     val isUser = message.sender == MessageSender.USER
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -108,26 +107,28 @@ internal fun ChatBubble(message: ChatMessage) {
             Spacer(Modifier.width(8.dp))
         }
 
-        Box(
-            modifier =
-                Modifier
-                    .widthIn(max = screenWidth * 0.78f)
-                    .clip(
-                        RoundedCornerShape(
-                            topStart = 20.dp,
-                            topEnd = 20.dp,
-                            bottomStart = if (isUser) 20.dp else 4.dp,
-                            bottomEnd = if (isUser) 4.dp else 20.dp,
-                        ),
-                    ).background(if (isUser) MaterialTheme.colorScheme.primary.copy(alpha = 0.85f) else MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-        ) {
-            Text(
-                text = message.content,
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (isUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                fontWeight = if (isUser) FontWeight.Medium else FontWeight.Normal,
-            )
+        BoxWithConstraints {
+            Box(
+                modifier =
+                    Modifier
+                        .widthIn(max = maxWidth * 0.78f)
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = 20.dp,
+                                topEnd = 20.dp,
+                                bottomStart = if (isUser) 20.dp else 4.dp,
+                                bottomEnd = if (isUser) 4.dp else 20.dp,
+                            ),
+                        ).background(if (isUser) MaterialTheme.colorScheme.primary.copy(alpha = 0.85f) else MaterialTheme.colorScheme.surfaceVariant)
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+            ) {
+                Text(
+                    text = message.content,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (isUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                    fontWeight = if (isUser) FontWeight.Medium else FontWeight.Normal,
+                )
+            }
         }
     }
 }

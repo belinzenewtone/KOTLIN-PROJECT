@@ -123,6 +123,7 @@ class RecurringViewModel
                 RecurringCadence.DAILY -> 24L * 60L * 60L * 1000L
                 RecurringCadence.WEEKLY -> 7L * 24L * 60L * 60L * 1000L
                 RecurringCadence.MONTHLY -> 30L * 24L * 60L * 60L * 1000L
+                RecurringCadence.YEARLY -> 365L * 24L * 60L * 60L * 1000L
             }
         }
     }

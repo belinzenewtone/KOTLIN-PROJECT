@@ -557,10 +557,9 @@ private fun TaskFormContent(
         TaskPriority.entries.forEach { p ->
             val selected = p == priority
             val color = when (p) {
-                TaskPriority.HIGH -> Error
-                TaskPriority.MEDIUM -> Warning
                 TaskPriority.NEUTRAL -> Info
-                TaskPriority.LOW -> MaterialTheme.colorScheme.outlineVariant
+                TaskPriority.IMPORTANT -> Warning
+                TaskPriority.URGENT -> Error
             }
             Box(
                 modifier = Modifier

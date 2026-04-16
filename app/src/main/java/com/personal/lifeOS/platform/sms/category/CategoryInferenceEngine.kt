@@ -223,6 +223,7 @@ object CategoryInferenceEngine {
             TransactionCategory.DEPOSIT  -> "Deposit"
             TransactionCategory.REVERSED -> "Reversal"
             TransactionCategory.LOAN     -> "Loans & Credit"
+            TransactionCategory.FULIZA_CHARGE -> "Fuliza Charge"
             // BUY_GOODS, PAYBILL, UNKNOWN → fall through to keyword + heuristic
             TransactionCategory.BUY_GOODS,
             TransactionCategory.PAYBILL,

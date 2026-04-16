@@ -263,6 +263,7 @@ class ExpenseRepositoryImpl
                 TransactionCategory.DEPOSIT -> "Deposit"
                 TransactionCategory.REVERSED -> "Reversal"
                 TransactionCategory.LOAN -> "Loans & Credit"
+                TransactionCategory.FULIZA_CHARGE -> "Fuliza Charge"
                 // Paybill and Buy Goods are real merchants — let the name lookup handle them
                 TransactionCategory.PAYBILL,
                 TransactionCategory.BUY_GOODS,

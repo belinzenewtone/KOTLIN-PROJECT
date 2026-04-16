@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.personal.lifeOS.features.calendar.domain.model.CalendarEvent
 import com.personal.lifeOS.features.calendar.domain.model.EventImportance
+import com.personal.lifeOS.features.calendar.domain.model.EventKind
 import com.personal.lifeOS.features.calendar.domain.model.EventStatus
 import com.personal.lifeOS.features.calendar.domain.model.EventType
+import com.personal.lifeOS.features.calendar.domain.model.RepeatRule
 import com.personal.lifeOS.features.calendar.domain.repository.CalendarRepository
 import com.personal.lifeOS.features.tasks.domain.model.Task
 import com.personal.lifeOS.features.tasks.domain.model.TaskPriority
@@ -34,7 +36,7 @@ data class CalendarUiState(
     val selectedDayTasks: List<Task> = emptyList(),
     val isLoading: Boolean = true,
     val error: String? = null,
-    val showAddDialog: Boolean = false,
+    val showAddScreen: Boolean = false,
     val editingEvent: CalendarEvent? = null,
     /** True when the user is viewing the current real-world month. */
     val isViewingCurrentMonth: Boolean = true,
@@ -81,15 +83,15 @@ class CalendarViewModel
         }
 
         fun showAddDialog() {
-            _uiState.update { it.copy(showAddDialog = true, editingEvent = null) }
+            _uiState.update { it.copy(showAddScreen = true, editingEvent = null) }
         }
 
         fun showEditDialog(event: CalendarEvent) {
-            _uiState.update { it.copy(showAddDialog = true, editingEvent = event) }
+            _uiState.update { it.copy(showAddScreen = true, editingEvent = event) }
         }
 
         fun hideAddDialog() {
-            _uiState.update { it.copy(showAddDialog = false, editingEvent = null) }
+            _uiState.update { it.copy(showAddScreen = false, editingEvent = null) }
         }
 
         @Suppress("LongParameterList")
@@ -102,6 +104,13 @@ class CalendarViewModel
             endDate: Long?,
             hasReminder: Boolean = false,
             reminderMinutesBefore: Int = 15,
+            kind: EventKind = EventKind.EVENT,
+            allDay: Boolean = false,
+            repeatRule: RepeatRule = RepeatRule.NEVER,
+            reminderOffsets: List<Int> = emptyList(),
+            alarmEnabled: Boolean = false,
+            guests: String = "",
+            timeZoneId: String = "",
         ) {
             viewModelScope.launch {
                 try {
@@ -116,8 +125,15 @@ class CalendarViewModel
                                 type = type,
                                 importance = importance,
                                 status = EventStatus.PENDING,
-                                hasReminder = hasReminder,
-                                reminderMinutesBefore = reminderMinutesBefore,
+                                hasReminder = hasReminder || reminderOffsets.isNotEmpty(),
+                                reminderMinutesBefore = reminderOffsets.firstOrNull() ?: reminderMinutesBefore,
+                                kind = kind,
+                                allDay = allDay,
+                                repeatRule = repeatRule,
+                                reminderOffsets = reminderOffsets,
+                                alarmEnabled = alarmEnabled,
+                                guests = guests,
+                                timeZoneId = timeZoneId,
                             ),
                         )
                     } else {
@@ -129,12 +145,19 @@ class CalendarViewModel
                                 endDate = endDate,
                                 type = type,
                                 importance = importance,
-                                hasReminder = hasReminder,
-                                reminderMinutesBefore = reminderMinutesBefore,
+                                hasReminder = hasReminder || reminderOffsets.isNotEmpty(),
+                                reminderMinutesBefore = reminderOffsets.firstOrNull() ?: reminderMinutesBefore,
+                                kind = kind,
+                                allDay = allDay,
+                                repeatRule = repeatRule,
+                                reminderOffsets = reminderOffsets,
+                                alarmEnabled = alarmEnabled,
+                                guests = guests,
+                                timeZoneId = timeZoneId,
                             ),
                         )
                     }
-                    _uiState.update { it.copy(showAddDialog = false, editingEvent = null) }
+                    _uiState.update { it.copy(showAddScreen = false, editingEvent = null) }
                 } catch (e: Exception) {
                     _uiState.update { it.copy(error = e.message) }
                 }
@@ -206,7 +229,7 @@ class CalendarViewModel
                             deadline = deadline,
                         ),
                     )
-                    _uiState.update { it.copy(showAddDialog = false) }
+                    _uiState.update { it.copy(showAddScreen = false) }
                 } catch (e: Exception) {
                     _uiState.update { it.copy(error = e.message) }
                 }

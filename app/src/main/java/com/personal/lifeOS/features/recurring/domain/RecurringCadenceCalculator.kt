@@ -13,9 +13,10 @@ object RecurringCadenceCalculator {
         val current = Instant.ofEpochMilli(currentRunAt).atZone(zone)
         val next =
             when (cadence) {
-                RecurringCadence.DAILY -> current.plusDays(1)
-                RecurringCadence.WEEKLY -> current.plusWeeks(1)
+                RecurringCadence.DAILY   -> current.plusDays(1)
+                RecurringCadence.WEEKLY  -> current.plusWeeks(1)
                 RecurringCadence.MONTHLY -> current.plusMonths(1)
+                RecurringCadence.YEARLY  -> current.plusYears(1)
             }
         return next.toInstant().toEpochMilli()
     }

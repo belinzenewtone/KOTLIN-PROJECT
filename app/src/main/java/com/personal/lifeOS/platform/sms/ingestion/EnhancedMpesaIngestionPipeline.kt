@@ -1,5 +1,6 @@
 package com.personal.lifeOS.platform.sms.ingestion
 
+import com.personal.lifeOS.core.preferences.AppSettingsStore
 import com.personal.lifeOS.features.expenses.domain.repository.ExpenseRepository
 import com.personal.lifeOS.features.expenses.domain.repository.FulizaLoanRepository
 import com.personal.lifeOS.platform.sms.audit.ImportAuditLogger
@@ -26,6 +27,7 @@ class EnhancedMpesaIngestionPipeline
         private val expenseRepository: ExpenseRepository,
         private val fulizaLoanRepository: FulizaLoanRepository,
         private val importAuditLogger: ImportAuditLogger,
+        private val appSettingsStore: AppSettingsStore,
     ) {
 
         /**
@@ -55,6 +57,27 @@ class EnhancedMpesaIngestionPipeline
                     failureReason = "Parser returned null",
                 )
                 return EnhancedMpesaIngestionOutcome.PARSE_FAILED
+            }
+
+            // ── FULIZA_CHARGE short-circuit ──────────────────────────────────────
+            // Charge notice carries the authoritative total outstanding balance.
+            // It is NOT a debit event — do not import as a transaction.
+            // Template: "Fuliza M-PESA amount is Ksh X. … Total Fuliza M-PESA outstanding amount is Ksh Z"
+            if (parsed.category == TransactionCategory.FULIZA_CHARGE) {
+                val outstanding = parsed.fulizaOutstandingKes
+                if (outstanding != null) {
+                    fulizaLoanRepository.setOutstandingKes(outstanding)
+                    importAuditLogger.log(
+                        outcome = "fuliza_balance_updated",
+                        rawMessage = rawMessage,
+                        mpesaCode = parsed.mpesaCode,
+                        amount = outstanding,
+                        merchant = "Fuliza M-PESA",
+                    )
+                    return EnhancedMpesaIngestionOutcome.FULIZA_BALANCE_UPDATED
+                }
+                // Outstanding not extractable — fall through to normal import path
+                // (this shouldn't happen for a well-formed charge notice, but be defensive)
             }
 
             // Dual-key deduplication check
@@ -103,20 +126,22 @@ class EnhancedMpesaIngestionPipeline
                 merchant = parsed.counterparty,
             )
 
-            val hasFulizaContext = rawMessage.contains("fuliza", ignoreCase = true)
-            when {
-                parsed.category == TransactionCategory.LOAN -> {
+            // ── Fuliza balance update from repayment SMS ─────────────────────────
+            // Repayment SMS: "Ksh X from your M-PESA has been used to … pay your outstanding Fuliza …
+            //                 Your available Fuliza M-PESA limit is Ksh Y."
+            // outstanding = userFulizaLimit - availableLimit (both from SMS / settings)
+            if (parsed.category == TransactionCategory.LOAN) {
+                val availableLimit = parsed.fulizaAvailableLimitKes
+                val userLimit = appSettingsStore.getFulizaLimitKes()
+                if (availableLimit != null && userLimit != null && userLimit > 0.0) {
+                    val outstanding = (userLimit - availableLimit).coerceAtLeast(0.0)
+                    fulizaLoanRepository.setOutstandingKes(outstanding)
+                } else {
+                    // No available-limit in SMS and no user limit set — fall back to FIFO ledger
                     fulizaLoanRepository.recordRepayment(
                         drawCode = parsed.mpesaCode,
                         repaidAmountKes = parsed.amount,
                         repaymentDate = parsed.date,
-                    )
-                }
-                hasFulizaContext && parsed.category in FULIZA_DRAW_CATEGORIES -> {
-                    fulizaLoanRepository.recordDraw(
-                        drawCode = parsed.mpesaCode,
-                        amountKes = parsed.amount,
-                        drawDate = parsed.date,
                     )
                 }
             }
@@ -134,16 +159,6 @@ class EnhancedMpesaIngestionPipeline
             }
         }
 
-        private companion object {
-            val FULIZA_DRAW_CATEGORIES =
-                setOf(
-                    TransactionCategory.SENT,
-                    TransactionCategory.AIRTIME,
-                    TransactionCategory.PAYBILL,
-                    TransactionCategory.BUY_GOODS,
-                    TransactionCategory.WITHDRAW,
-                )
-        }
     }
 
 /**
@@ -166,4 +181,7 @@ enum class EnhancedMpesaIngestionOutcome {
     IMPORTED_REALTIME,
     IMPORTED_BATCH_PENDING,
     IMPORTED_QUARANTINE,
+
+    // Fuliza charge notice — outstanding balance updated, no transaction imported
+    FULIZA_BALANCE_UPDATED,
 }

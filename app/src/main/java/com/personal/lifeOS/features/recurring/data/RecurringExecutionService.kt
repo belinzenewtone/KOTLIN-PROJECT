@@ -58,12 +58,18 @@ class RecurringExecutionService
 
             dueRules.forEach { rule ->
                 database.withTransaction {
-                    val cadence =
-                        runCatching { RecurringCadence.valueOf(rule.cadence) }
-                            .getOrDefault(RecurringCadence.MONTHLY)
-                    val type =
-                        runCatching { RecurringType.valueOf(rule.type) }
-                            .getOrDefault(RecurringType.EXPENSE)
+                    val cadence = runCatching { RecurringCadence.valueOf(rule.cadence) }.getOrNull()
+                    if (cadence == null) {
+                        // Unrecognised cadence string — skip rather than silently advancing
+                        // on the wrong schedule. Rule will remain due and retry next cycle.
+                        skippedRules++
+                        return@withTransaction
+                    }
+                    val type = runCatching { RecurringType.valueOf(rule.type) }.getOrNull()
+                    if (type == null) {
+                        skippedRules++
+                        return@withTransaction
+                    }
                     val nextRunAt =
                         RecurringCadenceCalculator.nextRun(
                             currentRunAt = rule.nextRunAt,
@@ -94,7 +100,7 @@ class RecurringExecutionService
                                         id = LocalIdGenerator.nextId(),
                                         amount = amount,
                                         merchant = rule.title,
-                                        category = "RECURRING",
+                                        category = rule.category.ifBlank { "RECURRING" },
                                         date = now,
                                         source = "RECURRING",
                                         transactionType = "SENT",
@@ -132,7 +138,7 @@ class RecurringExecutionService
                                     title = rule.title,
                                     description = "Auto-generated recurring task",
                                     priority = "NEUTRAL",
-                                    deadline = now,
+                                    deadline = now + 24 * 60 * 60 * 1000L, // due end-of-next-day
                                     status = "PENDING",
                                     userId = userId,
                                 ),

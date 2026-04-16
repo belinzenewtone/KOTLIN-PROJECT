@@ -737,6 +737,47 @@ object DatabaseMigrations {
             }
         }
 
+    val MIGRATION_16_17: Migration =
+        object : Migration(16, 17) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add extended calendar-event columns. All have defaults so existing rows keep working.
+                if (!hasColumn(database, "events", "kind")) {
+                    database.execSQL("ALTER TABLE events ADD COLUMN kind TEXT NOT NULL DEFAULT 'EVENT'")
+                }
+                if (!hasColumn(database, "events", "all_day")) {
+                    database.execSQL("ALTER TABLE events ADD COLUMN all_day INTEGER NOT NULL DEFAULT 0")
+                }
+                if (!hasColumn(database, "events", "repeat_rule")) {
+                    database.execSQL("ALTER TABLE events ADD COLUMN repeat_rule TEXT NOT NULL DEFAULT 'NEVER'")
+                }
+                if (!hasColumn(database, "events", "reminder_offsets")) {
+                    database.execSQL("ALTER TABLE events ADD COLUMN reminder_offsets TEXT NOT NULL DEFAULT ''")
+                }
+                if (!hasColumn(database, "events", "alarm_enabled")) {
+                    database.execSQL("ALTER TABLE events ADD COLUMN alarm_enabled INTEGER NOT NULL DEFAULT 0")
+                }
+                if (!hasColumn(database, "events", "guests")) {
+                    database.execSQL("ALTER TABLE events ADD COLUMN guests TEXT NOT NULL DEFAULT ''")
+                }
+                if (!hasColumn(database, "events", "time_zone_id")) {
+                    database.execSQL("ALTER TABLE events ADD COLUMN time_zone_id TEXT NOT NULL DEFAULT ''")
+                }
+            }
+        }
+
+    val MIGRATION_15_16: Migration =
+        object : Migration(15, 16) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add category column to recurring_rules.
+                // Default 'RECURRING' preserves behaviour for all existing rules.
+                if (!hasColumn(database, "recurring_rules", "category")) {
+                    database.execSQL(
+                        "ALTER TABLE recurring_rules ADD COLUMN category TEXT NOT NULL DEFAULT 'RECURRING'",
+                    )
+                }
+            }
+        }
+
     // Restrict spending views to outflow transaction types only.
     val MIGRATION_14_15: Migration =
         object : Migration(14, 15) {

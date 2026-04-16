@@ -30,6 +30,20 @@ data class EventEntity(
     val reminderMinutesBefore: Int = 15,
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis(),
+    @ColumnInfo(name = "kind", defaultValue = "EVENT")
+    val kind: String = "EVENT",
+    @ColumnInfo(name = "all_day", defaultValue = "0")
+    val allDay: Boolean = false,
+    @ColumnInfo(name = "repeat_rule", defaultValue = "NEVER")
+    val repeatRule: String = "NEVER",
+    @ColumnInfo(name = "reminder_offsets", defaultValue = "")
+    val reminderOffsets: String = "",
+    @ColumnInfo(name = "alarm_enabled", defaultValue = "0")
+    val alarmEnabled: Boolean = false,
+    @ColumnInfo(name = "guests", defaultValue = "")
+    val guests: String = "",
+    @ColumnInfo(name = "time_zone_id", defaultValue = "")
+    val timeZoneId: String = "",
     @ColumnInfo(name = "updated_at")
     val updatedAt: Long = System.currentTimeMillis(),
     @ColumnInfo(name = "sync_state")

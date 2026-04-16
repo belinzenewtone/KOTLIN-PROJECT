@@ -27,15 +27,16 @@ object MpesaParsingConfig {
      * Semantic transaction categories for categorization and display.
      */
     enum class TransactionCategory {
-        RECEIVED,    // Money received from person or bank
-        SENT,        // Money sent to person (P2P)
-        AIRTIME,     // Airtime purchase
-        PAYBILL,     // Paybill payment (electricity, water, etc.)
-        BUY_GOODS,   // Buy goods (merchant till payment)
-        DEPOSIT,     // Agent/bank deposit
-        WITHDRAW,    // ATM / agent withdrawal
-        REVERSED,    // Reversed transaction
-        LOAN,        // Fuliza loan repayment
+        RECEIVED,       // Money received from person or bank
+        SENT,           // Money sent to person (P2P)
+        AIRTIME,        // Airtime purchase
+        PAYBILL,        // Paybill payment (electricity, water, etc.)
+        BUY_GOODS,      // Buy goods (merchant till payment)
+        DEPOSIT,        // Agent/bank deposit
+        WITHDRAW,       // ATM / agent withdrawal
+        REVERSED,       // Reversed transaction
+        LOAN,           // Fuliza repayment (money taken from wallet to settle Fuliza debt)
+        FULIZA_CHARGE,  // Fuliza charge notice — carries authoritative total outstanding balance
         UNKNOWN,
     }
 
@@ -77,7 +78,6 @@ object MpesaParsingConfig {
                 Regex("received from\\s+(.+?)(?:\\s+on\\s|\\s+New\\s|\\.|$)", RegexOption.IGNORE_CASE),
                 Regex("sent to\\s+(.+?)(?:\\s+on\\s|\\s+New\\s|\\.|$)", RegexOption.IGNORE_CASE),
             ),
-            confidence = Confidence.HIGH,
         ),
 
         // ── 2. Received (P2P credit) ─────────────────────────────────────────────
@@ -98,7 +98,6 @@ object MpesaParsingConfig {
                 Regex("received\\s+(?:Ksh|KES)\\s?[\\d,.]+\\s+from\\s+(.+?)(?:\\s+on\\s|\\s+New\\s|\\.|$)", RegexOption.IGNORE_CASE),
                 Regex("(?:Ksh|KES)\\s?[\\d,.]+\\s+received from\\s+(.+?)(?:\\s+on\\s|\\s+New\\s|\\.|$)", RegexOption.IGNORE_CASE),
             ),
-            confidence = Confidence.HIGH,
         ),
 
         // ── 3. Deposit (agent / bank float) ──────────────────────────────────────
@@ -116,7 +115,6 @@ object MpesaParsingConfig {
                 Regex("\\b deposited\\b", RegexOption.IGNORE_CASE),
             ),
             counterpartyPatterns = emptyList(),
-            confidence = Confidence.HIGH,
         ),
 
         // ── 4. Airtime ── BEFORE paybill to catch "sent to 0712345678 for airtime" ──
@@ -141,7 +139,6 @@ object MpesaParsingConfig {
             counterpartyPatterns = listOf(
                 Regex("sent to\\s+(.+?)\\s+for airtime", RegexOption.IGNORE_CASE),
             ),
-            confidence = Confidence.HIGH,
         ),
 
         // ── 5. Paybill (utility / bill — has account number) ────────────────────
@@ -163,7 +160,6 @@ object MpesaParsingConfig {
                 Regex("paid to\\s+(.+?)\\s+(?:for account|account)\\s+[\\w-]+", RegexOption.IGNORE_CASE),
                 Regex("sent to\\s+(.+?)\\s+(?:for account|account)\\s+[\\w-]+", RegexOption.IGNORE_CASE),
             ),
-            confidence = Confidence.HIGH,
         ),
 
         // ── 6. Buy Goods (merchant till — no account number) ────────────────────
@@ -189,7 +185,6 @@ object MpesaParsingConfig {
                 Regex("(?:Ksh|KES)\\s?[\\d,.]+\\s+paid to\\s+(.+?)(?:\\s+on\\s\\d|\\.\\s|confirmed|$)", RegexOption.IGNORE_CASE),
                 Regex("paid to\\s+(.+?)(?:\\s+on\\s\\d|\\.\\s|confirmed|$)", RegexOption.IGNORE_CASE),
             ),
-            confidence = Confidence.HIGH,
         ),
 
         // ── 7. Withdrawal ────────────────────────────────────────────────────────
@@ -209,10 +204,36 @@ object MpesaParsingConfig {
             counterpartyPatterns = listOf(
                 Regex("withdrawn from(?:\\s+agent)?\\s+\\d+\\s*-?\\s*(.+?)(?:\\s+on\\s|\\s+New\\s|\\.|$)", RegexOption.IGNORE_CASE),
             ),
-            confidence = Confidence.HIGH,
         ),
 
-        // ── 8. Fuliza repayment (debt service) ── BEFORE sent_p2p ───────────────
+        // ── 8. Fuliza charge notice ── BEFORE repayment — carries total outstanding ──
+        //    SMS template: "Fuliza M-PESA amount is Ksh X. Access Fee charged Ksh Y.
+        //                   Total Fuliza M-PESA outstanding amount is Ksh Z due on DD/MM/YY."
+        //    Same M-Pesa code as the spend that triggered it. Not a debit event — just
+        //    updates the outstanding balance. Pipeline short-circuits before importFromSms().
+        DetectionRule(
+            id = "fuliza_charge",
+            category = TransactionCategory.FULIZA_CHARGE,
+            description = "Fuliza charge notice — authoritative total outstanding balance",
+            patterns = listOf(
+                Regex(
+                    "Total Fuliza M-PESA outstanding amount is\\s*(?:Ksh|KES)\\s?[\\d,]+",
+                    RegexOption.IGNORE_CASE,
+                ),
+                Regex(
+                    "Fuliza M-PESA amount is\\s*(?:Ksh|KES)\\s?[\\d,.]+.*Access Fee charged",
+                    RegexOption.IGNORE_CASE,
+                ),
+            ),
+            fallbackPatterns = listOf(
+                Regex("Total Fuliza.*outstanding amount", RegexOption.IGNORE_CASE),
+            ),
+            counterpartyPatterns = listOf(
+                Regex("(Fuliza M-PESA)", RegexOption.IGNORE_CASE),
+            ),
+        ),
+
+        // ── 9. Fuliza repayment (debt service) ── BEFORE sent_p2p ───────────────
         DetectionRule(
             id = "fuliza_repayment",
             category = TransactionCategory.LOAN,
@@ -230,10 +251,9 @@ object MpesaParsingConfig {
             counterpartyPatterns = listOf(
                 Regex("(Fuliza M-PESA)", RegexOption.IGNORE_CASE),
             ),
-            confidence = Confidence.MEDIUM,
         ),
 
-        // ── 9. Sent P2P ── LAST; catches remaining "sent to PERSON" ─────────────
+        // ── 10. Sent P2P ── LAST; catches remaining "sent to PERSON" ────────────
         DetectionRule(
             id = "sent_p2p",
             category = TransactionCategory.SENT,
@@ -250,7 +270,6 @@ object MpesaParsingConfig {
                 Regex("(?:Ksh|KES)\\s?[\\d,.]+\\s+sent to\\s+(.+?)(?:\\s+on\\s|\\s+New\\s|\\.|confirmed|$)", RegexOption.IGNORE_CASE),
                 Regex("customer transfer of\\s+(?:Ksh|KES)\\s?[\\d,.]+\\s+to\\s+(.+?)(?:\\s+on\\s|\\s+New\\s|\\.|confirmed|$)", RegexOption.IGNORE_CASE),
             ),
-            confidence = Confidence.HIGH,
         ),
     )
 
@@ -279,10 +298,15 @@ object MpesaParsingConfig {
      * imported as a transaction. Requires BOTH a Fuliza context word AND a specific fee
      * signal — this prevents real Fuliza transactions (which contain "Fuliza" but not fee
      * signals) from being accidentally filtered out.
+     *
+     * IMPORTANT: Charge notices that carry "Total Fuliza M-PESA outstanding amount is Ksh X"
+     * are NOT filtered — they are parsed as FULIZA_CHARGE to update the live outstanding balance.
      */
     fun isFulizaServiceNotice(message: String): Boolean {
         val text = message.lowercase().replace("\\s+".toRegex(), " ").trim()
         if (!text.contains("fuliza")) return false
+        // Charge notices contain the authoritative outstanding balance — let the parser handle them.
+        if (text.contains("total fuliza m-pesa outstanding amount is")) return false
         return FULIZA_NOTICE_SIGNALS.any { text.contains(it) }
     }
 
@@ -297,22 +321,25 @@ object MpesaParsingConfig {
         TransactionCategory.BUY_GOODS to "Shopping",
         TransactionCategory.DEPOSIT   to "Deposit",
         TransactionCategory.WITHDRAW  to "Cash Withdrawal",
-        TransactionCategory.REVERSED  to "Reversal",
-        TransactionCategory.LOAN      to "Loans & Credit",
-        TransactionCategory.UNKNOWN   to "Other",
+        TransactionCategory.REVERSED       to "Reversal",
+        TransactionCategory.LOAN           to "Loans & Credit",
+        TransactionCategory.FULIZA_CHARGE  to "Fuliza Charge",
+        TransactionCategory.UNKNOWN        to "Other",
     )
 }
 
 /**
  * A single detection rule used by the M-Pesa parser.
  *
- * @param id                  Stable identifier for debugging and logging
- * @param category            The [MpesaParsingConfig.TransactionCategory] this rule maps to
- * @param description         Human-readable description of the rule
- * @param patterns            PRIMARY patterns — structural match → HIGH confidence
- * @param fallbackPatterns    FALLBACK patterns — keyword match → MEDIUM confidence
+ * @param id                   Stable identifier for debugging and logging
+ * @param category             The [MpesaParsingConfig.TransactionCategory] this rule maps to
+ * @param description          Human-readable description of the rule
+ * @param patterns             PRIMARY patterns — structural match → HIGH confidence
+ * @param fallbackPatterns     FALLBACK patterns — keyword match → MEDIUM confidence
  * @param counterpartyPatterns Ordered regexes for extracting the counterparty name
- * @param confidence          Base confidence for a primary pattern match
+ *
+ * Note: confidence is NOT stored on the rule. It is determined solely by which detection
+ * phase matched: Phase 1 (primary patterns) → HIGH, Phase 2/3 (fallbacks) → MEDIUM.
  */
 data class DetectionRule(
     val id: String,
@@ -321,6 +348,5 @@ data class DetectionRule(
     val patterns: List<Regex>,
     val fallbackPatterns: List<Regex> = emptyList(),
     val counterpartyPatterns: List<Regex> = emptyList(),
-    val confidence: MpesaParsingConfig.Confidence,
 )
 

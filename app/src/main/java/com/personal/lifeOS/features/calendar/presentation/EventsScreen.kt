@@ -3,6 +3,7 @@
 package com.personal.lifeOS.features.calendar.presentation
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -33,12 +34,12 @@ import com.personal.lifeOS.core.ui.designsystem.InlineBanner
 import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
 import com.personal.lifeOS.core.ui.designsystem.SearchField
-import com.personal.lifeOS.core.ui.designsystem.SuperAddBottomSheet
-import com.personal.lifeOS.core.ui.designsystem.SuperKind
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.calendar.domain.model.CalendarEvent
-import com.personal.lifeOS.features.calendar.domain.model.EventImportance
+import com.personal.lifeOS.features.calendar.domain.model.EventKind
 import com.personal.lifeOS.features.calendar.domain.model.EventType
+import com.personal.lifeOS.features.calendar.domain.model.RepeatRule
+import com.personal.lifeOS.features.tasks.domain.model.TaskPriority
 import com.personal.lifeOS.ui.theme.AppSpacing
 
 @Composable
@@ -50,7 +51,6 @@ fun EventsScreen(
     var query by rememberSaveable { mutableStateOf("") }
     var deleteTarget by remember { mutableStateOf<CalendarEvent?>(null) }
 
-    // Show all events from now onwards, sorted chronologically.
     val nowMs = System.currentTimeMillis()
     val upcomingEvents = remember(state.events, query) {
         state.events
@@ -59,69 +59,91 @@ fun EventsScreen(
             .filterByQuery(query)
     }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        floatingActionButton = {
-            FloatingActionButton(
-                modifier = Modifier
-                    .navigationBarsPadding()
-                    .padding(bottom = AppSpacing.FabBottomOffset),
-                onClick = { viewModel.showAddDialog() },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-                shape = CircleShape,
-            ) {
-                Icon(Icons.Outlined.Add, contentDescription = "Add event")
-            }
-        },
-    ) { innerPadding ->
-        PageScaffold(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            headerEyebrow = "Schedule",
-            title = "Events",
-            subtitle = "Upcoming",
-            onBack = onBack,
-            contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFab),
-        ) {
-            state.error?.let {
-                InlineBanner(message = it, tone = InlineBannerTone.ERROR)
-            }
-
-            SearchField(
-                value = query,
-                onValueChange = { query = it },
-                placeholder = "Search events...",
-            )
-
-            if (upcomingEvents.isEmpty()) {
-                EmptyState(
-                    title = "No upcoming events",
-                    description = "Tap + to schedule your next event.",
-                )
-            } else {
-                androidx.compose.foundation.layout.Column(
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
+            floatingActionButton = {
+                FloatingActionButton(
+                    modifier = Modifier
+                        .navigationBarsPadding()
+                        .padding(bottom = AppSpacing.FabBottomOffset),
+                    onClick = { viewModel.showAddDialog() },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    shape = CircleShape,
                 ) {
-                    upcomingEvents.forEach { event ->
-                        CalendarEventChip(
-                            title = event.title,
-                            timeLabel = DateUtils.formatDate(event.date, "EEE, MMM dd - h:mm a"),
-                        )
-                        CalendarEventCard(
-                            event = event,
-                            onComplete = { viewModel.markEventCompleted(event) },
-                            onEdit = { viewModel.showEditDialog(event) },
-                            onDelete = { deleteTarget = event },
-                        )
+                    Icon(Icons.Outlined.Add, contentDescription = "Add event")
+                }
+            },
+        ) { innerPadding ->
+            PageScaffold(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                headerEyebrow = "Schedule",
+                title = "Events",
+                subtitle = "Upcoming",
+                onBack = onBack,
+                contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFab),
+            ) {
+                state.error?.let {
+                    InlineBanner(message = it, tone = InlineBannerTone.ERROR)
+                }
+
+                SearchField(
+                    value = query,
+                    onValueChange = { query = it },
+                    placeholder = "Search events...",
+                )
+
+                if (upcomingEvents.isEmpty()) {
+                    EmptyState(
+                        title = "No upcoming events",
+                        description = "Tap + to schedule your next event.",
+                    )
+                } else {
+                    androidx.compose.foundation.layout.Column(
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        upcomingEvents.forEach { event ->
+                            CalendarEventChip(
+                                title = event.title,
+                                timeLabel = if (event.allDay) DateUtils.formatDate(event.date, "EEE, MMM dd")
+                                    else DateUtils.formatDate(event.date, "EEE, MMM dd - h:mm a"),
+                            )
+                            CalendarEventCard(
+                                event = event,
+                                onComplete = { viewModel.markEventCompleted(event) },
+                                onEdit = { viewModel.showEditDialog(event) },
+                                onDelete = { deleteTarget = event },
+                            )
+                        }
                     }
                 }
             }
         }
+
+        // Full-page add / edit screen
+        CalendarAddScreenOverlay(
+            visible = state.showAddScreen,
+            editingEvent = state.editingEvent,
+            selectedDate = state.selectedDate,
+            onDismiss = { viewModel.hideAddDialog() },
+            onSaveTask = { title, desc, priority, deadline ->
+                viewModel.saveTask(title, desc, priority, deadline)
+            },
+            onSaveEvent = { title, desc, type, importance, date, endDate, allDay, repeatRule,
+                            reminderOffsets, alarmEnabled, guests, timeZoneId, kind ->
+                viewModel.saveEvent(
+                    title = title, description = desc, type = type, importance = importance,
+                    date = date, endDate = endDate, allDay = allDay, repeatRule = repeatRule,
+                    reminderOffsets = reminderOffsets, alarmEnabled = alarmEnabled,
+                    guests = guests, timeZoneId = timeZoneId, kind = kind,
+                )
+            },
+        )
     }
 
-    // Delete confirmation.
     deleteTarget?.let { event ->
         AlertDialog(
             onDismissRequest = { deleteTarget = null },
@@ -137,29 +159,6 @@ fun EventsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { deleteTarget = null }) { Text("Cancel") }
-            },
-        )
-    }
-
-    if (state.showAddDialog) {
-        SuperAddBottomSheet(
-            defaultKind = SuperKind.EVENT,
-            selectedDate = state.selectedDate,
-            isEdit = state.editingEvent != null,
-            editTitle = state.editingEvent?.title.orEmpty(),
-            editDescription = state.editingEvent?.description.orEmpty(),
-            editEventType = state.editingEvent?.type ?: EventType.PERSONAL,
-            editImportance = state.editingEvent?.importance ?: EventImportance.NEUTRAL,
-            editStartAt = state.editingEvent?.date,
-            editEndAt = state.editingEvent?.endDate,
-            editHasReminder = state.editingEvent?.hasReminder ?: false,
-            editReminderMinutes = state.editingEvent?.reminderMinutesBefore ?: 15,
-            onDismiss = { viewModel.hideAddDialog() },
-            onSaveTask = { title, desc, priority, deadline ->
-                viewModel.saveTask(title, desc, priority, deadline)
-            },
-            onSaveEvent = { title, desc, type, importance, startAt, endAt, hasReminder, reminderMins ->
-                viewModel.saveEvent(title, desc, type, importance, startAt, endAt, hasReminder, reminderMins)
             },
         )
     }

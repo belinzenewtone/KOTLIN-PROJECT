@@ -54,6 +54,18 @@ object MpesaParserEnhanced {
         val balanceAfter: Double?,
         val date: Long,
         val rawSms: String,
+        /**
+         * For FULIZA_CHARGE: the authoritative cumulative outstanding balance stated directly
+         * in the charge notice ("Total Fuliza M-PESA outstanding amount is Ksh X").
+         * Use this to update the live Fuliza balance — no computation needed.
+         */
+        val fulizaOutstandingKes: Double? = null,
+        /**
+         * For LOAN (repayment): the remaining available credit after this repayment
+         * ("Your available Fuliza M-PESA limit is Ksh X").
+         * outstanding = userFulizaLimit - fulizaAvailableLimitKes
+         */
+        val fulizaAvailableLimitKes: Double? = null,
     ) {
         /**
          * True when money credited into the M-Pesa wallet:
@@ -92,11 +104,35 @@ object MpesaParserEnhanced {
 
     // ── Extraction regexes ────────────────────────────────────────────────────
 
-    /** M-Pesa transaction codes: exactly 10 uppercase alphanumeric at the START. */
-    private val CODE_RE = Regex("^([A-Z0-9]{10})\\b")
+    /**
+     * M-Pesa transaction codes: exactly 10 uppercase alphanumeric characters.
+     * Uses a word-boundary match rather than `^` anchoring so that a short carrier
+     * prefix before the code (e.g. a network operator header) doesn't drop the SMS.
+     * The first match in the message is taken as the code.
+     */
+    private val CODE_RE = Regex("\\b([A-Z0-9]{10})\\b")
 
     /** Amount: "Ksh 1,234.56", "KES1234", "Ksh390.00" etc. */
     private val AMOUNT_RE = Regex("(?:Ksh|KES)\\s?([\\d,]+(?:\\.\\d{1,2})?)", RegexOption.IGNORE_CASE)
+
+    /**
+     * Authoritative total outstanding Fuliza balance — present in charge notice SMS.
+     * "Total Fuliza M-PESA outstanding amount is Ksh 508.16 due on …"
+     */
+    private val FULIZA_OUTSTANDING_RE = Regex(
+        "Total Fuliza M-PESA outstanding amount is\\s*(?:Ksh|KES)\\s?([\\d,]+(?:\\.\\d{1,2})?)",
+        RegexOption.IGNORE_CASE,
+    )
+
+    /**
+     * Available Fuliza credit limit remaining after a repayment.
+     * "Your available Fuliza M-PESA limit is Ksh 416.84"
+     * outstanding = userFulizaLimit - this value
+     */
+    private val FULIZA_AVAIL_LIMIT_RE = Regex(
+        "available Fuliza M-PESA limit is\\s*(?:Ksh|KES)\\s?([\\d,]+(?:\\.\\d{1,2})?)",
+        RegexOption.IGNORE_CASE,
+    )
 
     /** Balance after transaction. */
     private val BALANCE_RE = Regex(
@@ -222,7 +258,8 @@ object MpesaParserEnhanced {
         MpesaParsingConfig.TransactionCategory.AIRTIME   ->
             if (counterparty != null && counterparty != "Airtime Purchase") "Airtime for $counterparty"
             else "Airtime purchase"
-        MpesaParsingConfig.TransactionCategory.LOAN      -> "Fuliza repayment"
+        MpesaParsingConfig.TransactionCategory.LOAN           -> "Fuliza repayment"
+        MpesaParsingConfig.TransactionCategory.FULIZA_CHARGE  -> "Fuliza charge notice"
         MpesaParsingConfig.TransactionCategory.PAYBILL   ->
             if (counterparty != null) "Paid to $counterparty (Paybill)" else "Paybill payment"
         MpesaParsingConfig.TransactionCategory.BUY_GOODS ->
@@ -311,19 +348,37 @@ object MpesaParserEnhanced {
             // Stage 5: Balance (optional enrichment)
             val balance = parseBalance(normalized)
 
+            // Stage 5b: Fuliza-specific enrichment
+            // FULIZA_CHARGE — extract direct outstanding ("Total Fuliza … outstanding amount is Ksh X")
+            // LOAN (repayment) — extract available limit ("available Fuliza … limit is Ksh X")
+            val fulizaOutstanding = when (match.rule.category) {
+                MpesaParsingConfig.TransactionCategory.FULIZA_CHARGE ->
+                    FULIZA_OUTSTANDING_RE.find(normalized)
+                        ?.groupValues?.get(1)?.replace(",", "")?.toDoubleOrNull()
+                else -> null
+            }
+            val fulizaAvailableLimit = when (match.rule.category) {
+                MpesaParsingConfig.TransactionCategory.LOAN ->
+                    FULIZA_AVAIL_LIMIT_RE.find(normalized)
+                        ?.groupValues?.get(1)?.replace(",", "")?.toDoubleOrNull()
+                else -> null
+            }
+
             // Stage 6: Description
             val description = buildDescription(match.rule.category, counterparty, amount)
 
             ParsedTransaction(
-                mpesaCode    = code,
-                amount       = amount,
-                category     = match.rule.category,
-                confidence   = match.confidence,
-                counterparty = counterparty,
-                description  = description,
-                balanceAfter = balance,
-                date         = parseDate(normalized),
-                rawSms       = sms,
+                mpesaCode             = code,
+                amount                = amount,
+                category              = match.rule.category,
+                confidence            = match.confidence,
+                counterparty          = counterparty,
+                description           = description,
+                balanceAfter          = balance,
+                date                  = parseDate(normalized),
+                rawSms                = sms,
+                fulizaOutstandingKes  = fulizaOutstanding,
+                fulizaAvailableLimitKes = fulizaAvailableLimit,
             )
         } catch (e: Exception) {
             null

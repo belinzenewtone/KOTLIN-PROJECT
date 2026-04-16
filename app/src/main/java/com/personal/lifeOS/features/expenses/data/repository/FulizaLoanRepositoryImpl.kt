@@ -4,9 +4,11 @@ import com.personal.lifeOS.core.database.LocalIdGenerator
 import com.personal.lifeOS.core.database.dao.FulizaLoanDao
 import com.personal.lifeOS.core.database.entity.FulizaLoanEntity
 import com.personal.lifeOS.core.database.entity.FulizaLoanStatus
+import com.personal.lifeOS.core.preferences.AppSettingsStore
 import com.personal.lifeOS.core.security.AuthSessionStore
 import com.personal.lifeOS.features.expenses.domain.repository.FulizaLoanRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,12 +18,22 @@ class FulizaLoanRepositoryImpl
     constructor(
         private val fulizaLoanDao: FulizaLoanDao,
         private val authSessionStore: AuthSessionStore,
+        private val appSettingsStore: AppSettingsStore,
     ) : FulizaLoanRepository {
 
         private fun userId(): String = authSessionStore.getUserId()
 
+        /**
+         * Returns the SMS-derived outstanding balance stored in DataStore.
+         * Falls back to 0.0 when no SMS has been parsed yet (fresh install).
+         * The old FIFO SQL SUM approach is retired — balance is now authoritative from SMS.
+         */
         override fun observeNetOutstanding(): Flow<Double> =
-            fulizaLoanDao.observeNetOutstanding(userId())
+            appSettingsStore.fulizaOutstandingKesFlow().map { it ?: 0.0 }
+
+        override suspend fun setOutstandingKes(outstandingKes: Double) {
+            appSettingsStore.setFulizaOutstandingKes(outstandingKes.coerceAtLeast(0.0))
+        }
 
         override fun observeOpenLoans(): Flow<List<FulizaLoanEntity>> =
             fulizaLoanDao.observeOpenLoans(userId())

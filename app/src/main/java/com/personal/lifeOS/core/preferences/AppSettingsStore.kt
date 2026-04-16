@@ -28,6 +28,13 @@ object AppSettingsKeys {
     val NOTIFICATION_PERMISSION_ASKED = booleanPreferencesKey("notification_permission_asked")
     val SMS_PERMISSION_ASKED = booleanPreferencesKey("sms_permission_asked")
     val FULIZA_LIMIT_KES = longPreferencesKey("fuliza_limit_kes")
+    /**
+     * Last known Fuliza outstanding balance derived from SMS.
+     * Updated by FULIZA_CHARGE (direct outstanding) or LOAN repayment (limit - available).
+     * Stored as Long (rounded KES, e.g. 508 for Ksh 508.16 → multiply by 100 for cents).
+     * We store as centesimal (×100) to preserve decimal precision without using Double in DataStore.
+     */
+    val FULIZA_OUTSTANDING_KES_CENTS = longPreferencesKey("fuliza_outstanding_kes_cents")
 }
 
 @Singleton
@@ -184,6 +191,31 @@ class AppSettingsStore
         suspend fun clearFulizaLimitKes() {
             dataStore.edit { prefs ->
                 prefs.remove(AppSettingsKeys.FULIZA_LIMIT_KES)
+            }
+        }
+
+        // ── Fuliza outstanding balance (SMS-derived) ─────────────────────────────
+
+        fun fulizaOutstandingKesFlow(): Flow<Double?> =
+            dataStore.data.map { prefs ->
+                prefs[AppSettingsKeys.FULIZA_OUTSTANDING_KES_CENTS]?.let { it.toDouble() / 100.0 }
+            }
+
+        suspend fun getFulizaOutstandingKes(): Double? =
+            dataStore.data.first()[AppSettingsKeys.FULIZA_OUTSTANDING_KES_CENTS]
+                ?.let { it.toDouble() / 100.0 }
+
+        /** Persist the latest Fuliza outstanding balance sourced from an SMS. */
+        suspend fun setFulizaOutstandingKes(outstandingKes: Double) {
+            val cents = (outstandingKes * 100).toLong().coerceAtLeast(0L)
+            dataStore.edit { prefs ->
+                prefs[AppSettingsKeys.FULIZA_OUTSTANDING_KES_CENTS] = cents
+            }
+        }
+
+        suspend fun clearFulizaOutstandingKes() {
+            dataStore.edit { prefs ->
+                prefs.remove(AppSettingsKeys.FULIZA_OUTSTANDING_KES_CENTS)
             }
         }
 

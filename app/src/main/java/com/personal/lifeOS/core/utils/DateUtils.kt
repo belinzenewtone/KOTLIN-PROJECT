@@ -7,6 +7,8 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 
+private val LOCALE_KE = Locale("en", "KE")
+
 object DateUtils {
     fun todayStartMillis(): Long {
         return LocalDate.now()
@@ -48,6 +50,32 @@ object DateUtils {
             .toEpochMilli() - 1
     }
 
+    fun weekEndMillis(): Long {
+        return LocalDate.now()
+            .with(TemporalAdjusters.nextOrSame(java.time.DayOfWeek.SUNDAY))
+            .plusDays(1)
+            .atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli() - 1
+    }
+
+    fun yearStartMillis(): Long {
+        return LocalDate.now()
+            .withDayOfYear(1)
+            .atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+    }
+
+    fun yearEndMillis(): Long {
+        return LocalDate.now()
+            .with(TemporalAdjusters.lastDayOfYear())
+            .plusDays(1)
+            .atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli() - 1
+    }
+
     fun formatDate(
         epochMillis: Long,
         pattern: String = "MMM dd, yyyy",
@@ -65,7 +93,7 @@ object DateUtils {
     }
 
     fun formatCurrency(amount: Double): String {
-        return "KSh ${String.format(Locale.getDefault(), "%,.0f", amount)}"
+        return "KSh ${String.format(LOCALE_KE, "%,.0f", amount)}"
     }
 
     fun formatRelativeTime(

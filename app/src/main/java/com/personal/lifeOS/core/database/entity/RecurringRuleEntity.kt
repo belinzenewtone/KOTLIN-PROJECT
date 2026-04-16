@@ -21,6 +21,14 @@ data class RecurringRuleEntity(
     @ColumnInfo(name = "next_run_at")
     val nextRunAt: Long,
     val amount: Double? = null,
+    /**
+     * Expense/income category label (e.g. "Utilities", "Rent", "Shopping").
+     * Used when materialising a recurring expense/income so it shows up correctly
+     * in budget category breakdowns instead of the generic "RECURRING" bucket.
+     * Defaults to "RECURRING" for backwards-compatibility with existing rules.
+     */
+    @ColumnInfo(name = "category", defaultValue = "RECURRING")
+    val category: String = "RECURRING",
     val enabled: Boolean = true,
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis(),

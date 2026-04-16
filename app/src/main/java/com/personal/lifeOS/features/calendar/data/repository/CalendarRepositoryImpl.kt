@@ -8,8 +8,10 @@ import com.personal.lifeOS.core.security.AuthSessionStore
 import com.personal.lifeOS.core.sync.SyncMutationEnqueuer
 import com.personal.lifeOS.features.calendar.domain.model.CalendarEvent
 import com.personal.lifeOS.features.calendar.domain.model.EventImportance
+import com.personal.lifeOS.features.calendar.domain.model.EventKind
 import com.personal.lifeOS.features.calendar.domain.model.EventStatus
 import com.personal.lifeOS.features.calendar.domain.model.EventType
+import com.personal.lifeOS.features.calendar.domain.model.RepeatRule
 import com.personal.lifeOS.features.calendar.domain.repository.CalendarRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -121,6 +123,14 @@ fun EventEntity.toDomain(): CalendarEvent {
             },
         hasReminder = hasReminder, reminderMinutesBefore = reminderMinutesBefore,
         createdAt = createdAt,
+        kind = try { EventKind.valueOf(kind) } catch (_: Exception) { EventKind.EVENT },
+        allDay = allDay,
+        repeatRule = try { RepeatRule.valueOf(repeatRule) } catch (_: Exception) { RepeatRule.NEVER },
+        reminderOffsets = if (reminderOffsets.isBlank()) emptyList()
+            else reminderOffsets.split(",").mapNotNull { it.trim().toIntOrNull() },
+        alarmEnabled = alarmEnabled,
+        guests = guests,
+        timeZoneId = timeZoneId,
     )
 }
 
@@ -132,5 +142,12 @@ fun CalendarEvent.toEntity(): EventEntity {
         status = status.name,
         hasReminder = hasReminder, reminderMinutesBefore = reminderMinutesBefore,
         createdAt = createdAt,
+        kind = kind.name,
+        allDay = allDay,
+        repeatRule = repeatRule.name,
+        reminderOffsets = reminderOffsets.joinToString(","),
+        alarmEnabled = alarmEnabled,
+        guests = guests,
+        timeZoneId = timeZoneId,
     )
 }

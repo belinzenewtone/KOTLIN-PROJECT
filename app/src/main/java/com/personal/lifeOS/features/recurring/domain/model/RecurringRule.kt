@@ -7,6 +7,7 @@ data class RecurringRule(
     val cadence: RecurringCadence,
     val nextRunAt: Long,
     val amount: Double? = null,
+    val category: String = "RECURRING",
     val enabled: Boolean = true,
     val createdAt: Long = System.currentTimeMillis(),
 )
@@ -21,4 +22,5 @@ enum class RecurringCadence {
     DAILY,
     WEEKLY,
     MONTHLY,
+    YEARLY,
 }

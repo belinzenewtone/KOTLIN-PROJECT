@@ -12,7 +12,31 @@ data class CalendarEvent(
     val hasReminder: Boolean = false,
     val reminderMinutesBefore: Int = 15,
     val createdAt: Long = System.currentTimeMillis(),
+    // Extended fields
+    val kind: EventKind = EventKind.EVENT,
+    val allDay: Boolean = false,
+    val repeatRule: RepeatRule = RepeatRule.NEVER,
+    val reminderOffsets: List<Int> = emptyList(),
+    val alarmEnabled: Boolean = false,
+    val guests: String = "",
+    val timeZoneId: String = "",
 )
+
+enum class EventKind(val label: String) {
+    EVENT("Event"),
+    BIRTHDAY("Birthday"),
+    ANNIVERSARY("Anniversary"),
+    COUNTDOWN("Countdown"),
+}
+
+enum class RepeatRule(val label: String) {
+    NEVER("Never"),
+    DAILY("Daily"),
+    MON_FRI("Mon – Fri"),
+    WEEKLY("Weekly"),
+    MONTHLY("Monthly"),
+    YEARLY("Yearly"),
+}
 
 enum class EventType(val label: String) {
     WORK("Work"),

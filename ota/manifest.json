@@ -1,8 +1,8 @@
 ﻿{
-    "version_code":  46,
-    "version_name":  "1.2.35",
-    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.35/app-release-v1.2.35.apk",
-    "checksum_sha256":  "f2dc6a717707deecc79db108c1b19296b44d488aea7bf6794fb7526dca170c2a",
+    "version_code":  47,
+    "version_name":  "1.2.36",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.36/app-release-v1.2.36.apk",
+    "checksum_sha256":  "57d68c23d7831a88ce1308b7867a4d7f7b57eb96584dd2513b18e320d631f189",
     "required":  false,
-    "release_notes":  "Stability update with compile fixes and refreshed OTA signed release."
+    "release_notes":  "Latest user code updates packaged in a signed OTA release."
 }

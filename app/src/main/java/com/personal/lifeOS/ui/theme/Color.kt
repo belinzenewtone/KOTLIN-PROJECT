@@ -42,3 +42,8 @@ val CategoryEntertainment = Color(0xFFFFA726)
 val CategorySubscriptions = Color(0xFF26C6DA)
 val CategorySavings = Color(0xFF66BB6A)
 val CategoryOther = Color(0xFF78909C)
+
+// Calendar event-kind colours (used for day dots and section headers)
+val CategoryBirthday = Color(0xFFEF5350)   // red  — same hue as Error
+val CategoryAnniversary = Color(0xFFFFB74D) // amber — same hue as Warning
+val CategoryCountdown = Color(0xFF7B1FA2)   // purple

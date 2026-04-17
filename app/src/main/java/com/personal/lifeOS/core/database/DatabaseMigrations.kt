@@ -778,6 +778,23 @@ object DatabaseMigrations {
             }
         }
 
+    val MIGRATION_17_18: Migration =
+        object : Migration(17, 18) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                if (!hasColumn(database, "events", "reminder_time_of_day_minutes")) {
+                    database.execSQL(
+                        "ALTER TABLE events ADD COLUMN reminder_time_of_day_minutes INTEGER NOT NULL DEFAULT 480",
+                    )
+                }
+                if (!hasColumn(database, "tasks", "reminder_offsets")) {
+                    database.execSQL("ALTER TABLE tasks ADD COLUMN reminder_offsets TEXT NOT NULL DEFAULT ''")
+                }
+                if (!hasColumn(database, "tasks", "alarm_enabled")) {
+                    database.execSQL("ALTER TABLE tasks ADD COLUMN alarm_enabled INTEGER NOT NULL DEFAULT 0")
+                }
+            }
+        }
+
     // Restrict spending views to outflow transaction types only.
     val MIGRATION_14_15: Migration =
         object : Migration(14, 15) {

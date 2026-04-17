@@ -41,6 +41,7 @@ import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.calendar.domain.model.CalendarEvent
 import com.personal.lifeOS.features.calendar.domain.model.EventImportance
+import com.personal.lifeOS.features.calendar.domain.model.EventKind
 import com.personal.lifeOS.features.calendar.domain.model.EventStatus
 import com.personal.lifeOS.features.calendar.domain.model.EventType
 import com.personal.lifeOS.ui.theme.CategoryOther
@@ -164,6 +165,9 @@ internal fun CalendarEventCard(
                         color = if (event.status == EventStatus.COMPLETED) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (event.kind != EventKind.EVENT) {
+                            EventBadge(text = event.kind.label, color = MaterialTheme.colorScheme.tertiary)
+                        }
                         EventBadge(text = event.type.label, color = typeColor)
                         EventBadge(text = event.importance.label, color = importanceColor(event.importance))
                         if (event.status == EventStatus.COMPLETED) {

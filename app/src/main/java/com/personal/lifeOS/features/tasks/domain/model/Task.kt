@@ -9,6 +9,9 @@ data class Task(
     val status: TaskStatus = TaskStatus.PENDING,
     val completedAt: Long? = null,
     val createdAt: Long = System.currentTimeMillis(),
+    /** Reminder offsets in minutes before the deadline (mirrors CalendarEvent.reminderOffsets). */
+    val reminderOffsets: List<Int> = emptyList(),
+    val alarmEnabled: Boolean = false,
 )
 
 enum class TaskPriority(val label: String) {

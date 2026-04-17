@@ -27,6 +27,10 @@ data class TaskEntity(
     val createdAt: Long = System.currentTimeMillis(),
     @ColumnInfo(name = "updated_at")
     val updatedAt: Long = System.currentTimeMillis(),
+    @ColumnInfo(name = "reminder_offsets", defaultValue = "")
+    val reminderOffsets: String = "",
+    @ColumnInfo(name = "alarm_enabled", defaultValue = "0")
+    val alarmEnabled: Boolean = false,
     @ColumnInfo(name = "sync_state")
     val syncState: String = "LOCAL_ONLY",
     @ColumnInfo(name = "record_source")

@@ -20,6 +20,8 @@ data class CalendarEvent(
     val alarmEnabled: Boolean = false,
     val guests: String = "",
     val timeZoneId: String = "",
+    /** Minutes from midnight used as the time-of-day for all-day event reminders (default 08:00 = 480). */
+    val reminderTimeOfDayMinutes: Int = 480,
 )
 
 enum class EventKind(val label: String) {

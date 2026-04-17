@@ -69,7 +69,7 @@ import com.personal.lifeOS.core.database.entity.MonthlySpendView
         DailySpendView::class,
         MonthlySpendView::class,
     ],
-    version = 17,
+    version = 18,
     exportSchema = true,
 )
 @TypeConverters(DateConverters::class)

@@ -131,6 +131,9 @@ fun TaskEntity.toDomain(): Task {
             },
         completedAt = completedAt,
         createdAt = createdAt,
+        reminderOffsets = if (reminderOffsets.isBlank()) emptyList()
+            else reminderOffsets.split(",").mapNotNull { it.trim().toIntOrNull() },
+        alarmEnabled = alarmEnabled,
     )
 }
 
@@ -144,5 +147,7 @@ fun Task.toEntity(): TaskEntity {
         status = status.name,
         completedAt = completedAt,
         createdAt = createdAt,
+        reminderOffsets = reminderOffsets.joinToString(","),
+        alarmEnabled = alarmEnabled,
     )
 }

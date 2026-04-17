@@ -31,6 +31,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,6 +49,7 @@ import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Repeat
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -57,6 +61,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -72,6 +77,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.core.utils.DateUtils
@@ -89,7 +95,7 @@ import java.util.TimeZone
 
 // ── Tab types ─────────────────────────────────────────────────────────────────
 
-private enum class AddTab(val label: String) {
+internal enum class AddTab(val label: String) {
     TASK("Task"),
     EVENT("Event"),
     BIRTHDAY("Birthday"),
@@ -99,12 +105,13 @@ private enum class AddTab(val label: String) {
 
 // ── Internal navigation within the add screen ─────────────────────────────────
 
-private enum class AddPage { FORM, REPEAT, REMINDERS }
+private enum class AddPage { FORM, REPEAT, REMINDERS, TIMEZONE }
 
 // ── Named reminder presets (minutes before) ───────────────────────────────────
 
 private data class ReminderPreset(val label: String, val minutes: Int)
 
+/** Timed-event presets — offsets are relative minutes before event start. */
 private val REMINDER_PRESETS = listOf(
     ReminderPreset("When event starts", 0),
     ReminderPreset("5 minutes before", 5),
@@ -117,13 +124,22 @@ private val REMINDER_PRESETS = listOf(
     ReminderPreset("1 week before", 60 * 24 * 7),
 )
 
+/** All-day / birthday presets — the labels show "at HH:MM" suffix at runtime. */
 private val BIRTHDAY_REMINDER_PRESETS = listOf(
     ReminderPreset("On that day", 0),
-    ReminderPreset("1 day before", 60 * 24),
-    ReminderPreset("2 days before", 60 * 24 * 2),
-    ReminderPreset("3 days before", 60 * 24 * 3),
-    ReminderPreset("1 week before", 60 * 24 * 7),
+    ReminderPreset("1 day before the event", 60 * 24),
+    ReminderPreset("2 days before the event", 60 * 24 * 2),
+    ReminderPreset("3 days before the event", 60 * 24 * 3),
+    ReminderPreset("7 days before the event", 60 * 24 * 7),
 )
+
+// ── Custom reminder units ──────────────────────────────────────────────────────
+private val CUSTOM_UNITS = listOf("minute", "hour", "day")
+private fun customMinutes(value: Int, unit: String): Int = when (unit) {
+    "hour" -> value * 60
+    "day"  -> value * 60 * 24
+    else   -> value
+}
 
 // ── Root composable ────────────────────────────────────────────────────────────
 
@@ -132,12 +148,13 @@ internal fun CalendarAddScreen(
     editingEvent: com.personal.lifeOS.features.calendar.domain.model.CalendarEvent?,
     selectedDate: LocalDate,
     onDismiss: () -> Unit,
+    allowedTabs: List<AddTab>? = null,
     onSaveTask: (title: String, desc: String, priority: TaskPriority, deadline: Long?) -> Unit,
     onSaveEvent: (
         title: String, desc: String, type: EventType, importance: EventImportance,
         date: Long, endDate: Long?, allDay: Boolean, repeatRule: RepeatRule,
         reminderOffsets: List<Int>, alarmEnabled: Boolean, guests: String, timeZoneId: String,
-        kind: EventKind,
+        kind: EventKind, reminderTimeOfDayMinutes: Int,
     ) -> Unit,
 ) {
     BackHandler { onDismiss() }
@@ -171,6 +188,15 @@ internal fun CalendarAddScreen(
     var timeZoneId by rememberSaveable(editingEvent?.id) {
         mutableStateOf(editingEvent?.timeZoneId?.ifBlank { TimeZone.getDefault().id } ?: TimeZone.getDefault().id)
     }
+    var eventReminderEnabled by rememberSaveable(editingEvent?.id) {
+        mutableStateOf((editingEvent?.reminderOffsets?.isNotEmpty()) ?: false)
+    }
+    var eventReminderTimeHour by rememberSaveable(editingEvent?.id) {
+        mutableIntStateOf(editingEvent?.reminderTimeOfDayMinutes?.div(60) ?: 8)
+    }
+    var eventReminderTimeMinute by rememberSaveable(editingEvent?.id) {
+        mutableIntStateOf(editingEvent?.reminderTimeOfDayMinutes?.rem(60) ?: 0)
+    }
 
     // ── Task form state ───────────────────────────────────────────────────────
     var taskTitle by rememberSaveable { mutableStateOf("") }
@@ -182,13 +208,27 @@ internal fun CalendarAddScreen(
                 9 * 60 * 60 * 1000L,
         )
     }
+    val taskReminderOffsets = remember { mutableStateListOf<Int>() }
+    var taskAlarmEnabled by rememberSaveable { mutableStateOf(false) }
+    var taskReminderEnabled by rememberSaveable { mutableStateOf(false) }
 
     // ── Birthday / Anniversary form state ─────────────────────────────────────
-    var bdayName by rememberSaveable { mutableStateOf(editingEvent?.title.orEmpty()) }
-    var bdayDate by remember { mutableLongStateOf(editingEvent?.date ?: defaultEventDateTime(selectedDate)) }
-    var bdayShowYear by rememberSaveable { mutableStateOf(false) }
-    val bdayReminderOffsets = remember { mutableStateListOf<Int>() }
-    var bdayAlarm by rememberSaveable { mutableStateOf(false) }
+    var bdayName by rememberSaveable(editingEvent?.id) { mutableStateOf(editingEvent?.title.orEmpty()) }
+    var bdayDate by remember(editingEvent?.id) { mutableLongStateOf(editingEvent?.date ?: defaultEventDateTime(selectedDate)) }
+    var bdayShowYear by rememberSaveable(editingEvent?.id) { mutableStateOf(false) }
+    val bdayReminderOffsets = remember(editingEvent?.id) {
+        mutableStateListOf<Int>().also { list -> list.addAll(editingEvent?.reminderOffsets ?: emptyList()) }
+    }
+    var bdayAlarm by rememberSaveable(editingEvent?.id) { mutableStateOf(editingEvent?.alarmEnabled ?: false) }
+    var bdayReminderEnabled by rememberSaveable(editingEvent?.id) {
+        mutableStateOf((editingEvent?.reminderOffsets?.isNotEmpty()) ?: false)
+    }
+    var bdayReminderTimeHour by rememberSaveable(editingEvent?.id) {
+        mutableIntStateOf(editingEvent?.reminderTimeOfDayMinutes?.div(60) ?: 8)
+    }
+    var bdayReminderTimeMinute by rememberSaveable(editingEvent?.id) {
+        mutableIntStateOf(editingEvent?.reminderTimeOfDayMinutes?.rem(60) ?: 0)
+    }
 
     // ── Countdown form state ──────────────────────────────────────────────────
     var countdownName by rememberSaveable { mutableStateOf("") }
@@ -234,6 +274,7 @@ internal fun CalendarAddScreen(
                 AddPage.FORM -> {
                     FormPage(
                         tab = selectedTab,
+                        allowedTabs = allowedTabs,
                         onTabSelected = onTabSelected,
                         onDismiss = onDismiss,
                         isEdit = editingEvent != null,
@@ -262,6 +303,7 @@ internal fun CalendarAddScreen(
                         onGuestsChange = { guests = it },
                         timeZoneId = timeZoneId,
                         onTimeZoneChange = { timeZoneId = it },
+                        onOpenTimezone = { currentPage = AddPage.TIMEZONE },
                         // Task fields
                         taskTitle = taskTitle,
                         onTaskTitleChange = { taskTitle = it },
@@ -271,6 +313,10 @@ internal fun CalendarAddScreen(
                         onTaskPriorityChange = { taskPriority = it },
                         taskDeadline = taskDeadline,
                         onTaskDeadlineChange = { taskDeadline = it },
+                        taskReminderOffsets = taskReminderOffsets,
+                        onOpenTaskReminders = { currentPage = AddPage.REMINDERS },
+                        taskAlarmEnabled = taskAlarmEnabled,
+                        onTaskAlarmEnabledChange = { taskAlarmEnabled = it },
                         // Birthday fields
                         bdayName = bdayName,
                         onBdayNameChange = { bdayName = it },
@@ -306,6 +352,7 @@ internal fun CalendarAddScreen(
                                     startDateTime, endDateTime, allDay, repeatRule,
                                     reminderOffsets.toList(), alarmEnabled, guests, timeZoneId,
                                     EventKind.EVENT,
+                                    eventReminderTimeHour * 60 + eventReminderTimeMinute,
                                 )
                             }
                         },
@@ -316,6 +363,7 @@ internal fun CalendarAddScreen(
                                     bdayDate, null, true, RepeatRule.YEARLY,
                                     bdayReminderOffsets.toList(), bdayAlarm, "", "",
                                     kind,
+                                    bdayReminderTimeHour * 60 + bdayReminderTimeMinute,
                                 )
                             }
                         },
@@ -328,6 +376,7 @@ internal fun CalendarAddScreen(
                                     countdownDate, null, true, countdownRepeat,
                                     offsets, false, "", "",
                                     EventKind.COUNTDOWN,
+                                    eventReminderTimeHour * 60 + eventReminderTimeMinute,
                                 )
                             }
                         },
@@ -346,16 +395,56 @@ internal fun CalendarAddScreen(
                 }
 
                 AddPage.REMINDERS -> {
-                    val presets = if (selectedTab == AddTab.BIRTHDAY || selectedTab == AddTab.ANNIVERSARY)
-                        BIRTHDAY_REMINDER_PRESETS else REMINDER_PRESETS
-                    val offsets = if (selectedTab == AddTab.BIRTHDAY || selectedTab == AddTab.ANNIVERSARY)
-                        bdayReminderOffsets else reminderOffsets
+                    val isDayBased = selectedTab == AddTab.BIRTHDAY || selectedTab == AddTab.ANNIVERSARY ||
+                        (selectedTab == AddTab.EVENT && allDay)
+                    val presets = if (isDayBased) BIRTHDAY_REMINDER_PRESETS else REMINDER_PRESETS
+                    val offsets = when {
+                        selectedTab == AddTab.BIRTHDAY || selectedTab == AddTab.ANNIVERSARY -> bdayReminderOffsets
+                        selectedTab == AddTab.TASK -> taskReminderOffsets
+                        else -> reminderOffsets
+                    }
+                    val reminderEnabled = when {
+                        selectedTab == AddTab.BIRTHDAY || selectedTab == AddTab.ANNIVERSARY -> bdayReminderEnabled
+                        selectedTab == AddTab.TASK -> taskReminderEnabled
+                        else -> eventReminderEnabled
+                    }
+                    val reminderHour = if (selectedTab == AddTab.BIRTHDAY || selectedTab == AddTab.ANNIVERSARY)
+                        bdayReminderTimeHour else eventReminderTimeHour
+                    val reminderMinute = if (selectedTab == AddTab.BIRTHDAY || selectedTab == AddTab.ANNIVERSARY)
+                        bdayReminderTimeMinute else eventReminderTimeMinute
                     RemindersPickerPage(
                         presets = presets,
+                        isDayBased = isDayBased,
                         selectedOffsets = offsets,
+                        reminderEnabled = reminderEnabled,
+                        reminderTimeHour = reminderHour,
+                        reminderTimeMinute = reminderMinute,
+                        onReminderEnabledChange = { enabled ->
+                            when {
+                                selectedTab == AddTab.BIRTHDAY || selectedTab == AddTab.ANNIVERSARY ->
+                                    bdayReminderEnabled = enabled
+                                selectedTab == AddTab.TASK -> taskReminderEnabled = enabled
+                                else -> eventReminderEnabled = enabled
+                            }
+                        },
+                        onReminderTimeChange = { h, m ->
+                            if (selectedTab == AddTab.BIRTHDAY || selectedTab == AddTab.ANNIVERSARY) {
+                                bdayReminderTimeHour = h; bdayReminderTimeMinute = m
+                            } else {
+                                eventReminderTimeHour = h; eventReminderTimeMinute = m
+                            }
+                        },
                         onToggle = { minutes ->
                             if (offsets.contains(minutes)) offsets.remove(minutes) else offsets.add(minutes)
                         },
+                        onBack = { currentPage = AddPage.FORM },
+                    )
+                }
+
+                AddPage.TIMEZONE -> {
+                    TimezonePickerPage(
+                        selected = timeZoneId,
+                        onSelect = { timeZoneId = it; currentPage = AddPage.FORM },
                         onBack = { currentPage = AddPage.FORM },
                     )
                 }
@@ -370,6 +459,7 @@ internal fun CalendarAddScreen(
 @Composable
 private fun FormPage(
     tab: AddTab,
+    allowedTabs: List<AddTab>? = null,
     onTabSelected: (AddTab) -> Unit,
     onDismiss: () -> Unit,
     isEdit: Boolean,
@@ -386,11 +476,14 @@ private fun FormPage(
     alarmEnabled: Boolean, onAlarmEnabledChange: (Boolean) -> Unit,
     guests: String, onGuestsChange: (String) -> Unit,
     timeZoneId: String, onTimeZoneChange: (String) -> Unit,
+    onOpenTimezone: () -> Unit,
     // Task
     taskTitle: String, onTaskTitleChange: (String) -> Unit,
     taskDesc: String, onTaskDescChange: (String) -> Unit,
     taskPriority: TaskPriority, onTaskPriorityChange: (TaskPriority) -> Unit,
     taskDeadline: Long?, onTaskDeadlineChange: (Long?) -> Unit,
+    taskReminderOffsets: List<Int>, onOpenTaskReminders: () -> Unit,
+    taskAlarmEnabled: Boolean, onTaskAlarmEnabledChange: (Boolean) -> Unit,
     // Birthday
     bdayName: String, onBdayNameChange: (String) -> Unit,
     bdayDate: Long, onBdayDateChange: (Long) -> Unit,
@@ -443,33 +536,36 @@ private fun FormPage(
             }
         }
 
-        // ── Horizontally scrollable type tabs ─────────────────────────────────
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            AddTab.entries.forEach { t ->
-                val selected = t == tab
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(
-                            if (selected) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.surfaceVariant,
+        // ── Horizontally scrollable type tabs (hidden when only one tab is allowed)
+        val visibleTabs = allowedTabs ?: AddTab.entries.toList()
+        if (visibleTabs.size > 1) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                visibleTabs.forEach { t ->
+                    val selected = t == tab
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(
+                                if (selected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.surfaceVariant,
+                            )
+                            .clickable { onTabSelected(t) }
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                    ) {
+                        Text(
+                            text = t.label,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (selected) MaterialTheme.colorScheme.onPrimary
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                         )
-                        .clickable { onTabSelected(t) }
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                ) {
-                    Text(
-                        text = t.label,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = if (selected) MaterialTheme.colorScheme.onPrimary
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                    )
+                    }
                 }
             }
         }
@@ -492,6 +588,8 @@ private fun FormPage(
                         desc = taskDesc, onDescChange = onTaskDescChange,
                         priority = taskPriority, onPriorityChange = onTaskPriorityChange,
                         deadline = taskDeadline, onDeadlineChange = onTaskDeadlineChange,
+                        reminderOffsets = taskReminderOffsets, onOpenReminders = onOpenTaskReminders,
+                        alarmEnabled = taskAlarmEnabled, onAlarmEnabledChange = onTaskAlarmEnabledChange,
                     )
 
                 AddTab.EVENT ->
@@ -508,6 +606,7 @@ private fun FormPage(
                         alarmEnabled = alarmEnabled, onAlarmEnabledChange = onAlarmEnabledChange,
                         guests = guests, onGuestsChange = onGuestsChange,
                         timeZoneId = timeZoneId,
+                        onOpenTimezone = onOpenTimezone,
                     )
 
                 AddTab.BIRTHDAY, AddTab.ANNIVERSARY ->
@@ -546,6 +645,8 @@ private fun TaskFormContent(
     desc: String, onDescChange: (String) -> Unit,
     priority: TaskPriority, onPriorityChange: (TaskPriority) -> Unit,
     deadline: Long?, onDeadlineChange: (Long?) -> Unit,
+    reminderOffsets: List<Int>, onOpenReminders: () -> Unit,
+    alarmEnabled: Boolean, onAlarmEnabledChange: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -608,6 +709,21 @@ private fun TaskFormContent(
             ).show()
         },
     )
+
+    FormNavRow(
+        icon = Icons.Outlined.Notifications,
+        label = "Reminders",
+        value = if (reminderOffsets.isEmpty()) "None"
+            else "${reminderOffsets.size} reminder${if (reminderOffsets.size > 1) "s" else ""}",
+        onClick = onOpenReminders,
+    )
+
+    FormToggleRow(
+        icon = Icons.Outlined.NotificationsActive,
+        label = "Alarm reminders",
+        checked = alarmEnabled,
+        onCheckedChange = onAlarmEnabledChange,
+    )
 }
 
 // ── Event form ────────────────────────────────────────────────────────────────
@@ -626,6 +742,7 @@ private fun EventFormContent(
     alarmEnabled: Boolean, onAlarmEnabledChange: (Boolean) -> Unit,
     guests: String, onGuestsChange: (String) -> Unit,
     timeZoneId: String,
+    onOpenTimezone: () -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -749,14 +866,16 @@ private fun EventFormContent(
     // Guests
     FormTextField(value = guests, onValueChange = onGuestsChange, label = "Add guests (optional)", icon = Icons.Outlined.People)
 
-    // Timezone
-    FormCard {
-        FormPickerRow(
-            icon = Icons.Outlined.Public,
-            label = "Time zone",
-            value = timeZoneId.ifBlank { TimeZone.getDefault().id },
-            onClick = { /* Advanced: open timezone list */ },
-        )
+    // Timezone — hidden for all-day events
+    if (!allDay) {
+        FormCard {
+            FormPickerRow(
+                icon = Icons.Outlined.Public,
+                label = "Time zone",
+                value = timeZoneId.ifBlank { TimeZone.getDefault().id },
+                onClick = onOpenTimezone,
+            )
+        }
     }
 
     // Category (type)
@@ -942,7 +1061,7 @@ private fun RepeatPickerPage(
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         SubPageTopBar(title = "Repeat", onBack = onBack)
-        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+        Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
             RepeatRule.entries.forEach { rule ->
                 Row(
                     modifier = Modifier
@@ -980,15 +1099,74 @@ private fun RepeatPickerPage(
 @Composable
 private fun RemindersPickerPage(
     presets: List<ReminderPreset>,
+    isDayBased: Boolean,
     selectedOffsets: List<Int>,
+    reminderEnabled: Boolean,
+    reminderTimeHour: Int,
+    reminderTimeMinute: Int,
+    onReminderEnabledChange: (Boolean) -> Unit,
+    onReminderTimeChange: (Int, Int) -> Unit,
     onToggle: (Int) -> Unit,
     onBack: () -> Unit,
 ) {
+    val context = LocalContext.current
+    var showCustomDialog by remember { mutableStateOf(false) }
+    val timeLabel = String.format("%02d:%02d", reminderTimeHour, reminderTimeMinute)
+
     Column(modifier = Modifier.fillMaxSize()) {
         SubPageTopBar(title = "Reminders", onBack = onBack)
-        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+
+        // Master toggle
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("Reminder", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+            Switch(
+                checked = reminderEnabled,
+                onCheckedChange = onReminderEnabledChange,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                    checkedTrackColor = MaterialTheme.colorScheme.primary,
+                    uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                ),
+            )
+        }
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+
+        Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+            // Time-of-day row (for day-based events: all-day, birthday, anniversary)
+            if (isDayBased) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            TimePickerDialog(
+                                context,
+                                { _, h, min -> onReminderTimeChange(h, min) },
+                                reminderTimeHour, reminderTimeMinute, false,
+                            ).show()
+                        }
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("Reminder time", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+                    Text(timeLabel, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                }
+                HorizontalDivider(modifier = Modifier.padding(start = 20.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+            }
+
+            // Preset rows
             presets.forEach { preset ->
                 val selected = selectedOffsets.contains(preset.minutes)
+                val label = if (isDayBased && preset.minutes > 0) "${preset.label} at $timeLabel"
+                    else if (isDayBased) "${preset.label} at $timeLabel"
+                    else preset.label
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -997,27 +1175,127 @@ private fun RemindersPickerPage(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
-                        text = preset.label,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
+                    Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
                     if (selected) {
-                        Icon(
-                            Icons.Outlined.Check,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp),
-                        )
+                        Icon(Icons.Outlined.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                     }
                 }
-                HorizontalDivider(
-                    modifier = Modifier.padding(start = 20.dp),
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
-                )
+                HorizontalDivider(modifier = Modifier.padding(start = 20.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+            }
+
+            // Custom row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showCustomDialog = true }
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("Custom", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                Icon(Icons.Outlined.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
             }
         }
     }
+
+    if (showCustomDialog) {
+        CustomReminderDialog(
+            onConfirm = { minutes ->
+                onToggle(minutes)
+                showCustomDialog = false
+            },
+            onDismiss = { showCustomDialog = false },
+        )
+    }
+}
+
+// ── Custom reminder wheel-picker dialog ───────────────────────────────────────
+
+@Composable
+private fun CustomReminderDialog(
+    onConfirm: (Int) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var value by remember { mutableIntStateOf(10) }
+    var unit by remember { mutableStateOf("minute") }
+    val valueItems = (1..60).toList()
+    val valueListState = rememberLazyListState(valueItems.indexOf(value).coerceAtLeast(0))
+    val unitListState = rememberLazyListState(CUSTOM_UNITS.indexOf(unit).coerceAtLeast(0))
+
+    LaunchedEffect(valueListState.firstVisibleItemIndex) {
+        val idx = valueListState.firstVisibleItemIndex
+        if (idx in valueItems.indices) value = valueItems[idx]
+    }
+    LaunchedEffect(unitListState.firstVisibleItemIndex) {
+        val idx = unitListState.firstVisibleItemIndex
+        if (idx in CUSTOM_UNITS.indices) unit = CUSTOM_UNITS[idx]
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Custom reminder", style = MaterialTheme.typography.titleMedium) },
+        text = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // Value wheel
+                LazyColumn(
+                    state = valueListState,
+                    modifier = Modifier.width(72.dp).height(144.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    items(valueItems.size) { idx ->
+                        val isSelected = valueItems[idx] == value
+                        Text(
+                            text = valueItems[idx].toString(),
+                            style = if (isSelected) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 10.dp)
+                                .wrapContentWidth(Alignment.CenterHorizontally),
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+                Spacer(Modifier.width(16.dp))
+                // Unit wheel
+                LazyColumn(
+                    state = unitListState,
+                    modifier = Modifier.width(96.dp).height(144.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    items(CUSTOM_UNITS.size) { idx ->
+                        val isSelected = CUSTOM_UNITS[idx] == unit
+                        Text(
+                            text = CUSTOM_UNITS[idx] + if (value > 1) "s" else "",
+                            style = if (isSelected) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 10.dp)
+                                .wrapContentWidth(Alignment.CenterHorizontally),
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(customMinutes(value, unit)) }) {
+                Text("OK", color = MaterialTheme.colorScheme.primary)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        },
+    )
 }
 
 // ── Reusable UI components ─────────────────────────────────────────────────────
@@ -1163,8 +1441,75 @@ private fun FormToggleRow(
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(checkedThumbColor = MaterialTheme.colorScheme.primary),
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                uncheckedBorderColor = MaterialTheme.colorScheme.outline,
+            ),
         )
+    }
+}
+
+// ── Timezone picker sub-page ──────────────────────────────────────────────────
+
+@Composable
+private fun TimezonePickerPage(
+    selected: String,
+    onSelect: (String) -> Unit,
+    onBack: () -> Unit,
+) {
+    var query by remember { mutableStateOf("") }
+    val allZones = remember { TimeZone.getAvailableIDs().sorted() }
+    val filtered = remember(query) {
+        if (query.isBlank()) allZones
+        else allZones.filter { it.contains(query, ignoreCase = true) }
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        SubPageTopBar(title = "Time zone", onBack = onBack)
+
+        OutlinedTextField(
+            value = query,
+            onValueChange = { query = it },
+            placeholder = { Text("Search time zones") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            shape = RoundedCornerShape(AppDesignTokens.radius.md),
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+            ),
+        )
+
+        LazyColumn(modifier = Modifier.weight(1f)) {
+            items(filtered.size) { idx ->
+                val tz = filtered[idx]
+                val isSelected = tz == selected
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onSelect(tz) }
+                        .padding(horizontal = 20.dp, vertical = 14.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = tz,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (isSelected) {
+                        Icon(Icons.Outlined.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                    }
+                }
+                HorizontalDivider(modifier = Modifier.padding(start = 20.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+            }
+        }
     }
 }
 
@@ -1195,8 +1540,9 @@ internal fun CalendarAddScreenOverlay(
     editingEvent: com.personal.lifeOS.features.calendar.domain.model.CalendarEvent?,
     selectedDate: LocalDate,
     onDismiss: () -> Unit,
+    allowedTabs: List<AddTab>? = null,
     onSaveTask: (String, String, TaskPriority, Long?) -> Unit,
-    onSaveEvent: (String, String, EventType, EventImportance, Long, Long?, Boolean, RepeatRule, List<Int>, Boolean, String, String, EventKind) -> Unit,
+    onSaveEvent: (String, String, EventType, EventImportance, Long, Long?, Boolean, RepeatRule, List<Int>, Boolean, String, String, EventKind, Int) -> Unit,
 ) {
     AnimatedVisibility(
         visible = visible,
@@ -1207,6 +1553,7 @@ internal fun CalendarAddScreenOverlay(
             editingEvent = editingEvent,
             selectedDate = selectedDate,
             onDismiss = onDismiss,
+            allowedTabs = allowedTabs,
             onSaveTask = onSaveTask,
             onSaveEvent = onSaveEvent,
         )

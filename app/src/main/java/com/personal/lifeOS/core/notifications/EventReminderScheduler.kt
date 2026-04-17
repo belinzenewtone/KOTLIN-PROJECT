@@ -32,43 +32,56 @@ class EventReminderScheduler
                 return false
             }
 
-            val triggerAt = event.date - (event.reminderMinutesBefore.coerceAtLeast(0) * 60_000L)
-            if (triggerAt <= System.currentTimeMillis()) return false
-
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return false
-            val pendingIntent =
-                buildReminderPendingIntent(
+            val now = System.currentTimeMillis()
+            // Use reminderOffsets when available, fall back to reminderMinutesBefore
+            val offsets = event.reminderOffsets.ifEmpty { listOf(event.reminderMinutesBefore) }
+            var scheduled = false
+            val timeOfDayMs = event.reminderTimeOfDayMinutes.coerceIn(0, 1439) * 60_000L
+            offsets.forEachIndexed { index, minutes ->
+                val triggerAt = if (event.allDay) {
+                    // For all-day events, offset is days-before; fire at user's chosen time-of-day.
+                    event.date - (minutes.coerceAtLeast(0) * 60_000L) + timeOfDayMs
+                } else {
+                    event.date - (minutes.coerceAtLeast(0) * 60_000L)
+                }
+                if (triggerAt <= now) return@forEachIndexed
+                val pendingIntent = buildReminderPendingIntent(
                     context = context,
                     eventId = event.id,
                     userId = userId,
+                    offsetIndex = index,
                     title = event.title,
                     description = event.description,
                 )
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
-                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
-                return true
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+                    alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+                } else {
+                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+                }
+                scheduled = true
             }
-
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
-            return true
+            return scheduled
         }
 
         fun cancelEventReminder(
             eventId: Long,
             userId: String,
+            offsetCount: Int = MAX_REMINDER_OFFSETS,
         ) {
             if (eventId <= 0L) return
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
-            val pendingIntent =
-                buildReminderPendingIntent(
+            repeat(offsetCount) { index ->
+                val pendingIntent = buildReminderPendingIntent(
                     context = context,
                     eventId = eventId,
                     userId = userId,
+                    offsetIndex = index,
                     title = "",
                     description = "",
                 )
-            alarmManager.cancel(pendingIntent)
+                alarmManager.cancel(pendingIntent)
+            }
         }
 
         companion object {
@@ -77,6 +90,8 @@ class EventReminderScheduler
             const val EXTRA_USER_ID = "extra_user_id"
             const val EXTRA_TITLE = "extra_title"
             const val EXTRA_DESCRIPTION = "extra_description"
+            // Upper bound used when cancelling all alarms for an event without knowing the count
+            const val MAX_REMINDER_OFFSETS = 10
 
             fun ensureNotificationChannel(context: Context) {
                 val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
@@ -95,10 +110,11 @@ class EventReminderScheduler
                 context: Context,
                 eventId: Long,
                 userId: String,
+                offsetIndex: Int,
                 title: String,
                 description: String,
             ): PendingIntent {
-                val requestCode = reminderRequestCode(userId = userId, eventId = eventId)
+                val requestCode = reminderRequestCode(userId = userId, eventId = eventId, offsetIndex = offsetIndex)
                 val intent =
                     Intent(context, EventReminderReceiver::class.java).apply {
                         putExtra(EXTRA_EVENT_ID, eventId)
@@ -118,8 +134,9 @@ class EventReminderScheduler
             internal fun reminderRequestCode(
                 userId: String,
                 eventId: Long,
+                offsetIndex: Int = 0,
             ): Int {
-                return "$userId:$eventId".hashCode()
+                return "$userId:$eventId:$offsetIndex".hashCode()
             }
         }
     }

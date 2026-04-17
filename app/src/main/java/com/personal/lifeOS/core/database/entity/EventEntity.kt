@@ -44,6 +44,8 @@ data class EventEntity(
     val guests: String = "",
     @ColumnInfo(name = "time_zone_id", defaultValue = "")
     val timeZoneId: String = "",
+    @ColumnInfo(name = "reminder_time_of_day_minutes", defaultValue = "480")
+    val reminderTimeOfDayMinutes: Int = 480,
     @ColumnInfo(name = "updated_at")
     val updatedAt: Long = System.currentTimeMillis(),
     @ColumnInfo(name = "sync_state")

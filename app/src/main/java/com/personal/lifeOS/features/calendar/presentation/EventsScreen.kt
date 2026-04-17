@@ -40,6 +40,8 @@ import com.personal.lifeOS.features.calendar.domain.model.EventKind
 import com.personal.lifeOS.features.calendar.domain.model.EventType
 import com.personal.lifeOS.features.calendar.domain.model.RepeatRule
 import com.personal.lifeOS.features.tasks.domain.model.TaskPriority
+import java.time.Instant
+import java.time.ZoneId
 import com.personal.lifeOS.ui.theme.AppSpacing
 
 @Composable
@@ -55,7 +57,7 @@ fun EventsScreen(
     val upcomingEvents = remember(state.events, query) {
         state.events
             .filter { it.date >= nowMs || it.endDate?.let { end -> end >= nowMs } == true }
-            .sortedBy { it.date }
+            .sortedBy { it.nextOccurrenceMs(nowMs) }
             .filterByQuery(query)
     }
 
@@ -129,16 +131,18 @@ fun EventsScreen(
             editingEvent = state.editingEvent,
             selectedDate = state.selectedDate,
             onDismiss = { viewModel.hideAddDialog() },
+            allowedTabs = if (state.editingEvent == null) listOf(AddTab.EVENT) else null,
             onSaveTask = { title, desc, priority, deadline ->
                 viewModel.saveTask(title, desc, priority, deadline)
             },
             onSaveEvent = { title, desc, type, importance, date, endDate, allDay, repeatRule,
-                            reminderOffsets, alarmEnabled, guests, timeZoneId, kind ->
+                            reminderOffsets, alarmEnabled, guests, timeZoneId, kind, reminderTimeOfDayMinutes ->
                 viewModel.saveEvent(
                     title = title, description = desc, type = type, importance = importance,
                     date = date, endDate = endDate, allDay = allDay, repeatRule = repeatRule,
                     reminderOffsets = reminderOffsets, alarmEnabled = alarmEnabled,
                     guests = guests, timeZoneId = timeZoneId, kind = kind,
+                    reminderTimeOfDayMinutes = reminderTimeOfDayMinutes,
                 )
             },
         )
@@ -169,6 +173,18 @@ private fun List<CalendarEvent>.filterByQuery(query: String): List<CalendarEvent
     val search = query.trim()
     return filter { event ->
         event.title.contains(search, ignoreCase = true) ||
-            event.description.contains(search, ignoreCase = true)
+            event.description.contains(search, ignoreCase = true) ||
+            event.kind.label.contains(search, ignoreCase = true) ||
+            event.type.label.contains(search, ignoreCase = true)
     }
+}
+
+/** Returns the next upcoming timestamp for this event, advancing yearly repeats past [nowMs]. */
+private fun CalendarEvent.nextOccurrenceMs(nowMs: Long): Long {
+    if (repeatRule != RepeatRule.YEARLY || date >= nowMs) return date
+    val zone = ZoneId.systemDefault()
+    val original = Instant.ofEpochMilli(date).atZone(zone)
+    var next = original.withYear(Instant.ofEpochMilli(nowMs).atZone(zone).year)
+    if (next.toInstant().toEpochMilli() < nowMs) next = next.plusYears(1)
+    return next.toInstant().toEpochMilli()
 }

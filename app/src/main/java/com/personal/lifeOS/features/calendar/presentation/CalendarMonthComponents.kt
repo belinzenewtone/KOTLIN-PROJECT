@@ -39,12 +39,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.personal.lifeOS.core.ui.designsystem.AppCard
 import com.personal.lifeOS.features.calendar.domain.model.CalendarEvent
-import com.personal.lifeOS.features.calendar.domain.model.EventType
-import com.personal.lifeOS.ui.theme.CategoryOther
+import com.personal.lifeOS.features.calendar.domain.model.EventKind
+import com.personal.lifeOS.ui.theme.CategoryAnniversary
+import com.personal.lifeOS.ui.theme.CategoryBirthday
+import com.personal.lifeOS.ui.theme.CategoryCountdown
 import com.personal.lifeOS.ui.theme.Info
-import com.personal.lifeOS.ui.theme.Primary
-import com.personal.lifeOS.ui.theme.Success
-import com.personal.lifeOS.ui.theme.Warning
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -53,14 +52,13 @@ import java.time.ZoneId
 import java.time.format.TextStyle
 import java.util.Locale
 
-// ── Event type colour palette ────────────────────────────────────────────────
-private val EventType.dotColor: Color
+// ── Event kind colour palette for calendar dots ───────────────────────────────
+private val EventKind.dotColor: Color
     get() = when (this) {
-        EventType.WORK -> Info
-        EventType.FINANCE -> Warning
-        EventType.HEALTH -> Success
-        EventType.PERSONAL -> Primary
-        EventType.OTHER -> CategoryOther
+        EventKind.EVENT -> Info            // blue
+        EventKind.BIRTHDAY -> CategoryBirthday   // red
+        EventKind.ANNIVERSARY -> CategoryAnniversary // amber
+        EventKind.COUNTDOWN -> CategoryCountdown   // purple
     }
 
 @Composable
@@ -275,14 +273,14 @@ private fun CalendarGrid(
 }
 
 /**
- * Returns a map of day-of-month → distinct event-type colours on that day.
- * At most one colour per EventType so the dot row stays compact.
+ * Returns a map of day-of-month → distinct EventKind colours on that day.
+ * At most one colour per EventKind so the dot row stays compact.
  */
 private fun List<CalendarEvent>.toDayColorMap(zoneId: ZoneId): Map<Int, List<Color>> {
     val result = mutableMapOf<Int, MutableSet<Color>>()
     forEach { event ->
         val day = Instant.ofEpochMilli(event.date).atZone(zoneId).toLocalDate().dayOfMonth
-        result.getOrPut(day) { mutableSetOf() }.add(event.type.dotColor)
+        result.getOrPut(day) { mutableSetOf() }.add(event.kind.dotColor)
     }
     return result.mapValues { (_, set) -> set.toList() }
 }

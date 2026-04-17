@@ -2,11 +2,16 @@ package com.personal.lifeOS.features.calendar.presentation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.AlertDialog
@@ -40,6 +45,10 @@ import com.personal.lifeOS.features.calendar.domain.model.EventType
 import com.personal.lifeOS.features.calendar.domain.model.RepeatRule
 import com.personal.lifeOS.features.tasks.domain.model.TaskPriority
 import com.personal.lifeOS.ui.theme.AppSpacing
+import com.personal.lifeOS.ui.theme.CategoryAnniversary
+import com.personal.lifeOS.ui.theme.CategoryBirthday
+import com.personal.lifeOS.ui.theme.CategoryCountdown
+import com.personal.lifeOS.ui.theme.Info
 
 @Composable
 @Suppress("LongMethod")
@@ -91,12 +100,13 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
                 viewModel.saveTask(title, desc, priority, deadline)
             },
             onSaveEvent = { title, desc, type, importance, date, endDate, allDay, repeatRule,
-                            reminderOffsets, alarmEnabled, guests, timeZoneId, kind ->
+                            reminderOffsets, alarmEnabled, guests, timeZoneId, kind, reminderTimeOfDayMinutes ->
                 viewModel.saveEvent(
                     title = title, description = desc, type = type, importance = importance,
                     date = date, endDate = endDate, allDay = allDay, repeatRule = repeatRule,
                     reminderOffsets = reminderOffsets, alarmEnabled = alarmEnabled,
                     guests = guests, timeZoneId = timeZoneId, kind = kind,
+                    reminderTimeOfDayMinutes = reminderTimeOfDayMinutes,
                 )
             },
         )
@@ -170,19 +180,72 @@ private fun CalendarBody(
         SearchField(
             value = query,
             onValueChange = onQueryChange,
-            placeholder = "Search events for selected day",
+            placeholder = "Search across all categories",
         )
 
         if (events.isEmpty()) {
             EmptyState(
-                title = "No events on this day",
+                title = "Nothing for the day",
                 description = "Tap + to add an event, birthday, countdown and more.",
             )
         } else {
-            androidx.compose.foundation.layout.Column(
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                events.forEach { event ->
+            DayViewContent(
+                events = events,
+                onComplete = onComplete,
+                onEdit = onEdit,
+                onDelete = onDelete,
+            )
+        }
+    }
+}
+
+// ── Issue 9: Categorised day view ─────────────────────────────────────────────
+
+@Composable
+private fun DayViewContent(
+    events: List<CalendarEvent>,
+    onComplete: (CalendarEvent) -> Unit,
+    onEdit: (CalendarEvent) -> Unit,
+    onDelete: (CalendarEvent) -> Unit,
+) {
+    // Group by EventKind, then sort each group chronologically
+    val kindOrder = listOf(EventKind.EVENT, EventKind.BIRTHDAY, EventKind.ANNIVERSARY, EventKind.COUNTDOWN)
+    val grouped = events
+        .sortedBy { it.date }
+        .groupBy { it.kind }
+    val presentKinds = kindOrder.filter { grouped.containsKey(it) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+        presentKinds.forEachIndexed { sectionIdx, kind ->
+            val sectionEvents = grouped[kind] ?: return@forEachIndexed
+            val sectionColor = when (kind) {
+                EventKind.EVENT -> Info
+                EventKind.BIRTHDAY -> CategoryBirthday
+                EventKind.ANNIVERSARY -> CategoryAnniversary
+                EventKind.COUNTDOWN -> CategoryCountdown
+            }
+            val sectionLabel = when (kind) {
+                EventKind.EVENT -> "Events"
+                EventKind.BIRTHDAY -> "Birthdays"
+                EventKind.ANNIVERSARY -> "Anniversaries"
+                EventKind.COUNTDOWN -> "Countdowns"
+            }
+            if (sectionIdx > 0) {
+                Spacer(Modifier.height(8.dp))
+                HorizontalDivider(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                )
+                Spacer(Modifier.height(8.dp))
+            }
+            Text(
+                text = sectionLabel,
+                style = MaterialTheme.typography.labelMedium,
+                color = sectionColor,
+                modifier = Modifier.padding(bottom = 4.dp),
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                sectionEvents.forEach { event ->
                     CalendarEventChip(
                         title = event.title,
                         timeLabel = if (event.allDay) "All day" else DateUtils.formatTime(event.date),

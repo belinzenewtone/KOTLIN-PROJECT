@@ -14,6 +14,9 @@ enum class SearchSource {
     TRANSACTION,
     TASK,
     EVENT,
+    BIRTHDAY,
+    ANNIVERSARY,
+    COUNTDOWN,
     BUDGET,
     INCOME,
     RECURRING_RULE,
@@ -27,7 +30,10 @@ enum class SearchSource {
                 INCOME,
                 -> "Finance"
                 TASK -> "Tasks"
-                EVENT -> "Calendar"
+                EVENT -> "Events"
+                BIRTHDAY -> "Birthdays"
+                ANNIVERSARY -> "Anniversaries"
+                COUNTDOWN -> "Countdowns"
                 RECURRING_RULE -> "Recurring"
             }
 }

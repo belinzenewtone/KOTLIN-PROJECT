@@ -9,6 +9,7 @@ import com.personal.lifeOS.core.database.dao.TransactionDao
 import com.personal.lifeOS.core.security.AuthSessionStore
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.navigation.AppRoute
+import com.personal.lifeOS.features.calendar.domain.model.EventKind
 import com.personal.lifeOS.features.search.domain.model.SearchResult
 import com.personal.lifeOS.features.search.domain.model.SearchSource
 import com.personal.lifeOS.features.search.domain.repository.SearchRepository
@@ -124,9 +125,15 @@ class SearchRepositoryImpl
             trimmedQuery: String,
         ): List<SearchResult> =
             eventDao.search(userId, likeQuery, limitPerSource).map { event ->
+                val kindSource = when (runCatching { EventKind.valueOf(event.kind) }.getOrDefault(EventKind.EVENT)) {
+                    EventKind.BIRTHDAY -> SearchSource.BIRTHDAY
+                    EventKind.ANNIVERSARY -> SearchSource.ANNIVERSARY
+                    EventKind.COUNTDOWN -> SearchSource.COUNTDOWN
+                    EventKind.EVENT -> SearchSource.EVENT
+                }
                 SearchResult(
                     id = "event-${event.id}",
-                    source = SearchSource.EVENT,
+                    source = kindSource,
                     title = event.title,
                     subtitle = event.description.ifBlank { event.type },
                     timestamp = event.date,

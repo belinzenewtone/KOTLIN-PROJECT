@@ -1,10 +1,15 @@
 package com.personal.lifeOS.features.search.presentation
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -16,6 +21,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -26,7 +33,6 @@ import com.personal.lifeOS.core.ui.designsystem.InlineBannerTone
 import com.personal.lifeOS.core.ui.designsystem.LoadingState
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
 import com.personal.lifeOS.core.ui.designsystem.SearchField
-import com.personal.lifeOS.core.ui.designsystem.SegmentedControl
 import com.personal.lifeOS.ui.theme.AppSpacing
 import com.personal.lifeOS.core.utils.DateUtils
 import com.personal.lifeOS.features.search.domain.model.SearchResult
@@ -88,11 +94,30 @@ fun SearchScreen(
             )
         }
 
-        SegmentedControl(
-            items = SearchResultFilter.entries.map { it.label },
-            selectedIndex = SearchResultFilter.entries.indexOf(selectedFilter),
-            onSelected = { selectedFilter = SearchResultFilter.entries[it] },
-        )
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp),
+        ) {
+            items(SearchResultFilter.entries.size) { idx ->
+                val filter = SearchResultFilter.entries[idx]
+                val selected = filter == selectedFilter
+                Text(
+                    text = filter.label,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                    color = if (selected) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(
+                            if (selected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.surfaceVariant,
+                        )
+                        .clickable { selectedFilter = filter }
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                )
+            }
+        }
 
         SearchResultsContent(
             state = state,
@@ -222,6 +247,9 @@ private enum class SearchResultFilter(
     ALL("All"),
     TASKS("Tasks"),
     EVENTS("Events"),
+    BIRTHDAY("Birthdays"),
+    ANNIVERSARY("Anniversaries"),
+    COUNTDOWN("Countdowns"),
     FINANCE("Finance"),
     RECURRING("Recurring"),
 }
@@ -231,6 +259,9 @@ private fun List<SearchResult>.filterBy(filter: SearchResultFilter): List<Search
         SearchResultFilter.ALL -> this
         SearchResultFilter.TASKS -> filter { it.source == SearchSource.TASK }
         SearchResultFilter.EVENTS -> filter { it.source == SearchSource.EVENT }
+        SearchResultFilter.BIRTHDAY -> filter { it.source == SearchSource.BIRTHDAY }
+        SearchResultFilter.ANNIVERSARY -> filter { it.source == SearchSource.ANNIVERSARY }
+        SearchResultFilter.COUNTDOWN -> filter { it.source == SearchSource.COUNTDOWN }
         SearchResultFilter.FINANCE ->
             filter {
                 it.source == SearchSource.TRANSACTION ||

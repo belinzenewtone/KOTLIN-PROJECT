@@ -111,6 +111,7 @@ class CalendarViewModel
             alarmEnabled: Boolean = false,
             guests: String = "",
             timeZoneId: String = "",
+            reminderTimeOfDayMinutes: Int = 480,
         ) {
             viewModelScope.launch {
                 try {
@@ -134,6 +135,7 @@ class CalendarViewModel
                                 alarmEnabled = alarmEnabled,
                                 guests = guests,
                                 timeZoneId = timeZoneId,
+                                reminderTimeOfDayMinutes = reminderTimeOfDayMinutes,
                             ),
                         )
                     } else {
@@ -154,6 +156,7 @@ class CalendarViewModel
                                 alarmEnabled = alarmEnabled,
                                 guests = guests,
                                 timeZoneId = timeZoneId,
+                                reminderTimeOfDayMinutes = reminderTimeOfDayMinutes,
                             ),
                         )
                     }

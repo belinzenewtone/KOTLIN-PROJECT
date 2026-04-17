@@ -75,7 +75,7 @@ class CalendarRepositoryImpl
 
         override suspend fun deleteEvent(event: CalendarEvent) {
             val userId = activeUserId()
-            reminderScheduler.cancelEventReminder(event.id, userId)
+            reminderScheduler.cancelEventReminder(event.id, userId, event.reminderOffsets.size.coerceAtLeast(1))
             eventDao.delete(event.toEntity().copy(userId = userId))
             syncMutationEnqueuer.enqueueDelete(
                 entityType = "event",
@@ -131,6 +131,7 @@ fun EventEntity.toDomain(): CalendarEvent {
         alarmEnabled = alarmEnabled,
         guests = guests,
         timeZoneId = timeZoneId,
+        reminderTimeOfDayMinutes = reminderTimeOfDayMinutes,
     )
 }
 
@@ -149,5 +150,6 @@ fun CalendarEvent.toEntity(): EventEntity {
         alarmEnabled = alarmEnabled,
         guests = guests,
         timeZoneId = timeZoneId,
+        reminderTimeOfDayMinutes = reminderTimeOfDayMinutes,
     )
 }

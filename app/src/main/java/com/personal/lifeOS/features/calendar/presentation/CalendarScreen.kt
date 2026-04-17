@@ -96,8 +96,15 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
             editingEvent = state.editingEvent,
             selectedDate = state.selectedDate,
             onDismiss = { viewModel.hideAddDialog() },
-            onSaveTask = { title, desc, priority, deadline ->
-                viewModel.saveTask(title, desc, priority, deadline)
+            onSaveTask = { title, desc, priority, deadline, reminderOffsets, alarmEnabled ->
+                viewModel.saveTask(
+                    title = title,
+                    description = desc,
+                    priority = priority,
+                    deadline = deadline,
+                    reminderOffsets = reminderOffsets,
+                    alarmEnabled = alarmEnabled,
+                )
             },
             onSaveEvent = { title, desc, type, importance, date, endDate, allDay, repeatRule,
                             reminderOffsets, alarmEnabled, guests, timeZoneId, kind, reminderTimeOfDayMinutes ->

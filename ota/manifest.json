@@ -1,8 +1,8 @@
 ﻿{
-    "version_code":  47,
-    "version_name":  "1.2.36",
-    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.36/app-release-v1.2.36.apk",
-    "checksum_sha256":  "57d68c23d7831a88ce1308b7867a4d7f7b57eb96584dd2513b18e320d631f189",
+    "version_code":  48,
+    "version_name":  "1.2.37",
+    "download_url":  "https://github.com/belinzenewtone/KOTLIN-PROJECT/releases/download/v1.2.37/app-release-v1.2.37.apk",
+    "checksum_sha256":  "3dd33845f48cdb3cd980ae92027aac2a4fb7e8c563887f7d4166b6d6a52f47a1",
     "required":  false,
-    "release_notes":  "Latest user code updates packaged in a signed OTA release."
+    "release_notes":  "Task reminder flow completed: custom offsets now persist from add form and schedule correctly for OTA users."
 }

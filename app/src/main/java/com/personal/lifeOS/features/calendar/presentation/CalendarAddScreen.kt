@@ -149,7 +149,14 @@ internal fun CalendarAddScreen(
     selectedDate: LocalDate,
     onDismiss: () -> Unit,
     allowedTabs: List<AddTab>? = null,
-    onSaveTask: (title: String, desc: String, priority: TaskPriority, deadline: Long?) -> Unit,
+    onSaveTask: (
+        title: String,
+        desc: String,
+        priority: TaskPriority,
+        deadline: Long?,
+        reminderOffsets: List<Int>,
+        alarmEnabled: Boolean,
+    ) -> Unit,
     onSaveEvent: (
         title: String, desc: String, type: EventType, importance: EventImportance,
         date: Long, endDate: Long?, allDay: Boolean, repeatRule: RepeatRule,
@@ -342,7 +349,15 @@ internal fun CalendarAddScreen(
                         // Save callbacks
                         onSaveTask = {
                             if (taskTitle.isNotBlank()) {
-                                onSaveTask(taskTitle, taskDesc, taskPriority, taskDeadline)
+                                val offsets = if (taskReminderEnabled) taskReminderOffsets.toList() else emptyList()
+                                onSaveTask(
+                                    taskTitle,
+                                    taskDesc,
+                                    taskPriority,
+                                    taskDeadline,
+                                    offsets,
+                                    taskAlarmEnabled,
+                                )
                             }
                         },
                         onSaveEvent = {
@@ -1541,7 +1556,7 @@ internal fun CalendarAddScreenOverlay(
     selectedDate: LocalDate,
     onDismiss: () -> Unit,
     allowedTabs: List<AddTab>? = null,
-    onSaveTask: (String, String, TaskPriority, Long?) -> Unit,
+    onSaveTask: (String, String, TaskPriority, Long?, List<Int>, Boolean) -> Unit,
     onSaveEvent: (String, String, EventType, EventImportance, Long, Long?, Boolean, RepeatRule, List<Int>, Boolean, String, String, EventKind, Int) -> Unit,
 ) {
     AnimatedVisibility(

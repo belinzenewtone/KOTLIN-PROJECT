@@ -220,6 +220,8 @@ class CalendarViewModel
             description: String,
             priority: TaskPriority,
             deadline: Long?,
+            reminderOffsets: List<Int> = emptyList(),
+            alarmEnabled: Boolean = false,
         ) {
             if (title.isBlank()) return
             viewModelScope.launch {
@@ -230,6 +232,8 @@ class CalendarViewModel
                             description = description.trim(),
                             priority = priority,
                             deadline = deadline,
+                            reminderOffsets = reminderOffsets,
+                            alarmEnabled = alarmEnabled,
                         ),
                     )
                     _uiState.update { it.copy(showAddScreen = false) }

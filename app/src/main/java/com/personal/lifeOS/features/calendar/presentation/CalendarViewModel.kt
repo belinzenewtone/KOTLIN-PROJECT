@@ -40,6 +40,8 @@ data class CalendarUiState(
     val editingEvent: CalendarEvent? = null,
     /** True when the user is viewing the current real-world month. */
     val isViewingCurrentMonth: Boolean = true,
+    /** Set by search deep-links; cleared once the event's edit dialog has been opened. */
+    val pendingOpenEventId: Long? = null,
 )
 
 @HiltViewModel
@@ -88,6 +90,27 @@ class CalendarViewModel
 
         fun showEditDialog(event: CalendarEvent) {
             _uiState.update { it.copy(showAddScreen = true, editingEvent = event) }
+        }
+
+        /**
+         * Called by search deep-links to open a specific event.
+         * Navigates to the event's month (so `loadMonthEvents` reloads), then once events arrive
+         * the `loadMonthEvents` collector finds the event and calls [showEditDialog] automatically.
+         */
+        fun openEventById(eventId: Long, eventDate: Long) {
+            val zone = java.time.ZoneId.systemDefault()
+            val eventLocalDate =
+                java.time.Instant.ofEpochMilli(eventDate).atZone(zone).toLocalDate()
+            val targetMonth = java.time.YearMonth.from(eventLocalDate)
+            _uiState.update {
+                it.copy(
+                    pendingOpenEventId = eventId,
+                    currentMonth = targetMonth,
+                    selectedDate = eventLocalDate,
+                    isViewingCurrentMonth = targetMonth == YearMonth.now(),
+                )
+            }
+            loadMonthEvents()
         }
 
         fun hideAddDialog() {
@@ -253,6 +276,15 @@ class CalendarViewModel
                 .onEach { events ->
                     _uiState.update { it.copy(events = events, isLoading = false) }
                     filterSelectedDayEvents()
+                    // Handle deep-link: open the pending event once its month's data arrives
+                    val pendingId = _uiState.value.pendingOpenEventId
+                    if (pendingId != null) {
+                        val target = events.firstOrNull { it.id == pendingId }
+                        if (target != null) {
+                            _uiState.update { it.copy(pendingOpenEventId = null) }
+                            showEditDialog(target)
+                        }
+                    }
                 }
                 .catch { e ->
                     _uiState.update { it.copy(error = e.message, isLoading = false) }

@@ -58,6 +58,8 @@ import com.personal.lifeOS.ui.theme.Warning
 @Suppress("LongMethod")
 fun TasksScreen(
     onBack: (() -> Unit)? = null,
+    /** Non-null when navigated from a search result — opens that task's edit dialog immediately. */
+    initialTaskId: Long? = null,
     viewModel: TasksViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -67,6 +69,16 @@ fun TasksScreen(
 
     val pendingTasks = remember(state.pendingTasks, query) { state.pendingTasks.filterForQuery(query) }
     val completedTasks = remember(state.completedTasks, query) { state.completedTasks.filterForQuery(query) }
+
+    // Deep-link: wait for the task list to finish loading then open the target item
+    var pendingDeepLinkId by remember { mutableStateOf(initialTaskId) }
+    LaunchedEffect(state.isLoading, pendingDeepLinkId) {
+        val id = pendingDeepLinkId ?: return@LaunchedEffect
+        if (!state.isLoading) {
+            viewModel.showEditDialogById(id)
+            pendingDeepLinkId = null
+        }
+    }
 
     LaunchedEffect(state.error, state.successMessage) {
         state.error?.let {

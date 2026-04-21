@@ -8,11 +8,13 @@ import com.personal.lifeOS.core.database.dao.TaskDao
 import com.personal.lifeOS.core.database.dao.TransactionDao
 import com.personal.lifeOS.core.security.AuthSessionStore
 import com.personal.lifeOS.core.utils.DateUtils
-import com.personal.lifeOS.navigation.AppRoute
 import com.personal.lifeOS.features.calendar.domain.model.EventKind
 import com.personal.lifeOS.features.search.domain.model.SearchResult
 import com.personal.lifeOS.features.search.domain.model.SearchSource
 import com.personal.lifeOS.features.search.domain.repository.SearchRepository
+import com.personal.lifeOS.navigation.AppRoute
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -37,17 +39,24 @@ class SearchRepositoryImpl
 
             val trimmedQuery = query.trim()
             val likeQuery = "%$trimmedQuery%"
-            if (query.isBlank()) return emptyList()
+            if (trimmedQuery.isBlank()) return emptyList()
 
-            val results =
-                buildList {
-                    addAll(searchTransactions(userId, likeQuery, limitPerSource, trimmedQuery))
-                    addAll(searchTasks(userId, likeQuery, limitPerSource, trimmedQuery))
-                    addAll(searchEvents(userId, likeQuery, limitPerSource, trimmedQuery))
-                    addAll(searchBudgets(userId, likeQuery, limitPerSource, trimmedQuery))
-                    addAll(searchIncomes(userId, likeQuery, limitPerSource, trimmedQuery))
-                    addAll(searchRecurringRules(userId, likeQuery, limitPerSource, trimmedQuery))
-                }
+            // Gap 2: all 6 DAO calls run concurrently instead of sequentially
+            val results = coroutineScope {
+                val transactions = async { searchTransactions(userId, likeQuery, limitPerSource, trimmedQuery) }
+                val tasks = async { searchTasks(userId, likeQuery, limitPerSource, trimmedQuery) }
+                val events = async { searchEvents(userId, likeQuery, limitPerSource, trimmedQuery) }
+                val budgets = async { searchBudgets(userId, likeQuery, limitPerSource, trimmedQuery) }
+                val incomes = async { searchIncomes(userId, likeQuery, limitPerSource, trimmedQuery) }
+                val recurring = async { searchRecurringRules(userId, likeQuery, limitPerSource, trimmedQuery) }
+
+                transactions.await() +
+                    tasks.await() +
+                    events.await() +
+                    budgets.await() +
+                    incomes.await() +
+                    recurring.await()
+            }
 
             return results.sortedWith(
                 compareByDescending<SearchResult> { it.relevanceScore }
@@ -61,24 +70,15 @@ class SearchRepositoryImpl
             vararg secondary: String,
         ): Int {
             val normalizedQuery = query.trim().lowercase()
-            val fields = listOf(primary, *secondary)
-                .map { it.lowercase() }
+            val fields = listOf(primary, *secondary).map { it.lowercase() }
 
-            val exact = fields.any { it == normalizedQuery }
-            if (exact) return 400
-
-            val prefix = fields.any { it.startsWith(normalizedQuery) }
-            if (prefix) return 250
-
-            val wordPrefix =
-                fields.any { candidate ->
+            if (fields.any { it == normalizedQuery }) return 400
+            if (fields.any { it.startsWith(normalizedQuery) }) return 250
+            if (fields.any { candidate ->
                     candidate.split(' ', '-', '_').any { token -> token.startsWith(normalizedQuery) }
                 }
-            if (wordPrefix) return 160
-
-            val contains = fields.any { it.contains(normalizedQuery) }
-            if (contains) return 100
-
+            ) return 160
+            if (fields.any { it.contains(normalizedQuery) }) return 100
             return 0
         }
 
@@ -114,7 +114,8 @@ class SearchRepositoryImpl
                     subtitle = task.description.ifBlank { task.status },
                     timestamp = task.createdAt,
                     relevanceScore = scoreResult(trimmedQuery, task.title, task.description, task.status),
-                    navigationTarget = AppRoute.Tasks,
+                    // Gap 1: deep-links directly to this task's edit dialog
+                    navigationTarget = AppRoute.tasksWithItem(task.id),
                 )
             }
 
@@ -125,12 +126,13 @@ class SearchRepositoryImpl
             trimmedQuery: String,
         ): List<SearchResult> =
             eventDao.search(userId, likeQuery, limitPerSource).map { event ->
-                val kindSource = when (runCatching { EventKind.valueOf(event.kind) }.getOrDefault(EventKind.EVENT)) {
-                    EventKind.BIRTHDAY -> SearchSource.BIRTHDAY
-                    EventKind.ANNIVERSARY -> SearchSource.ANNIVERSARY
-                    EventKind.COUNTDOWN -> SearchSource.COUNTDOWN
-                    EventKind.EVENT -> SearchSource.EVENT
-                }
+                val kindSource =
+                    when (runCatching { EventKind.valueOf(event.kind) }.getOrDefault(EventKind.EVENT)) {
+                        EventKind.BIRTHDAY -> SearchSource.BIRTHDAY
+                        EventKind.ANNIVERSARY -> SearchSource.ANNIVERSARY
+                        EventKind.COUNTDOWN -> SearchSource.COUNTDOWN
+                        EventKind.EVENT -> SearchSource.EVENT
+                    }
                 SearchResult(
                     id = "event-${event.id}",
                     source = kindSource,
@@ -138,7 +140,8 @@ class SearchRepositoryImpl
                     subtitle = event.description.ifBlank { event.type },
                     timestamp = event.date,
                     relevanceScore = scoreResult(trimmedQuery, event.title, event.description, event.type),
-                    navigationTarget = AppRoute.Calendar,
+                    // Gap 1: deep-links to the correct calendar month and opens the event's edit dialog
+                    navigationTarget = AppRoute.calendarWithEvent(event.id, event.date),
                 )
             }
 
@@ -153,9 +156,12 @@ class SearchRepositoryImpl
                     id = "budget-${budget.id}",
                     source = SearchSource.BUDGET,
                     title = budget.category,
-                    subtitle = "Limit ${DateUtils.formatCurrency(budget.limitAmount)}",
+                    subtitle = "Limit ${DateUtils.formatCurrency(budget.limitAmount)} • ${
+                        budget.period.name.lowercase().replaceFirstChar { it.uppercase() }
+                    }",
                     timestamp = budget.createdAt,
-                    relevanceScore = scoreResult(trimmedQuery, budget.category),
+                    // Minor: score against period name so "monthly" / "weekly" queries match
+                    relevanceScore = scoreResult(trimmedQuery, budget.category, budget.period.name),
                     navigationTarget = AppRoute.Budget,
                 )
             }

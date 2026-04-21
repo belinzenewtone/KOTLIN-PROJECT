@@ -52,11 +52,23 @@ import com.personal.lifeOS.ui.theme.Info
 
 @Composable
 @Suppress("LongMethod")
-fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
+fun CalendarScreen(
+    /** Non-null when navigated from a search result — navigates to the event's month and opens its edit dialog. */
+    initialEventId: Long? = null,
+    initialEventDate: Long? = null,
+    viewModel: CalendarViewModel = hiltViewModel(),
+) {
     val state by viewModel.uiState.collectAsState()
     var query by rememberSaveable { mutableStateOf("") }
     var deleteTarget by remember { mutableStateOf<CalendarEvent?>(null) }
     val events = remember(state.selectedDayEvents, query) { state.selectedDayEvents.filterEventsByQuery(query) }
+
+    // Deep-link: navigate to the event's month, select its day, then open the edit dialog once events load
+    LaunchedEffect(initialEventId, initialEventDate) {
+        if (initialEventId != null && initialEventDate != null) {
+            viewModel.openEventById(initialEventId, initialEventDate)
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(

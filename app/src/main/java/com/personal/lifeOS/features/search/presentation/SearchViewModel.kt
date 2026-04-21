@@ -20,6 +20,8 @@ data class SearchUiState(
     val results: List<SearchResult> = emptyList(),
     val groupedSearchEnabled: Boolean = true,
     val error: String? = null,
+    /** Most recent successful queries, newest last, capped at 5. Session-scoped (in-memory). */
+    val recentSearches: List<String> = emptyList(),
 )
 
 @HiltViewModel
@@ -42,7 +44,6 @@ class SearchViewModel
             }
             searchJob =
                 viewModelScope.launch {
-                    // 150ms debounce: snappy real-time search while avoiding excessive queries
                     delay(150)
                     executeSearch(trimmed)
                 }
@@ -54,24 +55,33 @@ class SearchViewModel
                 _uiState.update { it.copy(results = emptyList(), error = null) }
                 return
             }
+            viewModelScope.launch { executeSearch(query) }
+        }
 
-            viewModelScope.launch {
-                executeSearch(query)
-            }
+        fun clearRecentSearches() {
+            _uiState.update { it.copy(recentSearches = emptyList()) }
         }
 
         private suspend fun executeSearch(query: String) {
             _uiState.update { it.copy(isLoading = true, error = null) }
             runCatching { repository.search(query) }
                 .onSuccess { results ->
-                    _uiState.update { it.copy(isLoading = false, results = results) }
+                    // Add to recent searches only when results come back (avoid polluting with no-result queries)
+                    val updatedRecents =
+                        if (results.isNotEmpty()) {
+                            val without = _uiState.value.recentSearches
+                                .filterNot { it.equals(query, ignoreCase = true) }
+                            (without + query).takeLast(5)
+                        } else {
+                            _uiState.value.recentSearches
+                        }
+                    _uiState.update {
+                        it.copy(isLoading = false, results = results, recentSearches = updatedRecents)
+                    }
                 }
                 .onFailure { error ->
                     _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            error = error.message ?: "Search failed",
-                        )
+                        it.copy(isLoading = false, error = error.message ?: "Search failed")
                     }
                 }
         }

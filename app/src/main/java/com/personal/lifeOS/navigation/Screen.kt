@@ -39,6 +39,11 @@ object AppRoute {
     // Learning module
     const val Learning = "learning"
 
+    // ── Deep-link helpers for search result navigation ─────────────────────
+    // Build parameterised routes that open a specific item directly.
+    fun tasksWithItem(taskId: Long) = "$Tasks?itemId=$taskId"
+    fun calendarWithEvent(eventId: Long, eventDate: Long) =
+        "$Calendar?eventId=$eventId&eventDate=$eventDate"
 }
 
 data class AppPrimaryTab(

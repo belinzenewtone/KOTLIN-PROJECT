@@ -88,6 +88,18 @@ class TasksViewModel
             }
         }
 
+        /**
+         * Called by search deep-links. Finds the task by [taskId] from the current loaded lists
+         * and opens its edit dialog. No-ops if the task isn't loaded yet (unlikely since tasks
+         * load on init, but the LaunchedEffect in TasksScreen retries after loading completes).
+         */
+        fun showEditDialogById(taskId: Long) {
+            val task =
+                (_uiState.value.pendingTasks + _uiState.value.completedTasks)
+                    .firstOrNull { it.id == taskId }
+            task?.let { showEditDialog(it) }
+        }
+
         fun hideDialog() {
             _uiState.update { it.copy(showDialog = false, editingTask = null) }
         }

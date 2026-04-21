@@ -75,10 +75,12 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.personal.lifeOS.core.permissions.AppPermissionsOrchestrator
 import com.personal.lifeOS.core.security.BiometricAuthManager
 import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
@@ -394,13 +396,31 @@ private fun LifeOSNavigationGraph(
                 onOpenProfile = { navController.navigate(AppRoute.Profile) },
             )
         }
-        composable(AppRoute.Tasks) { TasksScreen(onBack = { navController.popBackStack() }) }
+        composable(
+            route = "${AppRoute.Tasks}?itemId={itemId}",
+            arguments = listOf(
+                navArgument("itemId") { type = NavType.LongType; defaultValue = -1L },
+            ),
+        ) { backStackEntry ->
+            val itemId = backStackEntry.arguments?.getLong("itemId")?.takeIf { it != -1L }
+            TasksScreen(initialTaskId = itemId, onBack = { navController.popBackStack() })
+        }
         composable(AppRoute.Finance) {
             FinanceScreen(
                 onOpenTools = { navController.navigate(AppRoute.Planner) },
             )
         }
-        composable(AppRoute.Calendar) { CalendarScreen() }
+        composable(
+            route = "${AppRoute.Calendar}?eventId={eventId}&eventDate={eventDate}",
+            arguments = listOf(
+                navArgument("eventId") { type = NavType.LongType; defaultValue = -1L },
+                navArgument("eventDate") { type = NavType.LongType; defaultValue = -1L },
+            ),
+        ) { backStackEntry ->
+            val eventId = backStackEntry.arguments?.getLong("eventId")?.takeIf { it != -1L }
+            val eventDate = backStackEntry.arguments?.getLong("eventDate")?.takeIf { it != -1L }
+            CalendarScreen(initialEventId = eventId, initialEventDate = eventDate)
+        }
         composable(AppRoute.Assistant) { AssistantScreen() }
 
         // ── Secondary screens ────────────────────────────────────────────────

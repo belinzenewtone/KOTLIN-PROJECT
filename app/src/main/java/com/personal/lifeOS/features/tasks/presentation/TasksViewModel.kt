@@ -152,6 +152,8 @@ class TasksViewModel
             description: String,
             priority: TaskPriority,
             deadline: Long?,
+            reminderOffsets: List<Int> = emptyList(),
+            alarmEnabled: Boolean = false,
         ) {
             if (title.isBlank()) return
             viewModelScope.launch {
@@ -164,6 +166,8 @@ class TasksViewModel
                                 description = description,
                                 priority = priority,
                                 deadline = deadline,
+                                reminderOffsets = reminderOffsets,
+                                alarmEnabled = alarmEnabled,
                             ),
                         )
                     } else {
@@ -173,6 +177,8 @@ class TasksViewModel
                                 description = description,
                                 priority = priority,
                                 deadline = deadline,
+                                reminderOffsets = reminderOffsets,
+                                alarmEnabled = alarmEnabled,
                             ),
                         )
                     }

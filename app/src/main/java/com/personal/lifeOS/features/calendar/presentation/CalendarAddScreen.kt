@@ -149,14 +149,8 @@ internal fun CalendarAddScreen(
     selectedDate: LocalDate,
     onDismiss: () -> Unit,
     allowedTabs: List<AddTab>? = null,
-    onSaveTask: (
-        title: String,
-        desc: String,
-        priority: TaskPriority,
-        deadline: Long?,
-        reminderOffsets: List<Int>,
-        alarmEnabled: Boolean,
-    ) -> Unit,
+    editingTask: com.personal.lifeOS.features.tasks.domain.model.Task? = null,
+    onSaveTask: (title: String, desc: String, priority: TaskPriority, deadline: Long?, reminderOffsets: List<Int>, alarmEnabled: Boolean) -> Unit,
     onSaveEvent: (
         title: String, desc: String, type: EventType, importance: EventImportance,
         date: Long, endDate: Long?, allDay: Boolean, repeatRule: RepeatRule,
@@ -167,11 +161,12 @@ internal fun CalendarAddScreen(
     BackHandler { onDismiss() }
 
     // ── Tab state ─────────────────────────────────────────────────────────────
-    val initialTab = when (editingEvent?.kind) {
-        EventKind.BIRTHDAY -> AddTab.BIRTHDAY
-        EventKind.ANNIVERSARY -> AddTab.ANNIVERSARY
-        EventKind.COUNTDOWN -> AddTab.COUNTDOWN
-        else -> if (editingEvent != null) AddTab.EVENT else AddTab.EVENT
+    val initialTab = when {
+        editingTask != null -> AddTab.TASK
+        editingEvent?.kind == EventKind.BIRTHDAY -> AddTab.BIRTHDAY
+        editingEvent?.kind == EventKind.ANNIVERSARY -> AddTab.ANNIVERSARY
+        editingEvent?.kind == EventKind.COUNTDOWN -> AddTab.COUNTDOWN
+        else -> allowedTabs?.firstOrNull() ?: AddTab.EVENT
     }
     var selectedTab by rememberSaveable { mutableStateOf(initialTab) }
     var currentPage by remember { mutableStateOf(AddPage.FORM) }
@@ -206,18 +201,22 @@ internal fun CalendarAddScreen(
     }
 
     // ── Task form state ───────────────────────────────────────────────────────
-    var taskTitle by rememberSaveable { mutableStateOf("") }
-    var taskDesc by rememberSaveable { mutableStateOf("") }
-    var taskPriority by rememberSaveable { mutableStateOf(TaskPriority.NEUTRAL) }
-    var taskDeadline by remember {
+    var taskTitle by rememberSaveable(editingTask?.id) { mutableStateOf(editingTask?.title.orEmpty()) }
+    var taskDesc by rememberSaveable(editingTask?.id) { mutableStateOf(editingTask?.description.orEmpty()) }
+    var taskPriority by rememberSaveable(editingTask?.id) { mutableStateOf(editingTask?.priority ?: TaskPriority.NEUTRAL) }
+    var taskDeadline by remember(editingTask?.id) {
         mutableStateOf<Long?>(
-            selectedDate.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli() +
-                9 * 60 * 60 * 1000L,
+            editingTask?.deadline ?: (
+                selectedDate.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli() +
+                    9 * 60 * 60 * 1000L
+            ),
         )
     }
-    val taskReminderOffsets = remember { mutableStateListOf<Int>() }
-    var taskAlarmEnabled by rememberSaveable { mutableStateOf(false) }
-    var taskReminderEnabled by rememberSaveable { mutableStateOf(false) }
+    val taskReminderOffsets = remember(editingTask?.id) {
+        mutableStateListOf<Int>().also { list -> list.addAll(editingTask?.reminderOffsets ?: emptyList()) }
+    }
+    var taskAlarmEnabled by rememberSaveable(editingTask?.id) { mutableStateOf(editingTask?.alarmEnabled ?: false) }
+    var taskReminderEnabled by rememberSaveable(editingTask?.id) { mutableStateOf((editingTask?.reminderOffsets?.isNotEmpty()) ?: false) }
 
     // ── Birthday / Anniversary form state ─────────────────────────────────────
     var bdayName by rememberSaveable(editingEvent?.id) { mutableStateOf(editingEvent?.title.orEmpty()) }
@@ -349,15 +348,7 @@ internal fun CalendarAddScreen(
                         // Save callbacks
                         onSaveTask = {
                             if (taskTitle.isNotBlank()) {
-                                val offsets = if (taskReminderEnabled) taskReminderOffsets.toList() else emptyList()
-                                onSaveTask(
-                                    taskTitle,
-                                    taskDesc,
-                                    taskPriority,
-                                    taskDeadline,
-                                    offsets,
-                                    taskAlarmEnabled,
-                                )
+                                onSaveTask(taskTitle, taskDesc, taskPriority, taskDeadline, taskReminderOffsets.toList(), taskAlarmEnabled)
                             }
                         },
                         onSaveEvent = {
@@ -1556,6 +1547,7 @@ internal fun CalendarAddScreenOverlay(
     selectedDate: LocalDate,
     onDismiss: () -> Unit,
     allowedTabs: List<AddTab>? = null,
+    editingTask: com.personal.lifeOS.features.tasks.domain.model.Task? = null,
     onSaveTask: (String, String, TaskPriority, Long?, List<Int>, Boolean) -> Unit,
     onSaveEvent: (String, String, EventType, EventImportance, Long, Long?, Boolean, RepeatRule, List<Int>, Boolean, String, String, EventKind, Int) -> Unit,
 ) {
@@ -1569,6 +1561,7 @@ internal fun CalendarAddScreenOverlay(
             selectedDate = selectedDate,
             onDismiss = onDismiss,
             allowedTabs = allowedTabs,
+            editingTask = editingTask,
             onSaveTask = onSaveTask,
             onSaveEvent = onSaveEvent,
         )

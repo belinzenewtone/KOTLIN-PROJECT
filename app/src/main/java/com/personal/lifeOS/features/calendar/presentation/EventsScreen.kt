@@ -133,14 +133,7 @@ fun EventsScreen(
             onDismiss = { viewModel.hideAddDialog() },
             allowedTabs = if (state.editingEvent == null) listOf(AddTab.EVENT) else null,
             onSaveTask = { title, desc, priority, deadline, reminderOffsets, alarmEnabled ->
-                viewModel.saveTask(
-                    title = title,
-                    description = desc,
-                    priority = priority,
-                    deadline = deadline,
-                    reminderOffsets = reminderOffsets,
-                    alarmEnabled = alarmEnabled,
-                )
+                viewModel.saveTask(title, desc, priority, deadline, reminderOffsets, alarmEnabled)
             },
             onSaveEvent = { title, desc, type, importance, date, endDate, allDay, repeatRule,
                             reminderOffsets, alarmEnabled, guests, timeZoneId, kind, reminderTimeOfDayMinutes ->

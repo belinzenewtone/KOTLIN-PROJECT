@@ -43,12 +43,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.personal.lifeOS.core.ui.designsystem.EmptyState
 import com.personal.lifeOS.core.ui.designsystem.PageScaffold
 import com.personal.lifeOS.core.ui.designsystem.SearchField
-import com.personal.lifeOS.core.ui.designsystem.SuperAddBottomSheet
-import com.personal.lifeOS.core.ui.designsystem.SuperKind
 import com.personal.lifeOS.core.ui.designsystem.TaskRow
 import com.personal.lifeOS.core.utils.DateUtils
+import com.personal.lifeOS.features.calendar.presentation.AddTab
+import com.personal.lifeOS.features.calendar.presentation.CalendarAddScreenOverlay
 import com.personal.lifeOS.features.tasks.domain.model.Task
 import com.personal.lifeOS.features.tasks.domain.model.TaskPriority
+import java.time.LocalDate
 import com.personal.lifeOS.ui.components.StyledSnackbarHost
 import com.personal.lifeOS.ui.theme.AppSpacing
 import com.personal.lifeOS.ui.theme.Warning
@@ -131,23 +132,18 @@ fun TasksScreen(
         )
     }
 
-    if (state.showDialog) {
-        SuperAddBottomSheet(
-            defaultKind = SuperKind.TASK,
-            isEdit = state.editingTask != null,
-            editTitle = state.title,
-            editDescription = state.description,
-            editPriority = state.priority,
-            editDeadline = state.deadline,
-            onDismiss = { viewModel.hideDialog() },
-            onSaveTask = { title, desc, priority, deadline ->
-                viewModel.saveTaskWith(title, desc, priority, deadline)
-            },
-            onSaveEvent = { _, _, _, _, _, _, _, _ ->
-                // Tasks screen never saves events — no-op
-            },
-        )
-    }
+    CalendarAddScreenOverlay(
+        visible = state.showDialog,
+        editingEvent = null,
+        editingTask = state.editingTask,
+        selectedDate = LocalDate.now(),
+        allowedTabs = listOf(AddTab.TASK),
+        onDismiss = { viewModel.hideDialog() },
+        onSaveTask = { title, desc, priority, deadline, reminderOffsets, alarmEnabled ->
+            viewModel.saveTaskWith(title, desc, priority, deadline, reminderOffsets, alarmEnabled)
+        },
+        onSaveEvent = { _, _, _, _, _, _, _, _, _, _, _, _, _, _ -> },
+    )
 }
 
 @Composable

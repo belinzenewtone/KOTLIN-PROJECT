@@ -17,6 +17,12 @@ val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
     localProperties.load(localPropertiesFile.inputStream())
 }
+val defaultOtaManifestUrl = "https://raw.githubusercontent.com/belinzenewtone/KOTLIN-PROJECT/main/ota/manifest.json"
+val otaManifestUrl =
+    localProperties
+        .getProperty("OTA_MANIFEST_URL", "")
+        .trim()
+        .ifBlank { defaultOtaManifestUrl }
 
 val releaseStoreFilePath = localProperties.getProperty("RELEASE_STORE_FILE", "").trim()
 val releaseStorePassword = localProperties.getProperty("RELEASE_STORE_PASSWORD", "").trim()
@@ -31,7 +37,7 @@ val hasConfiguredRuntimeEnv =
     localProperties.getProperty("SUPABASE_URL", "").isNotBlank() &&
         localProperties.getProperty("SUPABASE_ANON_KEY", "").isNotBlank() &&
         localProperties.getProperty("ASSISTANT_PROXY_URL", "").isNotBlank() &&
-        localProperties.getProperty("OTA_MANIFEST_URL", "").isNotBlank()
+        otaManifestUrl.isNotBlank()
 val sentryDsn = localProperties.getProperty("SENTRY_DSN", "").trim()
 val sentryEnvironment = localProperties.getProperty("SENTRY_ENVIRONMENT", "production").trim()
 val sentryTracesSampleRate = localProperties.getProperty("SENTRY_TRACES_SAMPLE_RATE", "0.05").trim()
@@ -48,8 +54,8 @@ android {
         applicationId = "com.personal.lifeOS"
         minSdk = 26
         targetSdk = 35
-        versionCode = 49
-        versionName = "1.2.38"
+        versionCode = 50
+        versionName = "1.2.39"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -65,7 +71,7 @@ android {
             "ASSISTANT_PROXY_URL",
             "\"${localProperties.getProperty("ASSISTANT_PROXY_URL", "")}\"",
         )
-        buildConfigField("String", "OTA_MANIFEST_URL", "\"${localProperties.getProperty("OTA_MANIFEST_URL", "")}\"")
+        buildConfigField("String", "OTA_MANIFEST_URL", "\"$otaManifestUrl\"")
         buildConfigField("String", "SENTRY_DSN", "\"$sentryDsn\"")
         buildConfigField("String", "SENTRY_ENVIRONMENT", "\"$sentryEnvironment\"")
         buildConfigField("double", "SENTRY_TRACES_SAMPLE_RATE", sentryTracesSampleRate)

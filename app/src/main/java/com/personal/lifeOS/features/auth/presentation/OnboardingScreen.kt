@@ -384,7 +384,6 @@ private fun OnboardingProfileSetupStep(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(AppDesignTokens.radius.md))
                             .border(
                                 width = if (selected) 1.5.dp else 0.5.dp,
                                 color =
@@ -395,6 +394,7 @@ private fun OnboardingProfileSetupStep(
                                     },
                                 shape = RoundedCornerShape(AppDesignTokens.radius.md),
                             )
+                            .clip(RoundedCornerShape(AppDesignTokens.radius.md))
                             .background(
                                 color =
                                     if (selected) {

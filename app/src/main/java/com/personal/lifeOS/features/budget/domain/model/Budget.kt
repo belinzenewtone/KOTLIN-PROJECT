@@ -9,6 +9,7 @@ data class Budget(
 )
 
 enum class BudgetPeriod {
+    DAILY,
     WEEKLY,
     MONTHLY,
 }

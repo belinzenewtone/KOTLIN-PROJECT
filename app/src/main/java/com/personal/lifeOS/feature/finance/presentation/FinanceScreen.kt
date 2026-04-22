@@ -1,5 +1,6 @@
 package com.personal.lifeOS.feature.finance.presentation
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -67,6 +68,9 @@ import java.time.format.DateTimeFormatter
 fun FinanceScreen(
     viewModel: FinanceViewModel = hiltViewModel(),
     onOpenTools: () -> Unit = {},
+    onOpenCategorize: () -> Unit = {},
+    onOpenFeeAnalytics: () -> Unit = {},
+    onOpenMerchantDetail: (String) -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val lazyItems = viewModel.pagedTransactions.collectAsLazyPagingItems()
@@ -162,7 +166,16 @@ fun FinanceScreen(
                 tone = InlineBannerTone.WARNING,
             )
         }
-        FinanceCompactInsightsRow(uiState = uiState)
+        if (uiState.uncategorizedCount > 0) {
+            UncategorizedBanner(
+                count = uiState.uncategorizedCount,
+                onOrganize = onOpenCategorize,
+            )
+        }
+        FinanceCompactInsightsRow(
+            uiState = uiState,
+            onOpenFeeAnalytics = onOpenFeeAnalytics,
+        )
 
         if (uiState.enhancedUiEnabled) {
             uiState.reviewQueueSummary?.let { summary ->
@@ -259,6 +272,7 @@ fun FinanceScreen(
                                         viewModel.onEvent(FinanceUiEvent.ShowCategoryPicker(transaction))
                                     },
                                     onDelete = { deleteTarget = transaction },
+                                    onMerchantClick = onOpenMerchantDetail,
                                 )
                             }
                         }
@@ -468,7 +482,10 @@ private fun FinanceCompactSummaryCard(
 }
 
 @Composable
-private fun FinanceCompactInsightsRow(uiState: FinanceUiState) {
+private fun FinanceCompactInsightsRow(
+    uiState: FinanceUiState,
+    onOpenFeeAnalytics: () -> Unit = {},
+) {
     val spendingVelocityInsight =
         buildSpendingVelocityInsight(
             monthSpend = uiState.summary.monthTotal,
@@ -487,6 +504,15 @@ private fun FinanceCompactInsightsRow(uiState: FinanceUiState) {
                     outstanding = uiState.fulizaNetOutstandingKes ?: 0.0,
                     openCount = uiState.fulizaOpenCount,
                     limitKes = uiState.fulizaLimitKes,
+                    modifier = Modifier.width(236.dp),
+                )
+            }
+        }
+        if (uiState.monthFeesTotal > 0.0) {
+            item {
+                FinanceFeeCard(
+                    feesTotal = uiState.monthFeesTotal,
+                    onClick = onOpenFeeAnalytics,
                     modifier = Modifier.width(236.dp),
                 )
             }
@@ -641,6 +667,7 @@ private fun FinanceTransactionRow(
     transaction: FinanceTransaction,
     onRecategorize: () -> Unit,
     onDelete: () -> Unit,
+    onMerchantClick: (String) -> Unit = {},
 ) {
     AppCard(elevated = true) {
         Row(
@@ -655,9 +682,12 @@ private fun FinanceTransactionRow(
                 Text(
                     text = transaction.merchant,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.primary,
                     maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.clickable {
+                        onMerchantClick(transaction.merchant)
+                    },
                 )
                 Text(
                     text = "${transaction.category} \u00B7 ${DateUtils.formatDate(transaction.date, "MMM d, h:mm a")}",
@@ -804,6 +834,65 @@ private fun FinanceVelocityCard(
                 color = Warning,
                 maxLines = 1,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@Composable
+private fun UncategorizedBanner(
+    count: Int,
+    onOrganize: () -> Unit,
+) {
+    AppCard(modifier = Modifier.fillMaxWidth(), elevated = false) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "$count transaction${if (count == 1) "" else "s"} need a category",
+                style = MaterialTheme.typography.bodySmall,
+                color = Warning,
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(
+                onClick = onOrganize,
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+            ) {
+                Text("Organize", style = MaterialTheme.typography.labelMedium)
+            }
+        }
+    }
+}
+
+@Composable
+private fun FinanceFeeCard(
+    feesTotal: Double,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    AppCard(
+        modifier = modifier.clickable(onClick = onClick),
+        elevated = false,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = "Service Charges",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = DateUtils.formatCurrency(feesTotal),
+                style = MaterialTheme.typography.titleMedium,
+                color = Warning,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                maxLines = 1,
+            )
+            Text(
+                text = "Airtime, Fuliza & subscriptions",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }

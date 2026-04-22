@@ -37,6 +37,10 @@ data class FinanceUiState(
     val fulizaOpenCount: Int = 0,
     val totalMonthBudget: Double = 0.0,
     val enhancedUiEnabled: Boolean = true,
+    /** Transactions without a meaningful category — drives the amber categorize banner. */
+    val uncategorizedCount: Int = 0,
+    /** Sum of fee-type category spend this month — shown in the insights row fee card. */
+    val monthFeesTotal: Double = 0.0,
 )
 
 data class FinanceGuardrailUiModel(

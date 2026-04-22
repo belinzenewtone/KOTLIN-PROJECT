@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -366,10 +367,44 @@ internal fun AddBudgetDialog(
                     }
                 }
 
+                // Period picker chips
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = "Period",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        BudgetPeriod.entries.forEach { period ->
+                            val selected = state.periodInput == period
+                            Text(
+                                text = period.name.lowercase().replaceFirstChar { it.uppercase() },
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                                color = if (selected) MaterialTheme.colorScheme.onPrimary
+                                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(
+                                        if (selected) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.surfaceVariant,
+                                    )
+                                    .clickable { onSetPeriod(period) }
+                                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                            )
+                        }
+                    }
+                }
+
+                val limitLabel = when (state.periodInput) {
+                    BudgetPeriod.DAILY -> "Daily Limit (KES)"
+                    BudgetPeriod.WEEKLY -> "Weekly Limit (KES)"
+                    BudgetPeriod.MONTHLY -> "Monthly Limit (KES)"
+                }
                 OutlinedTextField(
                     value = state.limitInput,
                     onValueChange = onSetLimit,
-                    label = { Text("Monthly Limit (KES)") },
+                    label = { Text(limitLabel) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth(),
@@ -377,9 +412,23 @@ internal fun AddBudgetDialog(
                 )
 
                 state.limitInput.toDoubleOrNull()?.let { amount ->
-                    if (amount > 0) {
+                    if (amount > 0 && state.periodInput == BudgetPeriod.MONTHLY) {
                         Text(
                             text = "Daily equivalent: ${DateUtils.formatCurrency(amount / 30)}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    if (amount > 0 && state.periodInput == BudgetPeriod.WEEKLY) {
+                        Text(
+                            text = "Monthly equivalent: ${DateUtils.formatCurrency(amount * 4.33)}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    if (amount > 0 && state.periodInput == BudgetPeriod.DAILY) {
+                        Text(
+                            text = "Monthly equivalent: ${DateUtils.formatCurrency(amount * 30)}",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

@@ -35,6 +35,12 @@ object AppRoute {
     const val Budget = "budget"
     const val Income = "income"
     const val Recurring = "recurring"
+    const val Loans = "loans"
+
+    // Finance utility screens — navigated from Finance main screen
+    const val Categorize = "categorize"
+    const val FeeAnalytics = "fee_analytics"
+    const val MerchantDetail = "merchant_detail"
 
     // Learning module
     const val Learning = "learning"
@@ -44,6 +50,10 @@ object AppRoute {
     fun tasksWithItem(taskId: Long) = "$Tasks?itemId=$taskId"
     fun calendarWithEvent(eventId: Long, eventDate: Long) =
         "$Calendar?eventId=$eventId&eventDate=$eventDate"
+
+    // ── Merchant detail route with encoded merchant name ───────────────────
+    fun merchantDetail(merchant: String) =
+        "$MerchantDetail/${java.net.URLEncoder.encode(merchant, "UTF-8")}"
 }
 
 data class AppPrimaryTab(

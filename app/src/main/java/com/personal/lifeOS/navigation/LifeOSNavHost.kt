@@ -96,6 +96,10 @@ import com.personal.lifeOS.features.auth.presentation.OnboardingScreen
 import com.personal.lifeOS.features.budget.presentation.BudgetScreen
 import com.personal.lifeOS.features.calendar.presentation.CalendarScreen
 import com.personal.lifeOS.features.calendar.presentation.EventsScreen
+import com.personal.lifeOS.features.categorize.presentation.CategorizeScreen
+import com.personal.lifeOS.features.feeanalytics.presentation.FeeAnalyticsScreen
+import com.personal.lifeOS.features.loans.presentation.LoansScreen
+import com.personal.lifeOS.features.merchantdetail.presentation.MerchantDetailScreen
 import com.personal.lifeOS.features.export.presentation.ExportScreen
 import com.personal.lifeOS.features.income.presentation.IncomeScreen
 import com.personal.lifeOS.features.insights.presentation.InsightsScreen
@@ -408,6 +412,11 @@ private fun LifeOSNavigationGraph(
         composable(AppRoute.Finance) {
             FinanceScreen(
                 onOpenTools = { navController.navigate(AppRoute.Planner) },
+                onOpenCategorize = { navController.navigate(AppRoute.Categorize) },
+                onOpenFeeAnalytics = { navController.navigate(AppRoute.FeeAnalytics) },
+                onOpenMerchantDetail = { merchant ->
+                    navController.navigate(AppRoute.merchantDetail(merchant))
+                },
             )
         }
         composable(
@@ -470,6 +479,7 @@ private fun LifeOSNavigationGraph(
                 onOpenBudget = { navController.navigate(AppRoute.Budget) },
                 onOpenIncome = { navController.navigate(AppRoute.Income) },
                 onOpenRecurring = { navController.navigate(AppRoute.Recurring) },
+                onOpenLoans = { navController.navigate(AppRoute.Loans) },
                 onOpenExport = { navController.navigate(AppRoute.Export) },
                 onOpenSearch = { navController.navigate(AppRoute.Search) },
             )
@@ -479,6 +489,19 @@ private fun LifeOSNavigationGraph(
         composable(AppRoute.Budget) { BudgetScreen(onBack = { navController.popBackStack() }) }
         composable(AppRoute.Income) { IncomeScreen(onBack = { navController.popBackStack() }) }
         composable(AppRoute.Recurring) { RecurringScreen(onBack = { navController.popBackStack() }) }
+        composable(AppRoute.Loans) { LoansScreen(onBack = { navController.popBackStack() }) }
+
+        // Finance utility screens — from main Finance screen
+        composable(AppRoute.Categorize) { CategorizeScreen(onBack = { navController.popBackStack() }) }
+        composable(AppRoute.FeeAnalytics) { FeeAnalyticsScreen(onBack = { navController.popBackStack() }) }
+        composable(
+            route = "${AppRoute.MerchantDetail}/{merchant}",
+            arguments = listOf(
+                navArgument("merchant") { type = NavType.StringType; defaultValue = "" },
+            ),
+        ) {
+            MerchantDetailScreen(onBack = { navController.popBackStack() })
+        }
 
         // Weekly/monthly personal digest
         composable(AppRoute.Review) { ReviewScreen(onBack = { navController.popBackStack() }) }

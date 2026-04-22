@@ -115,6 +115,10 @@ fun InsightsScreen(
             )
         }
 
+        if (state.monthlySpendData.isNotEmpty()) {
+            MonthlySpendTrendSection(months = state.monthlySpendData)
+        }
+
         if (!state.isRefreshing && state.cards.isEmpty()) {
             EmptyState(
                 title = "Insights are warming up",
@@ -422,6 +426,93 @@ private fun DrawScope.drawStackedBarSegment(
             topLeft = Offset(left, top),
             size = Size(width, height),
         )
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Monthly Spend Trend
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun MonthlySpendTrendSection(months: List<MonthlySpendData>) {
+    if (months.isEmpty()) return
+
+    val maxSpend = months.maxOfOrNull { it.totalSpend }?.coerceAtLeast(1.0) ?: 1.0
+
+    AppCard(elevated = true) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                text = "Monthly Spending Trend",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            months.forEach { month ->
+                MonthlySpendRow(month = month, maxSpend = maxSpend)
+            }
+        }
+    }
+}
+
+@Composable
+private fun MonthlySpendRow(month: MonthlySpendData, maxSpend: Double) {
+    val ratio = (month.totalSpend / maxSpend).toFloat().coerceIn(0f, 1f)
+    val animatedRatio by animateFloatAsState(
+        targetValue = ratio,
+        animationSpec = androidx.compose.animation.core.tween(600),
+        label = "monthly_bar_${month.label}",
+    )
+    val delta = month.totalSpend - month.previousTotal
+    val deltaColor = when {
+        month.previousTotal == 0.0 -> MaterialTheme.colorScheme.onSurfaceVariant
+        delta > 0 -> MaterialTheme.colorScheme.error
+        else -> com.personal.lifeOS.ui.theme.Success
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = month.label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (month.previousTotal > 0.0 && delta != 0.0) {
+                    Text(
+                        text = "${if (delta > 0) "+" else ""}${com.personal.lifeOS.core.utils.DateUtils.formatCurrency(delta)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = deltaColor,
+                    )
+                }
+                Text(
+                    text = com.personal.lifeOS.core.utils.DateUtils.formatCurrency(month.totalSpend),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(6.dp)
+                .clip(RoundedCornerShape(3.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(animatedRatio)
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(MaterialTheme.colorScheme.primary),
+            )
+        }
     }
 }
 

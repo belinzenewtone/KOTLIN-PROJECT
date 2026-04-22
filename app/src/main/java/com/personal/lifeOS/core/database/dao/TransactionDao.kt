@@ -192,6 +192,94 @@ interface TransactionDao {
 
     @Query("UPDATE transactions SET user_id = :userId WHERE user_id = ''")
     suspend fun claimUnownedRecords(userId: String)
+
+    // ── One-shot spending aggregate (suspend) ─────────────────────────────
+    // Same semantics as getTotalSpendingBetween but suspend (single-shot) so
+    // callers can use it inside async {} parallel blocks without Flow collection.
+
+    @Query(
+        """
+        SELECT SUM(amount) FROM transactions
+        WHERE user_id = :userId
+          AND deleted_at IS NULL
+          AND date BETWEEN :start AND :end
+          AND UPPER(transaction_type) IN ('SENT', 'AIRTIME', 'PAYBILL', 'BUY_GOODS', 'WITHDRAW', 'PAID', 'WITHDRAWN')
+        """,
+    )
+    suspend fun getTotalSpendingBetweenSnapshot(
+        start: Long,
+        end: Long,
+        userId: String,
+    ): Double?
+
+    // ── Uncategorized transactions ─────────────────────────────────────────
+
+    /** Count of transactions that still use the default/unknown category. */
+    @Query(
+        """
+        SELECT COUNT(*) FROM transactions
+        WHERE user_id = :userId
+          AND deleted_at IS NULL
+          AND UPPER(category) IN ('OTHER', 'UNCATEGORIZED', 'UNKNOWN', '')
+        """,
+    )
+    fun getUncategorizedCount(userId: String): Flow<Int>
+
+    /** All transactions that still use the default/unknown category. */
+    @Query(
+        """
+        SELECT * FROM transactions
+        WHERE user_id = :userId
+          AND deleted_at IS NULL
+          AND UPPER(category) IN ('OTHER', 'UNCATEGORIZED', 'UNKNOWN', '')
+        ORDER BY date DESC
+        """,
+    )
+    fun getUncategorizedTransactions(userId: String): Flow<List<TransactionEntity>>
+
+    // ── Merchant detail ────────────────────────────────────────────────────
+
+    /** All transactions for a specific merchant, newest first. */
+    @Query(
+        """
+        SELECT * FROM transactions
+        WHERE user_id = :userId
+          AND deleted_at IS NULL
+          AND UPPER(merchant) = UPPER(:merchant)
+        ORDER BY date DESC
+        """,
+    )
+    fun getTransactionsByMerchant(userId: String, merchant: String): Flow<List<TransactionEntity>>
+
+    // ── Fee analytics ──────────────────────────────────────────────────────
+
+    /** Category breakdown limited to fee-like categories for the fee analytics screen. */
+    @Query(
+        """
+        SELECT category, SUM(amount) as total
+        FROM transactions
+        WHERE user_id = :userId
+          AND deleted_at IS NULL
+          AND date BETWEEN :start AND :end
+          AND UPPER(category) IN ('AIRTIME', 'FULIZA', 'SUBSCRIPTIONS', 'BANK CHARGES', 'CHARGES', 'FEES')
+        GROUP BY category
+        ORDER BY total DESC
+        """,
+    )
+    fun getFeeCategoryBreakdown(start: Long, end: Long, userId: String): Flow<List<CategoryTotal>>
+
+    /** Fee-category transactions list for the fee analytics detail screen. */
+    @Query(
+        """
+        SELECT * FROM transactions
+        WHERE user_id = :userId
+          AND deleted_at IS NULL
+          AND date BETWEEN :start AND :end
+          AND UPPER(category) IN ('AIRTIME', 'FULIZA', 'SUBSCRIPTIONS', 'BANK CHARGES', 'CHARGES', 'FEES')
+        ORDER BY date DESC
+        """,
+    )
+    fun getFeeTransactions(start: Long, end: Long, userId: String): Flow<List<TransactionEntity>>
 }
 
 data class CategoryTotal(

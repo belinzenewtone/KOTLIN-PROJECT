@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBalance
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.Loop
 import androidx.compose.material.icons.outlined.MonetizationOn
@@ -36,13 +37,14 @@ fun PlannerScreen(
     onOpenBudget: () -> Unit = {},
     onOpenIncome: () -> Unit = {},
     onOpenRecurring: () -> Unit = {},
+    onOpenLoans: () -> Unit = {},
     onOpenExport: () -> Unit = {},
     onOpenSearch: () -> Unit = {},
 ) {
     PageScaffold(
         headerEyebrow = "Finance Tools",
         title = "Finance Hub",
-        subtitle = "Manage budgets, income, recurring items, and exports",
+        subtitle = "Manage budgets, income, recurring items, loans, and exports",
         onBack = onBack,
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
     ) {
@@ -63,6 +65,12 @@ fun PlannerScreen(
             title = "Recurring",
             description = "Subscriptions, salaries, and scheduled payments",
             onClick = onOpenRecurring,
+        )
+        ToolCard(
+            icon = Icons.Outlined.AccountBalanceWallet,
+            title = "Loans & Fuliza",
+            description = "Track outstanding Fuliza draws and repayment history",
+            onClick = onOpenLoans,
         )
         ToolCard(
             icon = Icons.Outlined.Search,

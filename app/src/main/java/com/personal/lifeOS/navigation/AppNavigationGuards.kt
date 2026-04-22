@@ -43,10 +43,13 @@ internal fun isSensitiveRoute(route: String?): Boolean {
             AppRoute.Budget,
             AppRoute.Income,
             AppRoute.Recurring,
+            AppRoute.Loans,
+            AppRoute.Categorize,
+            AppRoute.FeeAnalytics,
             AppRoute.Review,
             AppRoute.Export,
             AppRoute.Search,
             AppRoute.Profile,
             AppRoute.Assistant,
-        )
+        ) || route?.startsWith(AppRoute.MerchantDetail) == true
 }

@@ -13,6 +13,8 @@ import com.personal.lifeOS.core.ui.model.SyncStatusUiModel
 import com.personal.lifeOS.feature.finance.domain.model.FinanceTransaction
 import com.personal.lifeOS.feature.finance.domain.model.FinanceSnapshot
 import com.personal.lifeOS.feature.finance.domain.model.toExpenseTransaction
+import com.personal.lifeOS.core.database.dao.TransactionDao
+import com.personal.lifeOS.core.security.AuthSessionStore
 import com.personal.lifeOS.feature.finance.domain.repository.FinanceRepository
 import com.personal.lifeOS.feature.finance.domain.usecase.BuildFinanceSummaryUseCase
 import com.personal.lifeOS.feature.finance.domain.usecase.ObserveFinanceSnapshotUseCase
@@ -59,6 +61,8 @@ class FinanceViewModel
         private val healthDiagnosticsRepository: HealthDiagnosticsRepository,
         private val featureFlagStore: FeatureFlagStore,
         private val appSettingsStore: AppSettingsStore,
+        private val transactionDao: TransactionDao,
+        private val authSessionStore: AuthSessionStore,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(FinanceUiState())
         val uiState: StateFlow<FinanceUiState> = _uiState.asStateFlow()
@@ -87,6 +91,7 @@ class FinanceViewModel
             observeFulizaLimit()
             observeFulizaDebt()
             observeSyncHealth()
+            observeUncategorizedCount()
         }
 
         fun onEvent(event: FinanceUiEvent) {
@@ -161,6 +166,9 @@ class FinanceViewModel
                         latestImportHealth.parseFailed > 0 -> SyncStatusUiModel.FAILED
                         else -> SyncStatusUiModel.SYNCED
                     }
+                val monthFeesTotal = latestSnapshot.transactions
+                    .filter { it.category.uppercase() in FEE_CATEGORIES }
+                    .sumOf { it.amount }
                 current.copy(
                     summary = summary,
                     importHealth = latestImportHealth.toUiModel(current.lastImportRunSummary),
@@ -170,8 +178,21 @@ class FinanceViewModel
                     budgetGuardrail = buildBudgetGuardrail(summary, latestSnapshot.totalBudgetLimit),
                     exportNudge = buildExportNudge(summary),
                     totalMonthBudget = latestSnapshot.totalBudgetLimit,
+                    monthFeesTotal = monthFeesTotal,
                     isLoading = false,
                 )
+            }
+        }
+
+        private fun observeUncategorizedCount() {
+            viewModelScope.launch {
+                val userId = authSessionStore.getUserId()
+                transactionDao.getUncategorizedCount(userId)
+                    .onEach { count ->
+                        _uiState.update { it.copy(uncategorizedCount = count) }
+                    }
+                    .catch { /* non-fatal — uncategorized banner is cosmetic */ }
+                    .launchIn(viewModelScope)
             }
         }
 
@@ -382,6 +403,13 @@ class FinanceViewModel
             }
         }
 
+        companion object {
+            /** Fee-like categories used to compute the month fees total.
+             *  Defined once as a constant — avoids recreating the Set on every snapshot update. */
+            private val FEE_CATEGORIES = setOf(
+                "AIRTIME", "FULIZA", "SUBSCRIPTIONS", "BANK CHARGES", "CHARGES", "FEES",
+            )
+        }
     }
 
 private fun MpesaHistoricalImportSummary.toResultMessage(): String {

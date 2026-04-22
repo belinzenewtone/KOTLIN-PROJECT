@@ -142,9 +142,11 @@ object OtaUpdateManager {
             val request =
                 DownloadManager.Request(manifest.apkUrl.toUri())
                     .setMimeType("application/vnd.android.package-archive")
-                    .setTitle("BELTECH update")
-                    .setDescription("Downloading version ${manifest.versionName ?: manifest.versionCode}")
-                    .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                    .setTitle("Updating to v${manifest.versionName ?: manifest.versionCode}")
+                    .setDescription("Tap to return to the app")
+                    // VISIBILITY_VISIBLE shows progress during download (not just on completion),
+                    // so the user can see status in the notification shade if they background the app.
+                    .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
                     .setAllowedOverMetered(true)
                     .setAllowedOverRoaming(true)
                     .setDestinationInExternalFilesDir(

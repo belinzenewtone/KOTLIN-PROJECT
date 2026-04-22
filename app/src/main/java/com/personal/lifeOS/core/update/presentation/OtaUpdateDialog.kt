@@ -1,22 +1,26 @@
 package com.personal.lifeOS.core.update.presentation
 
-import androidx.compose.foundation.background
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.material3.Button
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -25,12 +29,20 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.foundation.Image
+import com.personal.lifeOS.R
 import com.personal.lifeOS.core.ui.designsystem.AppDesignTokens
 import com.personal.lifeOS.core.update.OtaUpdateManifest
 import java.util.Locale
@@ -40,6 +52,7 @@ import kotlin.math.pow
 @Composable
 internal fun OtaUpdateDialog(
     appName: String,
+    currentVersionName: String,
     manifest: OtaUpdateManifest,
     state: OtaPromptUiState,
     hasDownloadedApk: Boolean,
@@ -69,7 +82,7 @@ internal fun OtaUpdateDialog(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 ),
             border =
-                androidx.compose.foundation.BorderStroke(
+                BorderStroke(
                     width = 1.dp,
                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.72f),
                 ),
@@ -80,6 +93,7 @@ internal fun OtaUpdateDialog(
             ) {
                 OtaDialogHeader(
                     appName = appName,
+                    currentVersionName = currentVersionName,
                     manifest = manifest,
                     canClose = !manifest.mandatory && !state.isDownloading,
                     onClose = callbacks.onDismiss,
@@ -109,6 +123,7 @@ internal fun OtaUpdateDialog(
 @Composable
 private fun OtaDialogHeader(
     appName: String,
+    currentVersionName: String,
     manifest: OtaUpdateManifest,
     canClose: Boolean,
     onClose: () -> Unit,
@@ -118,29 +133,32 @@ private fun OtaDialogHeader(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Box(
-            modifier =
-                Modifier
-                    .background(
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
-                        shape = CircleShape,
-                    )
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
+        Image(
+            painter = painterResource(id = R.mipmap.ic_launcher),
+            contentDescription = "$appName icon",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape),
+        )
+
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             Text(
-                text = appName.trim().firstOrNull()?.uppercase() ?: "U",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.SemiBold,
+                text = manifest.title ?: "Update $appName",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            // Version arrow: "v1.2.3 → v1.3.0"
+            val newVersion = manifest.versionName ?: manifest.versionCode.toString()
+            Text(
+                text = "v$currentVersionName → v$newVersion",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-
-        Text(
-            text = manifest.title ?: "Update $appName",
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f),
-        )
 
         if (canClose) {
             IconButton(onClick = onClose) {
@@ -162,12 +180,34 @@ private fun OtaDialogBody(manifest: OtaUpdateManifest) {
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurface,
     )
-    manifest.changelog?.takeIf { it.isNotBlank() }?.let {
-        Text(
-            text = it.trim(),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+
+    // Collapsible changelog — collapsed by default so it doesn't overwhelm the dialog
+    manifest.changelog?.takeIf { it.isNotBlank() }?.let { log ->
+        var expanded by remember { mutableStateOf(false) }
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded }
+                    .padding(vertical = 2.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = if (expanded) "What's new ▴" else "What's new ▾",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+            AnimatedVisibility(visible = expanded) {
+                Text(
+                    text = log.trim(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
 
@@ -270,7 +310,64 @@ private fun primaryButtonLabel(
     return when {
         state.isDownloading -> "Updating..."
         hasDownloadedApk -> "Install now"
+        state.downloadFailed -> "Retry"
         else -> "Update now"
+    }
+}
+
+/**
+ * Lightweight dialog shown while the OTA manifest is being fetched.
+ * Dismissed automatically once the check completes (dialog is only composed when isChecking = true).
+ */
+@Composable
+internal fun OtaCheckingDialog(appName: String) {
+    Dialog(
+        onDismissRequest = { /* not dismissible while checking */ },
+        properties = DialogProperties(
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false,
+            usePlatformDefaultWidth = false,
+        ),
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            shape = RoundedCornerShape(AppDesignTokens.radius.lg),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ),
+            border = BorderStroke(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.72f),
+            ),
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(28.dp),
+                    strokeWidth = 3.dp,
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text = "Checking for updates",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = "Looking for a newer version of $appName…",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
     }
 }
 

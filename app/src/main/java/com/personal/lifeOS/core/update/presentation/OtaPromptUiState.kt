@@ -14,6 +14,8 @@ internal data class OtaPromptUiState(
     val statusMessage: String? = null,
     val activeDownloadId: Long = -1L,
     val showDialog: Boolean = false,
+    /** True after a download attempt ends with [OtaDownloadResult.Error]; cleared on retry. */
+    val downloadFailed: Boolean = false,
 ) {
     fun dismissForVersion(versionCode: Long): OtaPromptUiState {
         return copy(
@@ -38,6 +40,7 @@ internal data class OtaPromptUiState(
                         it.statusMessage,
                         it.activeDownloadId,
                         it.showDialog,
+                        it.downloadFailed,
                     )
                 },
                 restore = {
@@ -53,6 +56,7 @@ internal data class OtaPromptUiState(
                         statusMessage = it[8] as String?,
                         activeDownloadId = it[9] as Long,
                         showDialog = it[10] as Boolean,
+                        downloadFailed = it[11] as Boolean,
                     )
                 },
             )

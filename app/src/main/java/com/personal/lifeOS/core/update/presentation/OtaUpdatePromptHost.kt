@@ -47,11 +47,18 @@ fun OtaUpdatePromptHost(shouldCheckForUpdates: Boolean) {
             )
     }
 
+    // Show a lightweight "checking" skeleton while the manifest is being fetched
+    if (uiState.isChecking) {
+        OtaCheckingDialog(appName = context.getString(R.string.app_name))
+        return
+    }
+
     val activeManifest = manifest ?: return
     if (!uiState.showDialog) return
 
     OtaUpdateDialog(
         appName = context.getString(R.string.app_name),
+        currentVersionName = BuildConfig.VERSION_NAME,
         manifest = activeManifest,
         state = uiState,
         hasDownloadedApk = downloadedApkUri != null,
@@ -175,6 +182,7 @@ private fun handlePrimaryAction(
             isDownloading = true,
             statusMessage = "Downloading update...",
             downloadPercent = 0,
+            downloadFailed = false,
         )
     runtime.onDownloadStarted(
         runtime.scope.launch {
@@ -263,7 +271,9 @@ private suspend fun downloadAndInstallUpdate(
                 startState.copy(
                     isDownloading = false,
                     activeDownloadId = -1L,
+                    downloadPercent = null,   // clear progress bar on failure
                     statusMessage = "Download failed: ${result.message}",
+                    downloadFailed = true,
                 ),
             )
         }

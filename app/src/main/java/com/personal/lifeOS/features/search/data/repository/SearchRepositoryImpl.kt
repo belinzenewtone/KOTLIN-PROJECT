@@ -157,11 +157,11 @@ class SearchRepositoryImpl
                     source = SearchSource.BUDGET,
                     title = budget.category,
                     subtitle = "Limit ${DateUtils.formatCurrency(budget.limitAmount)} • ${
-                        budget.period.name.lowercase().replaceFirstChar { it.uppercase() }
+                        budget.period.lowercase().replaceFirstChar { it.uppercase() }
                     }",
                     timestamp = budget.createdAt,
                     // Minor: score against period name so "monthly" / "weekly" queries match
-                    relevanceScore = scoreResult(trimmedQuery, budget.category, budget.period.name),
+                    relevanceScore = scoreResult(trimmedQuery, budget.category, budget.period),
                     navigationTarget = AppRoute.Budget,
                 )
             }

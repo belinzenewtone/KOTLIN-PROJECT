@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -86,6 +85,7 @@ import com.personal.lifeOS.features.calendar.domain.model.EventKind
 import com.personal.lifeOS.features.calendar.domain.model.EventType
 import com.personal.lifeOS.features.calendar.domain.model.RepeatRule
 import com.personal.lifeOS.features.tasks.domain.model.TaskPriority
+import com.personal.lifeOS.ui.theme.AppSpacing
 import com.personal.lifeOS.ui.theme.Error
 import com.personal.lifeOS.ui.theme.Info
 import com.personal.lifeOS.ui.theme.Warning
@@ -256,12 +256,17 @@ internal fun CalendarAddScreen(
     }
 
     // ── Root layout ───────────────────────────────────────────────────────────
+    // statusBarsPadding() keeps content below the status bar.
+    // Bottom insets are handled by the BottomSafeWithFloatingNav spacer inside the
+    // scrollable column — the same technique used by every PageScaffold screen.
+    // navigationBarsPadding() is intentionally NOT applied here because it only
+    // covers the system nav bar (~50 dp) and would under-count the app's floating
+    // bottom nav bar (220 dp total). The spacer approach handles both in one place.
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .statusBarsPadding()
-            .navigationBarsPadding(),
+            .statusBarsPadding(),
     ) {
         AnimatedContent(
             targetState = currentPage,
@@ -638,7 +643,9 @@ private fun FormPage(
                     )
             }
 
-            Spacer(Modifier.height(32.dp))
+            // Ensures the last field (Description) scrolls fully clear of the
+            // floating bottom navigation bar. Matches PageScaffold's contentPadding.
+            Spacer(Modifier.height(AppSpacing.BottomSafeWithFloatingNav))
         }
     }
 }

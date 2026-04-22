@@ -404,10 +404,18 @@ class FinanceViewModel
         }
 
         companion object {
-            /** Fee-like categories used to compute the month fees total.
-             *  Defined once as a constant — avoids recreating the Set on every snapshot update. */
+            /**
+             * Fee-like categories used to compute the month fees total.
+             * Mirrors the expanded IN-list used by [TransactionDao.getFeeCategoryBreakdown] so
+             * both the DAO query and the in-memory snapshot filter stay in sync.
+             *
+             * Includes auto-assigned variants (e.g. "FULIZA CHARGE" from resolveCategoryFromMpesa)
+             * alongside user-assigned budget categories ("FULIZA", "AIRTIME", "SUBSCRIPTIONS").
+             */
             private val FEE_CATEGORIES = setOf(
-                "AIRTIME", "FULIZA", "SUBSCRIPTIONS", "BANK CHARGES", "CHARGES", "FEES",
+                "AIRTIME", "FULIZA", "FULIZA CHARGE",
+                "SUBSCRIPTIONS", "BANK CHARGES", "CHARGES", "FEES",
+                "WITHDRAWAL", "CASH WITHDRAWAL",
             )
         }
     }

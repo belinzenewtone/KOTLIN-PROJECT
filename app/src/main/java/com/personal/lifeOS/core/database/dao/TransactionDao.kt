@@ -168,7 +168,13 @@ interface TransactionDao {
         """
         SELECT * FROM transactions
         WHERE user_id = :userId AND deleted_at IS NULL
-          AND (merchant LIKE :query OR category LIKE :query)
+          AND (
+            merchant            LIKE :query
+            OR category         LIKE :query
+            OR mpesa_code       LIKE :query
+            OR transaction_type LIKE :query
+            OR CAST(CAST(amount AS INTEGER) AS TEXT) LIKE :query
+          )
         ORDER BY date DESC
         """,
     )
@@ -179,7 +185,13 @@ interface TransactionDao {
         SELECT * FROM transactions
         WHERE user_id = :userId AND deleted_at IS NULL
           AND date BETWEEN :start AND :end
-          AND (merchant LIKE :query OR category LIKE :query)
+          AND (
+            merchant            LIKE :query
+            OR category         LIKE :query
+            OR mpesa_code       LIKE :query
+            OR transaction_type LIKE :query
+            OR CAST(CAST(amount AS INTEGER) AS TEXT) LIKE :query
+          )
         ORDER BY date DESC
         """,
     )
@@ -192,6 +204,28 @@ interface TransactionDao {
 
     @Query("UPDATE transactions SET user_id = :userId WHERE user_id = ''")
     suspend fun claimUnownedRecords(userId: String)
+
+    /**
+     * Batch-assign [category] to every uncategorized transaction from [merchant].
+     * Returns the number of rows updated (useful for snackbar messages).
+     */
+    @Query(
+        """
+        UPDATE transactions
+        SET category   = :category,
+            updated_at = :updatedAt
+        WHERE user_id = :userId
+          AND UPPER(merchant) = UPPER(:merchant)
+          AND deleted_at IS NULL
+          AND UPPER(category) IN ('OTHER', 'UNCATEGORIZED', 'UNKNOWN', '')
+        """,
+    )
+    suspend fun updateCategoryForMerchant(
+        userId: String,
+        merchant: String,
+        category: String,
+        updatedAt: Long,
+    )
 
     // ── One-shot spending aggregate (suspend) ─────────────────────────────
     // Same semantics as getTotalSpendingBetween but suspend (single-shot) so
@@ -253,7 +287,13 @@ interface TransactionDao {
 
     // ── Fee analytics ──────────────────────────────────────────────────────
 
-    /** Category breakdown limited to fee-like categories for the fee analytics screen. */
+    /** Category breakdown limited to fee-like categories for the fee analytics screen.
+     *
+     * Matches both user-assigned categories AND the categories produced by
+     * resolveCategoryFromMpesa (e.g. "Fuliza Charge", "Airtime", "Withdrawal").
+     * Also catches transactions whose transactionType is inherently fee-like
+     * (AIRTIME, FULIZA_CHARGE) regardless of how the category was labelled.
+     */
     @Query(
         """
         SELECT category, SUM(amount) as total
@@ -261,7 +301,14 @@ interface TransactionDao {
         WHERE user_id = :userId
           AND deleted_at IS NULL
           AND date BETWEEN :start AND :end
-          AND UPPER(category) IN ('AIRTIME', 'FULIZA', 'SUBSCRIPTIONS', 'BANK CHARGES', 'CHARGES', 'FEES')
+          AND (
+            UPPER(category) IN (
+              'AIRTIME', 'FULIZA', 'FULIZA CHARGE',
+              'SUBSCRIPTIONS', 'BANK CHARGES', 'CHARGES', 'FEES',
+              'WITHDRAWAL', 'CASH WITHDRAWAL'
+            )
+            OR UPPER(transaction_type) IN ('AIRTIME', 'FULIZA_CHARGE')
+          )
         GROUP BY category
         ORDER BY total DESC
         """,
@@ -275,7 +322,14 @@ interface TransactionDao {
         WHERE user_id = :userId
           AND deleted_at IS NULL
           AND date BETWEEN :start AND :end
-          AND UPPER(category) IN ('AIRTIME', 'FULIZA', 'SUBSCRIPTIONS', 'BANK CHARGES', 'CHARGES', 'FEES')
+          AND (
+            UPPER(category) IN (
+              'AIRTIME', 'FULIZA', 'FULIZA CHARGE',
+              'SUBSCRIPTIONS', 'BANK CHARGES', 'CHARGES', 'FEES',
+              'WITHDRAWAL', 'CASH WITHDRAWAL'
+            )
+            OR UPPER(transaction_type) IN ('AIRTIME', 'FULIZA_CHARGE')
+          )
         ORDER BY date DESC
         """,
     )

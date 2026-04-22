@@ -45,7 +45,7 @@ fun FeeAnalyticsScreen(
     PageScaffold(
         headerEyebrow = "Finance",
         title = "Service Charges",
-        subtitle = "Airtime, Fuliza, and subscription spending this month",
+        subtitle = "Airtime, Fuliza, withdrawals and subscriptions this month",
         onBack = onBack,
         contentPadding = PaddingValues(bottom = AppSpacing.BottomSafeWithFloatingNav),
     ) {
@@ -61,7 +61,7 @@ fun FeeAnalyticsScreen(
         if (state.categoryBreakdown.isEmpty()) {
             EmptyState(
                 title = "No service charges this month",
-                description = "No Airtime, Fuliza, or subscription transactions found for the current month.",
+                description = "No airtime, Fuliza, withdrawal, or subscription transactions found for the current month.",
             )
             return@PageScaffold
         }

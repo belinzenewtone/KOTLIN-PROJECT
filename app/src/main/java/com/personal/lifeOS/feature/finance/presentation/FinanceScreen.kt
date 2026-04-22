@@ -219,7 +219,7 @@ fun FinanceScreen(
                 query = newQuery
                 viewModel.onEvent(FinanceUiEvent.UpdateSearchQuery(newQuery))
             },
-            placeholder = "Search merchant or category",
+            placeholder = "Search merchant, category, code or amount…",
         )
 
         if (lazyItems.itemCount == 0 && lazyItems.loadState.refresh !is LoadState.Loading) {
